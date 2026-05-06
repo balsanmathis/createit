@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "login": "Login",
+    "signup": "Get Started",
+    "dashboard": "Dashboard"
+  },
+  "hero": {
+    "badge": "Powered by Claude AI",
+    "title": "Build websites",
+    "titleAccent": "in seconds",
+    "subtitle": "Describe your website in plain language, CreateIt generates it instantly. Professional design, responsive, ready to use.",
+    "cta": "Create my first site",
+    "ctaSecondary": "Watch demo",
+    "promptPlaceholder": "Describe your ideal website...",
+    "promptExample": "A portfolio site for a photographer with a dark and elegant gallery",
+    "generating": "Generating...",
+    "stats": {
+      "sites": "Sites generated",
+      "users": "Active users",
+      "time": "Average seconds"
+    }
+  },
+  "features": {
+    "title": "Everything you need",
+    "subtitle": "Powerful tools to create, edit and deploy your websites in an instant.",
+    "items": [
+      {
+        "title": "Advanced AI",
+        "description": "Claude AI generates professional websites from a simple text description."
+      },
+      {
+        "title": "Visual Editor",
+        "description": "Edit text and images directly on your site with our WYSIWYG editor."
+      },
+      {
+        "title": "ZIP Export",
+        "description": "Download your site in one click, ready to be hosted anywhere."
+      },
+      {
+        "title": "21st.dev Templates",
+        "description": "Import premium UI components from the 21st.dev library."
+      },
+      {
+        "title": "Bilingual FR/EN",
+        "description": "Interface and generation available in French and English."
+      },
+      {
+        "title": "Full history",
+        "description": "Find and edit all your created sites from your dashboard."
+      }
+    ]
+  },
+  "howItWorks": {
+    "title": "How it works",
+    "subtitle": "Three simple steps to go from idea to website.",
+    "steps": [
+      {
+        "title": "Describe your site",
+        "description": "Write a description of your ideal website in natural language."
+      },
+      {
+        "title": "AI generates",
+        "description": "Claude analyzes your description and creates a complete, professional website."
+      },
+      {
+        "title": "Edit and export",
+        "description": "Customize your site then download it or share it directly."
+      }
+    ]
+  },
+  "pricing": {
+    "title": "Simple, transparent pricing",
+    "subtitle": "Choose the plan that fits your needs.",
+    "monthly": "/ month",
+    "sites": "sites / month",
+    "cta": "Get started",
+    "popular": "Popular",
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "description": "Perfect for getting started"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "For professionals"
+      },
+      "agency": {
+        "name": "Agency",
+        "description": "For agencies"
+      }
+    }
+  },
+  "cta": {
+    "title": "Ready to build your first site?",
+    "subtitle": "Join thousands of creators using CreateIt to build their web projects.",
+    "button": "Start for free"
+  },
+  "footer": {
+    "tagline": "The AI-powered website generator.",
+    "product": "Product",
+    "company": "Company",
+    "legal": "Legal"
+  }
+}

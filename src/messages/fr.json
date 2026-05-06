@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "login": "Connexion",
+    "signup": "Commencer",
+    "dashboard": "Dashboard"
+  },
+  "hero": {
+    "badge": "Propulsé par Claude AI",
+    "title": "Créez des sites web",
+    "titleAccent": "en quelques secondes",
+    "subtitle": "Décrivez votre site en français ou en anglais, CreateIt le génère instantanément. Design professionnel, responsive, prêt à l'emploi.",
+    "cta": "Créer mon premier site",
+    "ctaSecondary": "Voir une démo",
+    "promptPlaceholder": "Décrivez votre site web idéal...",
+    "promptExample": "Un site portfolio pour un photographe avec galerie sombre et élégante",
+    "generating": "Génération en cours...",
+    "stats": {
+      "sites": "Sites générés",
+      "users": "Utilisateurs actifs",
+      "time": "Secondes en moyenne"
+    }
+  },
+  "features": {
+    "title": "Tout ce dont vous avez besoin",
+    "subtitle": "Des outils puissants pour créer, modifier et déployer vos sites web en un instant.",
+    "items": [
+      {
+        "title": "IA Avancée",
+        "description": "Claude AI génère des sites web professionnels à partir d'une simple description textuelle."
+      },
+      {
+        "title": "Éditeur Visuel",
+        "description": "Modifiez textes et images directement sur votre site avec notre éditeur WYSIWYG."
+      },
+      {
+        "title": "Export ZIP",
+        "description": "Téléchargez votre site en un clic, prêt à être hébergé n'importe où."
+      },
+      {
+        "title": "Templates 21st.dev",
+        "description": "Importez des composants UI premium depuis la bibliothèque 21st.dev."
+      },
+      {
+        "title": "Bilingue FR/EN",
+        "description": "Interface et génération disponibles en français et en anglais."
+      },
+      {
+        "title": "Historique complet",
+        "description": "Retrouvez et modifiez tous vos sites créés depuis votre dashboard."
+      }
+    ]
+  },
+  "howItWorks": {
+    "title": "Comment ça marche",
+    "subtitle": "Trois étapes simples pour passer de l'idée au site web.",
+    "steps": [
+      {
+        "title": "Décrivez votre site",
+        "description": "Écrivez une description de votre site web idéal en langage naturel."
+      },
+      {
+        "title": "L'IA génère",
+        "description": "Claude analyse votre description et crée un site web complet et professionnel."
+      },
+      {
+        "title": "Éditez et exportez",
+        "description": "Personnalisez votre site puis téléchargez-le ou partagez-le directement."
+      }
+    ]
+  },
+  "pricing": {
+    "title": "Tarifs simples et transparents",
+    "subtitle": "Choisissez le plan qui correspond à vos besoins.",
+    "monthly": "/ mois",
+    "sites": "sites / mois",
+    "cta": "Commencer",
+    "popular": "Populaire",
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "description": "Parfait pour débuter"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Pour les professionnels"
+      },
+      "agency": {
+        "name": "Agency",
+        "description": "Pour les agences"
+      }
+    }
+  },
+  "cta": {
+    "title": "Prêt à créer votre premier site ?",
+    "subtitle": "Rejoignez des milliers de créateurs qui utilisent CreateIt pour construire leurs projets web.",
+    "button": "Commencer gratuitement"
+  },
+  "footer": {
+    "tagline": "Le générateur de sites web propulsé par l'IA.",
+    "product": "Produit",
+    "company": "Entreprise",
+    "legal": "Légal"
+  }
+}
