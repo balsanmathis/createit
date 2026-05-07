@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { signUpAdmin } from './actions'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -21,28 +20,15 @@ export default function SignupPage() {
       return
     }
     setLoading(true)
-    try {
-      // Create user server-side (no email confirmation URL built)
-      const { error: createError } = await signUpAdmin(email, password)
-      if (createError) {
-        toast.error(createError)
-        setLoading(false)
-        return
-      }
-
-      // Sign in immediately
-      const supabase = createClient()
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-      if (signInError) {
-        toast.error(signInError.message)
-        setLoading(false)
-        return
-      }
-
-      toast.success('Compte créé avec succès !')
+    const supabase = createClient()
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    })
+    if (error) {
+      toast.error(error.message)
+    } else {
       router.push('/dashboard')
-    } catch (err) {
-      toast.error('Une erreur est survenue')
     }
     setLoading(false)
   }
