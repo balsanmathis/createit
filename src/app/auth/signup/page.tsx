@@ -12,6 +12,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [signupError, setSignupError] = useState<{ message?: string; status?: number; code?: string; name?: string } | null>(null)
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,6 +27,8 @@ export default function SignupPage() {
       password: password,
     })
     if (error) {
+      console.error('Supabase signup error:', JSON.stringify(error))
+      setSignupError(error)
       toast.error(error.message)
     } else {
       router.push('/dashboard')
@@ -58,6 +61,16 @@ export default function SignupPage() {
         </div>
 
         <div className="glass-strong rounded-2xl p-8 border border-violet-500/20">
+          {signupError && (
+            <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm font-mono">
+              <p className="text-red-400 font-bold mb-2">Supabase Error</p>
+              <p className="text-red-300">message: {signupError.message ?? 'undefined'}</p>
+              <p className="text-red-300">status: {signupError.status ?? 'undefined'}</p>
+              <p className="text-red-300">code: {signupError.code ?? 'undefined'}</p>
+              <p className="text-red-300">name: {signupError.name ?? 'undefined'}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSignup} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-white/70 mb-2">Email</label>
