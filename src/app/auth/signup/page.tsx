@@ -1,55 +1,37 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { createClient } from '@/lib/supabase/client'
-import { toast } from 'sonner'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function SignupPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    console.log('[signup] SUPABASE_URL:', url ? url.slice(0, 30) : 'UNDEFINED')
-    console.log('[signup] ANON_KEY:', key ? key.slice(0, 10) : 'UNDEFINED')
-  }, [])
-
-  const handleSignup = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (password.length < 8) {
-      toast.error('Le mot de passe doit faire au moins 8 caractères')
+    setError('')
+    setLoading(true)
+
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    const { error: signUpError } = await supabase.auth.signUp({ email, password })
+
+    if (signUpError) {
+      setError(signUpError.message)
+      setLoading(false)
       return
     }
-    setLoading(true)
-    setDebugInfo(null)
-    try {
-      const supabase = createClient()
-      const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-      })
-      console.error('[signup] result:', JSON.stringify({ error, user: data?.user?.id }))
-      if (error) {
-        const info = `message: ${error.message}\nstatus: ${(error as any).status ?? 'n/a'}\ncode: ${(error as any).code ?? 'n/a'}\nname: ${error.name ?? 'n/a'}`
-        setDebugInfo(info)
-        toast.error(error.message)
-      } else {
-        router.push('/dashboard')
-      }
-    } catch (thrown: unknown) {
-      const msg = thrown instanceof Error ? thrown.message : String(thrown)
-      console.error('[signup] THROWN:', msg)
-      setDebugInfo(`THROWN EXCEPTION:\n${msg}`)
-      toast.error(msg)
-    }
-    setLoading(false)
+
+    router.push('/dashboard')
   }
 
   return (
@@ -65,11 +47,11 @@ export default function SignupPage() {
           <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg">
               <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8L7 12L13 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 8L7 12L13 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <span className="text-2xl font-bold text-white">
-              Create<span className="gradient-text">It</span>
+              Create<span className="text-violet-400">It</span>
             </span>
           </Link>
           <h1 className="text-3xl font-black text-white mb-2">Créer un compte</h1>
@@ -77,13 +59,13 @@ export default function SignupPage() {
         </div>
 
         <div className="glass-strong rounded-2xl p-8 border border-violet-500/20">
-          {debugInfo && (
-            <pre className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-xs text-red-300 whitespace-pre-wrap break-all">
-              {debugInfo}
-            </pre>
+          {error && (
+            <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
+              {error}
+            </div>
           )}
 
-          <form onSubmit={handleSignup} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-white/70 mb-2">Email</label>
               <input
@@ -112,7 +94,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 shadow-lg hover:shadow-violet-500/25"
+              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-all duration-200 shadow-lg hover:shadow-violet-500/25"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -125,11 +107,6 @@ export default function SignupPage() {
               ) : 'Créer mon compte'}
             </button>
           </form>
-
-          <p className="mt-4 text-xs text-white/30 text-center">
-            En créant un compte, vous acceptez nos{' '}
-            <Link href="#" className="text-violet-400 hover:underline">CGU</Link>
-          </p>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-white/40">

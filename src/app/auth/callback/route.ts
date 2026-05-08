@@ -1,16 +1,30 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
-
-  // Prefer explicit app URL over origin derived from request (avoids Vercel internal URLs)
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? origin
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
 
   if (code) {
-    const supabase = await createClient()
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => cookieStore.getAll(),
+          setAll: (toSet) => {
+            for (const { name, value, options } of toSet) {
+              cookieStore.set(name, value, options)
+            }
+          },
+        },
+      }
+    )
+
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       return NextResponse.redirect(`${base}${next}`)
