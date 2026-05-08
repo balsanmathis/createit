@@ -18,7 +18,7 @@ export function LampContainer({
       )}
     >
       {/* Lamp light effect — overflow hidden only on this inner wrapper */}
-      <div className="relative flex w-full items-center justify-center overflow-hidden" style={{ height: "260px" }}>
+      <div className="relative flex w-full items-center justify-center overflow-hidden" style={{ height: "200px" }}>
         <motion.div
           initial={{ opacity: 0.5, width: "15rem" }}
           whileInView={{ opacity: 1, width: "30rem" }}

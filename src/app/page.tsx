@@ -213,7 +213,7 @@ export default function HomePage() {
 
       {/* Hero — LampContainer + Sparkles */}
       <div className="relative">
-        <LampContainer className="pt-20 pb-16">
+        <LampContainer className="pt-16 pb-10">
           {/* Sparkles layer */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             <SparklesCore
@@ -231,11 +231,7 @@ export default function HomePage() {
             initial="hidden"
             animate="visible"
           >
-            <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-1.5 mb-6 px-3 py-1 rounded-full text-xs" style={{ background: "rgba(91,33,182,0.15)", border: "1px solid rgba(91,33,182,0.3)", color: "#a78bfa" }}>
-              <span>✦</span> Créateur de sites web IA
-            </motion.div>
-
-            <motion.h1 variants={fadeUp} custom={1} className="text-6xl md:text-7xl font-black leading-[0.9] tracking-tight mb-6">
+            <motion.h1 variants={fadeUp} custom={0} className="text-6xl md:text-7xl font-black leading-[0.9] tracking-tight mb-6">
               <span className="bg-gradient-to-r from-slate-200 via-[#7c3aed] to-[#1d4ed8] bg-clip-text text-transparent">
                 Créez des sites web
               </span>
@@ -276,23 +272,7 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            {/* Tags */}
-            <motion.div variants={fadeUp} custom={4} className="flex flex-wrap justify-center gap-2 mb-6">
-              {["🍕 Restaurant", "💼 Portfolio", "🛍️ E-commerce", "🚀 SaaS", "📝 Blog"].map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => setPrompt(`Crée un site ${tag.split(" ").slice(1).join(" ").toLowerCase()}`)}
-                  className="px-3 py-1.5 rounded-full text-sm transition-all"
-                  style={{ background: "rgba(30,27,75,0.5)", border: "1px solid #1e1b4b", color: "#94a3b8" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#5b21b6"; e.currentTarget.style.color = "#e2e8f0"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1e1b4b"; e.currentTarget.style.color = "#94a3b8"; }}
-                >
-                  {tag}
-                </button>
-              ))}
-            </motion.div>
-
-            <motion.p variants={fadeUp} custom={5} className="text-sm" style={{ color: "#475569" }}>
+            <motion.p variants={fadeUp} custom={4} className="text-sm" style={{ color: "#475569" }}>
               Sans carte bancaire • Export ZIP inclus
             </motion.p>
           </motion.div>
