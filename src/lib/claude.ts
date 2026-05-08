@@ -1,7 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-// ─── System prompts ───────────────────────────────────────────────────────────
-
 const SYSTEM_PROMPT = `Tu es un expert développeur web. Génère un site web HTML5 COMPLET en un seul fichier.
 RÈGLES ABSOLUES - AUCUNE EXCEPTION :
 - Commence TOUJOURS par <!DOCTYPE html><html lang='fr'>
@@ -13,13 +11,13 @@ RÈGLES ABSOLUES - AUCUNE EXCEPTION :
 - Effets 3D avec CSS transform perspective
 - IntersectionObserver JavaScript pour les animations au scroll
 - Le site doit être magnifique, professionnel, complet
-- NE T'ARRÊTE JAMAIS avant la balise </html>`
+- NE T'ARRÊTE JAMAIS avant la balise </html>
 
-const CONTINUE_MSG =
-  'Continue exactement où tu t\'es arrêté et termine le HTML jusqu\'à </body></html>. ' +
-  'Génère UNIQUEMENT la suite du code HTML, sans rien répéter.'
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+RÈGLE ABSOLUE : Tu as exactement 16000 tokens pour générer le site complet.
+Tu DOIS terminer par </body></html>.
+Si le contenu risque d'être trop long, raccourcis chaque section MAIS inclus TOUTES les sections demandées.
+Préfère un site plus court mais 100% complet plutôt qu'un site long mais tronqué.
+Ne t'arrête JAMAIS avant </html>.`
 
 function stripFences(text: string): string {
   let t = text.trim()
@@ -44,12 +42,9 @@ async function streamCall(
   return { text: stripFences(raw), stopReason: msg.stop_reason ?? 'end_turn' }
 }
 
-// ─── Main export ──────────────────────────────────────────────────────────────
-
 export async function generateWebsite(prompt: string): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
-  // ── Pass 0 : premier appel ──────────────────────────────────────────────
   const { text: first, stopReason: stop0 } = await streamCall(anthropic, {
     model: 'claude-sonnet-4-6',
     max_tokens: 16000,
@@ -60,8 +55,13 @@ export async function generateWebsite(prompt: string): Promise<string> {
   let html = first
   console.log(`[claude] pass 0 | ${html.length} chars | stop=${stop0} | closed=${isClosed(html)}`)
 
-  // ── Passes 1-3 : continuation si HTML incomplet ────────────────────────
   for (let pass = 1; pass <= 3 && !isClosed(html); pass++) {
+    const tail = html.slice(-500)
+    const continueMsg =
+      `Le HTML précédent est incomplet. Termine-le maintenant en fermant toutes les balises ouvertes et en terminant par </body></html>. ` +
+      `Génère UNIQUEMENT la suite du code HTML, sans rien répéter. ` +
+      `Voici où tu t'es arrêté : ${tail}`
+
     const { text: chunk, stopReason } = await streamCall(anthropic, {
       model: 'claude-sonnet-4-6',
       max_tokens: 16000,
@@ -69,14 +69,13 @@ export async function generateWebsite(prompt: string): Promise<string> {
       messages: [
         { role: 'user', content: prompt },
         { role: 'assistant', content: html },
-        { role: 'user', content: CONTINUE_MSG },
+        { role: 'user', content: continueMsg },
       ],
     })
     html += chunk
     console.log(`[claude] pass ${pass} | +${chunk.length} chars | stop=${stopReason} | closed=${isClosed(html)}`)
   }
 
-  // ── Fermeture forcée si toujours incomplet ─────────────────────────────
   if (!isClosed(html)) {
     if (!/<\/body>/i.test(html)) html += '\n</body>'
     html += '\n</html>'
