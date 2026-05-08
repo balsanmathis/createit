@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -12,7 +12,14 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [signupError, setSignupError] = useState<{ message?: string; status?: number; code?: string; name?: string } | null>(null)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
+
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    console.log('[signup] SUPABASE_URL:', url ? url.slice(0, 30) : 'UNDEFINED')
+    console.log('[signup] ANON_KEY:', key ? key.slice(0, 10) : 'UNDEFINED')
+  }, [])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,17 +28,26 @@ export default function SignupPage() {
       return
     }
     setLoading(true)
-    const supabase = createClient()
-    const { data, error } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    })
-    if (error) {
-      console.error('Supabase signup error:', JSON.stringify(error))
-      setSignupError(error)
-      toast.error(error.message)
-    } else {
-      router.push('/dashboard')
+    setDebugInfo(null)
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+      })
+      console.error('[signup] result:', JSON.stringify({ error, user: data?.user?.id }))
+      if (error) {
+        const info = `message: ${error.message}\nstatus: ${(error as any).status ?? 'n/a'}\ncode: ${(error as any).code ?? 'n/a'}\nname: ${error.name ?? 'n/a'}`
+        setDebugInfo(info)
+        toast.error(error.message)
+      } else {
+        router.push('/dashboard')
+      }
+    } catch (thrown: unknown) {
+      const msg = thrown instanceof Error ? thrown.message : String(thrown)
+      console.error('[signup] THROWN:', msg)
+      setDebugInfo(`THROWN EXCEPTION:\n${msg}`)
+      toast.error(msg)
     }
     setLoading(false)
   }
@@ -61,14 +77,10 @@ export default function SignupPage() {
         </div>
 
         <div className="glass-strong rounded-2xl p-8 border border-violet-500/20">
-          {signupError && (
-            <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm font-mono">
-              <p className="text-red-400 font-bold mb-2">Supabase Error</p>
-              <p className="text-red-300">message: {signupError.message ?? 'undefined'}</p>
-              <p className="text-red-300">status: {signupError.status ?? 'undefined'}</p>
-              <p className="text-red-300">code: {signupError.code ?? 'undefined'}</p>
-              <p className="text-red-300">name: {signupError.name ?? 'undefined'}</p>
-            </div>
+          {debugInfo && (
+            <pre className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-xs text-red-300 whitespace-pre-wrap break-all">
+              {debugInfo}
+            </pre>
           )}
 
           <form onSubmit={handleSignup} className="space-y-5">
