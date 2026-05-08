@@ -1,77 +1,87 @@
-'use client'
+"use client";
 
-import { useState, Suspense } from 'react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { createBrowserClient } from '@supabase/ssr'
+import { useState, Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { createBrowserClient } from "@supabase/ssr";
+import { SparklesCore } from "@/components/ui/sparkles";
 
 function LoginForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/dashboard'
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    );
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (signInError) {
-      setError(signInError.message)
-      setLoading(false)
-      return
+      setError(signInError.message);
+      setLoading(false);
+      return;
     }
 
-    router.push(redirectTo)
-    router.refresh()
+    router.push(redirectTo);
+    router.refresh();
   }
 
   return (
     <>
       {error && (
-        <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
+        <div className="mb-5 rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(127,29,29,0.2)", border: "1px solid rgba(185,28,28,0.3)", color: "#fca5a5" }}>
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-white/70 mb-2">Email</label>
+          <label className="block text-sm font-medium mb-2" style={{ color: "#94a3b8" }}>Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="vous@exemple.com"
-            className="w-full glass rounded-xl px-4 py-3 text-white placeholder-white/30 border border-white/10 focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30 transition-all"
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
+            style={{ background: "#0d0d2e", border: "1px solid #1e1b4b", color: "#e2e8f0" }}
+            onFocus={(e) => (e.target.style.borderColor = "#5b21b6")}
+            onBlur={(e) => (e.target.style.borderColor = "#1e1b4b")}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-white/70 mb-2">Mot de passe</label>
+          <label className="block text-sm font-medium mb-2" style={{ color: "#94a3b8" }}>Mot de passe</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             placeholder="••••••••"
-            className="w-full glass rounded-xl px-4 py-3 text-white placeholder-white/30 border border-white/10 focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30 transition-all"
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
+            style={{ background: "#0d0d2e", border: "1px solid #1e1b4b", color: "#e2e8f0" }}
+            onFocus={(e) => (e.target.style.borderColor = "#5b21b6")}
+            onBlur={(e) => (e.target.style.borderColor = "#1e1b4b")}
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-all duration-200 shadow-lg hover:shadow-violet-500/25"
+          className="w-full text-white font-semibold py-3.5 rounded-xl transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: "#5b21b6" }}
+          onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#6d28d9"; }}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#5b21b6")}
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -81,47 +91,55 @@ function LoginForm() {
               </svg>
               Connexion...
             </span>
-          ) : 'Se connecter'}
+          ) : "Se connecter"}
         </button>
       </form>
     </>
-  )
+  );
 }
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-[#080810] flex items-center justify-center px-6">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,rgba(124,109,250,0.12)_0%,transparent_60%)]" />
+    <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden" style={{ background: "#04040f" }}>
+      {/* Sparkles */}
+      <div className="absolute inset-0 z-0">
+        <SparklesCore background="transparent" particleColor="#ffffff" particleDensity={30} speed={0.3} minSize={0.3} maxSize={1} />
+      </div>
+
+      {/* Lamp glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(55,48,163,0.35) 0%, transparent 70%)" }} />
+
+      {/* Orb */}
+      <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(46,16,101,0.2) 0%, transparent 70%)", filter: "blur(60px)" }} />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative w-full max-w-md"
+        transition={{ duration: 0.6 }}
+        className="relative z-10 w-full max-w-md"
       >
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg">
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8L7 12L13 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg, #5b21b6, #1d4ed8)" }}>
+              <span className="text-white font-bold">✦</span>
             </div>
-            <span className="text-2xl font-bold text-white">
-              Create<span className="text-violet-400">It</span>
+            <span className="text-2xl font-bold" style={{ color: "#e2e8f0" }}>
+              Create<span style={{ color: "#7c3aed" }}>It</span>
             </span>
           </Link>
-          <h1 className="text-3xl font-black text-white mb-2">Bienvenue</h1>
-          <p className="text-white/50">Connectez-vous à votre compte</p>
+          <h1 className="text-3xl font-black mb-2" style={{ color: "#e2e8f0" }}>Bienvenue</h1>
+          <p style={{ color: "#64748b" }}>Connectez-vous à votre compte</p>
         </div>
 
-        <div className="glass-strong rounded-2xl p-8 border border-violet-500/20">
-          <Suspense fallback={<div className="h-48 animate-pulse rounded-xl bg-white/5" />}>
+        <div className="rounded-2xl p-8" style={{ background: "#080820", border: "1px solid #1e1b4b" }}>
+          <Suspense fallback={<div className="h-48 rounded-xl animate-pulse" style={{ background: "#0d0d2e" }} />}>
             <LoginForm />
           </Suspense>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-white/40">
-              Pas encore de compte ?{' '}
-              <Link href="/auth/signup" className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
+            <p className="text-sm" style={{ color: "#475569" }}>
+              Pas encore de compte ?{" "}
+              <Link href="/auth/signup" className="font-medium transition-colors hover:opacity-80" style={{ color: "#7c3aed" }}>
                 Créer un compte
               </Link>
             </p>
@@ -129,5 +147,5 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </div>
-  )
+  );
 }
