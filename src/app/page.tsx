@@ -213,7 +213,7 @@ export default function HomePage() {
 
       {/* Hero — LampContainer + Sparkles */}
       <div className="relative">
-        <LampContainer className="pt-16">
+        <LampContainer className="pt-20 pb-16">
           {/* Sparkles layer */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             <SparklesCore

@@ -13,11 +13,12 @@ export function LampContainer({
   return (
     <div
       className={cn(
-        "relative flex min-h-[60vh] flex-col items-center justify-center overflow-hidden bg-[#04040f] w-full z-0",
+        "relative flex flex-col items-center w-full z-0 bg-[#04040f]",
         className
       )}
     >
-      <div className="relative flex w-full flex-1 scale-y-125 items-center justify-center isolate z-0">
+      {/* Lamp light effect — overflow hidden only on this inner wrapper */}
+      <div className="relative flex w-full items-center justify-center overflow-hidden" style={{ height: "260px" }}>
         <motion.div
           initial={{ opacity: 0.5, width: "15rem" }}
           whileInView={{ opacity: 1, width: "30rem" }}
@@ -41,7 +42,6 @@ export function LampContainer({
         </motion.div>
 
         <div className="absolute top-1/2 h-48 w-full translate-y-12 scale-x-150 bg-[#04040f] blur-2xl" />
-        <div className="absolute top-1/2 z-50 h-48 w-full bg-transparent opacity-10 backdrop-blur-md" />
         <div className="absolute inset-auto z-50 h-36 w-[28rem] -translate-y-1/2 rounded-full bg-[#3730a3] opacity-40 blur-3xl" />
         <motion.div
           initial={{ width: "8rem" }}
@@ -58,7 +58,8 @@ export function LampContainer({
         <div className="absolute inset-auto z-40 h-44 w-full -translate-y-[12.5rem] bg-[#04040f]" />
       </div>
 
-      <div className="relative z-50 flex -translate-y-60 flex-col items-center px-5 w-full">
+      {/* Content — no clipping, sits below the lamp */}
+      <div className="relative z-50 flex flex-col items-center w-full px-5">
         {children}
       </div>
     </div>
