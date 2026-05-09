@@ -161,11 +161,6 @@ export default function HomePage() {
         />
       </div>
 
-      <style>{`
-        @keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(30px,-40px)} }
-        @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,40px)} }
-      `}</style>
-
       {/* Navbar */}
       <nav
         className="fixed top-0 left-0 right-0 z-40 transition-all duration-300"

@@ -272,23 +272,14 @@ function LandingPreview() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CARROUSEL — templates animés (éléments en mouvement permanent)
+   CARROUSEL — templates animés (keyframes dans globals.css)
    ═══════════════════════════════════════════════════════════════ */
 
 function MusicPreview() {
   return (
     <div style={{ width: '100%', height: '100%', background: '#0a0010', fontFamily: 'system-ui,sans-serif', overflow: 'hidden', position: 'relative' }}>
-      <style>{`
-        @keyframes bar1{0%,100%{height:6px}50%{height:22px}}
-        @keyframes bar2{0%,100%{height:14px}33%{height:6px}66%{height:20px}}
-        @keyframes bar3{0%,100%{height:10px}25%{height:20px}75%{height:4px}}
-        @keyframes bar4{0%,100%{height:18px}50%{height:6px}}
-        @keyframes bar5{0%,100%{height:8px}40%{height:22px}}
-        @keyframes orb1{0%,100%{transform:translate(0,0)}50%{transform:translate(10px,-15px)}}
-        @keyframes orb2{0%,100%{transform:translate(0,0)}50%{transform:translate(-12px,10px)}}
-      `}</style>
-      <div style={{ position: 'absolute', top: '10%', right: '8%', width: 60, height: 60, background: 'radial-gradient(circle,rgba(192,38,211,0.5) 0%,transparent 70%)', filter: 'blur(14px)', animation: 'orb1 4s ease-in-out infinite' }} />
-      <div style={{ position: 'absolute', bottom: '10%', left: '8%', width: 50, height: 50, background: 'radial-gradient(circle,rgba(124,58,237,0.4) 0%,transparent 70%)', filter: 'blur(12px)', animation: 'orb2 5s ease-in-out infinite' }} />
+      <div style={{ position: 'absolute', top: '10%', right: '8%', width: 60, height: 60, background: 'radial-gradient(circle,rgba(192,38,211,0.5) 0%,transparent 70%)', filter: 'blur(14px)', animation: 'orb-music-1 4s ease-in-out infinite' }} />
+      <div style={{ position: 'absolute', bottom: '10%', left: '8%', width: 50, height: 50, background: 'radial-gradient(circle,rgba(124,58,237,0.4) 0%,transparent 70%)', filter: 'blur(12px)', animation: 'orb-music-2 5s ease-in-out infinite' }} />
       <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
         <span style={{ fontSize: 8, fontWeight: 800, color: '#e879f9', letterSpacing: 2 }}>LUNA</span>
         <div style={{ display: 'flex', gap: 6, fontSize: 6.5, color: '#7e22ce' }}><span>Tour</span><span>Music</span><span>Store</span></div>
@@ -298,7 +289,6 @@ function MusicPreview() {
         <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.1, marginBottom: 6 }}>
           Nouvelle<br /><span style={{ background: 'linear-gradient(90deg,#e879f9,#a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Ère.</span>
         </div>
-        {/* Equalizer bars */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 24, marginBottom: 8 }}>
           {[
             { anim: 'bar1 0.8s ease-in-out infinite', color: '#e879f9' },
@@ -326,11 +316,6 @@ function MusicPreview() {
 function ImmobilierPreview() {
   return (
     <div style={{ width: '100%', height: '100%', background: '#fff', fontFamily: 'system-ui,sans-serif', overflow: 'hidden' }}>
-      <style>{`
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-        @keyframes slideIn{0%{transform:translateX(-10px);opacity:0}100%{transform:translateX(0);opacity:1}}
-        @keyframes ping{0%{transform:scale(1);opacity:1}75%,100%{transform:scale(1.8);opacity:0}}
-      `}</style>
       <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0' }}>
         <span style={{ fontSize: 8, fontWeight: 800, color: '#1e293b', letterSpacing: -0.5 }}>RÉSIDENCE+</span>
         <div style={{ background: '#1e293b', color: '#fff', fontSize: 6.5, padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>Estimer</div>
@@ -341,7 +326,7 @@ function ImmobilierPreview() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '4px 8px', background: '#f1f5f9', borderRadius: 8, border: '1.5px solid #7c3aed', marginBottom: 6 }}>
           <span style={{ fontSize: 7, color: '#64748b', flex: 1 }}>Paris, Lyon, Bordeaux...</span>
           <span style={{ fontSize: 6, color: '#fff', background: '#7c3aed', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>Go</span>
-          <span style={{ fontSize: 8, animation: 'blink 1s infinite', color: '#7c3aed', borderRight: '1px solid #7c3aed', paddingRight: 1 }} />
+          <span style={{ fontSize: 8, animation: 'blink-cursor 1s infinite', color: '#7c3aed', borderRight: '1px solid #7c3aed', paddingRight: 1 }} />
         </div>
       </div>
       <div style={{ padding: '0 10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
@@ -367,17 +352,11 @@ function ImmobilierPreview() {
 function FitnessPreview() {
   return (
     <div style={{ width: '100%', height: '100%', background: '#09090b', fontFamily: 'system-ui,sans-serif', overflow: 'hidden', position: 'relative' }}>
-      <style>{`
-        @keyframes countUp{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:translateY(0)}}
-        @keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
-        @keyframes progress{0%{width:0%}100%{width:78%}}
-        @keyframes heatglow{0%,100%{opacity:0.6}50%{opacity:1}}
-      `}</style>
       <div style={{ position: 'absolute', top: 0, right: 0, width: 80, height: 80, background: 'radial-gradient(circle,rgba(239,68,68,0.25) 0%,transparent 70%)', filter: 'blur(16px)', animation: 'heatglow 2s ease-in-out infinite' }} />
       <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 8, fontWeight: 900, color: '#fff', letterSpacing: 1 }}>IRON<span style={{ color: '#ef4444' }}>FIT</span></span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', animation: 'pulse2 1.5s ease-in-out infinite' }} />
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', animation: 'pulse-live 1.5s ease-in-out infinite' }} />
           <span style={{ fontSize: 6, color: '#ef4444', fontWeight: 700 }}>LIVE</span>
         </div>
       </div>
@@ -399,7 +378,7 @@ function FitnessPreview() {
             <span>Programme du mois</span><span style={{ color: '#ef4444' }}>78%</span>
           </div>
           <div style={{ height: 4, background: '#27272a', borderRadius: 2, overflow: 'hidden' }}>
-            <div style={{ height: '100%', background: 'linear-gradient(90deg,#ef4444,#f97316)', borderRadius: 2, animation: 'progress 2s ease-out forwards' }} />
+            <div style={{ height: '100%', background: 'linear-gradient(90deg,#ef4444,#f97316)', borderRadius: 2, animation: 'progress-bar 2s ease-out forwards' }} />
           </div>
         </div>
       </div>
@@ -410,10 +389,6 @@ function FitnessPreview() {
 function HotelPreview() {
   return (
     <div style={{ width: '100%', height: '100%', background: '#080604', fontFamily: 'Georgia,serif', overflow: 'hidden', position: 'relative' }}>
-      <style>{`
-        @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
-        @keyframes float3{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-      `}</style>
       <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(212,175,55,0.2)' }}>
         <span style={{ fontSize: 8, fontWeight: 700, color: '#d4af37', letterSpacing: 4 }}>ÉLYSÉE</span>
         <div style={{ display: 'flex', gap: 8, fontSize: 6.5, color: '#78716c' }}><span>Suites</span><span>Spa</span><span>Réserver</span></div>
@@ -426,7 +401,7 @@ function HotelPreview() {
             fontSize: 18, fontWeight: 700, color: 'transparent', letterSpacing: 1, position: 'relative',
             background: 'linear-gradient(90deg,#b8960c,#d4af37,#f0d060,#d4af37,#b8960c)',
             backgroundSize: '200% auto', WebkitBackgroundClip: 'text',
-            animation: 'shimmer 3s linear infinite',
+            animation: 'shimmer-gold 3s linear infinite',
           }}
         >
           Grand Hôtel
@@ -435,7 +410,7 @@ function HotelPreview() {
       </div>
       <div style={{ padding: '8px 10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
         {[['Suite Royale', '890€/nuit', true], ['Chambre Deluxe', '320€/nuit', false]].map(([name, price, feat]) => (
-          <div key={String(name)} style={{ background: feat ? 'rgba(212,175,55,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${feat ? 'rgba(212,175,55,0.2)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 5, padding: '5px 7px', animation: feat ? 'float3 4s ease-in-out infinite' : 'none' }}>
+          <div key={String(name)} style={{ background: feat ? 'rgba(212,175,55,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${feat ? 'rgba(212,175,55,0.2)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 5, padding: '5px 7px', animation: feat ? 'float-card 4s ease-in-out infinite' : 'none' }}>
             <div style={{ fontSize: 7, color: feat ? '#d4af37' : '#a8a29e', fontWeight: 700, marginBottom: 2 }}>{name}</div>
             <div style={{ fontSize: 6, color: '#57534e' }}>{price}</div>
           </div>
@@ -448,12 +423,6 @@ function HotelPreview() {
 function CryptoPreview() {
   return (
     <div style={{ width: '100%', height: '100%', background: '#020d06', fontFamily: 'system-ui,sans-serif', overflow: 'hidden', position: 'relative' }}>
-      <style>{`
-        @keyframes tick{0%,100%{opacity:1}45%,55%{opacity:0}}
-        @keyframes up{0%{transform:translateY(4px);opacity:0}100%{transform:translateY(0);opacity:1}}
-        @keyframes glow3{0%,100%{box-shadow:0 0 4px rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px rgba(34,197,94,0.8)}}
-        @keyframes chart{0%{d:path("M0 30 C20 28, 40 20, 60 22 C80 24, 100 10, 120 8 C140 6, 160 15, 180 12")}100%{d:path("M0 28 C20 25, 40 18, 60 20 C80 22, 100 8, 120 6 C140 4, 160 13, 180 10")}}
-      `}</style>
       <div style={{ position: 'absolute', bottom: '15%', left: '5%', right: '5%', height: 40, opacity: 0.15 }}>
         <svg width="100%" height="100%" viewBox="0 0 180 40" preserveAspectRatio="none">
           <path d="M0 30 C20 28, 40 20, 60 22 C80 24, 100 10, 120 8 C140 6, 160 15, 180 12" fill="none" stroke="#22c55e" strokeWidth="1.5"/>
@@ -462,7 +431,7 @@ function CryptoPreview() {
       <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 8, fontWeight: 800, color: '#22c55e' }}>◆ CryptoDesk</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', animation: 'glow3 1.5s ease-in-out infinite' }} />
+          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', animation: 'glow-green 1.5s ease-in-out infinite' }} />
           <span style={{ fontSize: 6, color: '#22c55e' }}>LIVE</span>
         </div>
       </div>
@@ -475,8 +444,8 @@ function CryptoPreview() {
           {[['BTC', '€42,380', '+2.4%'], ['ETH', '€2,190', '+1.8%'], ['SOL', '€98.40', '+5.1%']].map(([coin, price, change]) => (
             <div key={coin} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 6px', background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.1)', borderRadius: 4 }}>
               <span style={{ fontSize: 7, fontWeight: 700, color: '#e2e8f0' }}>{coin}</span>
-              <span style={{ fontSize: 7, color: '#94a3b8', animation: 'tick 2s infinite' }}>{price}</span>
-              <span style={{ fontSize: 6.5, color: '#22c55e', fontWeight: 700, animation: 'up 0.5s ease-out' }}>{change}</span>
+              <span style={{ fontSize: 7, color: '#94a3b8', animation: 'tick-price 2s infinite' }}>{price}</span>
+              <span style={{ fontSize: 6.5, color: '#22c55e', fontWeight: 700, animation: 'price-up 0.5s ease-out' }}>{change}</span>
             </div>
           ))}
         </div>
@@ -488,13 +457,7 @@ function CryptoPreview() {
 function EducationPreview() {
   return (
     <div style={{ width: '100%', height: '100%', background: '#03071e', fontFamily: 'system-ui,sans-serif', overflow: 'hidden', position: 'relative' }}>
-      <style>{`
-        @keyframes progressBar{0%{width:0}100%{width:72%}}
-        @keyframes progressBar2{0%{width:0}100%{width:45%}}
-        @keyframes progressBar3{0%{width:0}100%{width:90%}}
-        @keyframes orb3{0%,100%{transform:translate(0,0)}50%{transform:translate(8px,-10px)}}
-      `}</style>
-      <div style={{ position: 'absolute', top: 0, right: 0, width: 70, height: 70, background: 'radial-gradient(circle,rgba(99,102,241,0.35) 0%,transparent 70%)', filter: 'blur(16px)', animation: 'orb3 5s ease-in-out infinite' }} />
+      <div style={{ position: 'absolute', top: 0, right: 0, width: 70, height: 70, background: 'radial-gradient(circle,rgba(99,102,241,0.35) 0%,transparent 70%)', filter: 'blur(16px)', animation: 'orb-edu 5s ease-in-out infinite' }} />
       <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 8, fontWeight: 800, color: '#818cf8' }}>◈ <span style={{ color: '#fff' }}>LearnLab</span></span>
         <div style={{ background: 'linear-gradient(90deg,#6366f1,#4f46e5)', color: '#fff', fontSize: 6.5, padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>Commencer</div>
@@ -506,7 +469,7 @@ function EducationPreview() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
           {[
-            { name: 'Design UI/UX', pct: '72%', anim: 'progressBar 2s ease-out forwards', color: '#6366f1' },
+            { name: 'Design UI/UX', pct: '72%', anim: 'progressBar1 2s ease-out forwards', color: '#6366f1' },
             { name: 'React Avancé', pct: '45%', anim: 'progressBar2 2.5s ease-out forwards', color: '#8b5cf6' },
             { name: 'Branding', pct: '90%', anim: 'progressBar3 1.8s ease-out forwards', color: '#a78bfa' },
           ].map(c => (
@@ -528,10 +491,6 @@ function EducationPreview() {
 function ArchitecturePreview() {
   return (
     <div style={{ width: '100%', height: '100%', background: '#fafaf9', fontFamily: 'system-ui,sans-serif', overflow: 'hidden' }}>
-      <style>{`
-        @keyframes lineGrow{0%{width:0}100%{width:100%}}
-        @keyframes fadeSlide{0%{opacity:0;transform:translateX(-5px)}100%{opacity:1;transform:translateX(0)}}
-      `}</style>
       <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #111' }}>
         <span style={{ fontSize: 8, fontWeight: 900, color: '#111', letterSpacing: 4 }}>A.STUDIO</span>
         <div style={{ display: 'flex', gap: 8, fontSize: 6.5, color: '#737373' }}><span>Projets</span><span>Studio</span><span>Contact</span></div>
@@ -560,13 +519,9 @@ function ArchitecturePreview() {
 function MedicalPreview() {
   return (
     <div style={{ width: '100%', height: '100%', background: '#fff', fontFamily: 'system-ui,sans-serif', overflow: 'hidden' }}>
-      <style>{`
-        @keyframes pulse3{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.8}}
-        @keyframes heartbeat{0%,100%{transform:scaleX(1)}10%{transform:scaleX(1.02)}20%{transform:scaleX(0.98)}}
-      `}</style>
       <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e0f2fe', background: '#f0f9ff' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#0284c7', animation: 'pulse3 2s ease-in-out infinite' }} />
+          <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#0284c7', animation: 'pulse-med 2s ease-in-out infinite' }} />
           <span style={{ fontSize: 8, fontWeight: 800, color: '#0c4a6e' }}>MedCare+</span>
         </div>
         <div style={{ background: '#0284c7', color: '#fff', fontSize: 6.5, padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>Prendre RDV</div>
@@ -617,22 +572,6 @@ function TemplateCarousel() {
 
   return (
     <div style={{ overflow: 'hidden', position: 'relative' }}>
-      <style>{`
-        @keyframes scrollCarousel {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .carousel-track {
-          display: flex;
-          gap: 16px;
-          width: max-content;
-          animation: scrollCarousel 40s linear infinite;
-        }
-        .carousel-track:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
-
       {/* Left fade */}
       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 80, background: 'linear-gradient(90deg,#04040f,transparent)', zIndex: 10, pointerEvents: 'none' }} />
       {/* Right fade */}
@@ -654,7 +593,6 @@ function TemplateCarousel() {
             }}
           >
             <Preview />
-            {/* Label overlay */}
             <div style={{
               position: 'absolute', bottom: 0, left: 0, right: 0,
               padding: '6px 10px',
