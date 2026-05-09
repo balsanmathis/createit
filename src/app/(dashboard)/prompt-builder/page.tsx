@@ -4,16 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import Link from 'next/link'
-
-// ─── Nav ─────────────────────────────────────────────────────────────────────
-
-const NAV_ITEMS = [
-  { href: '/dashboard',      icon: '⊞', label: 'Dashboard' },
-  { href: '/generate',       icon: '✦', label: 'Générer' },
-  { href: '/prompt-builder', icon: '🪄', label: 'Créer un prompt', active: true },
-  { href: '/settings',       icon: '◎', label: 'Paramètres' },
-]
+import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -50,21 +41,9 @@ const SECTIONS_OPTIONS = [
 ]
 
 const ANIM_LEVELS = [
-  {
-    label: 'Simple',
-    desc: 'Transitions douces sur hover et apparition',
-    icon: '🌿',
-  },
-  {
-    label: 'Avancé',
-    desc: 'Scroll animations, cards 3D, navigation sticky',
-    icon: '⚡',
-  },
-  {
-    label: 'Wow effect',
-    desc: 'Particules CSS, flip 3D, typewriter, parallaxe',
-    icon: '🎆',
-  },
+  { label: 'Simple',     desc: 'Transitions douces sur hover et apparition',                                                                   icon: '🌿' },
+  { label: 'Avancé',     desc: 'Scroll animations, cards 3D, navigation sticky',                                                               icon: '⚡' },
+  { label: 'Wow effect', desc: 'Particules CSS, flip 3D, typewriter, parallaxe',                                                               icon: '🎆' },
 ]
 
 const COLOR_PRESETS = [
@@ -81,32 +60,20 @@ const COLOR_PRESETS = [
 // ─── Prompt compiler ──────────────────────────────────────────────────────────
 
 function buildPrompt(
-  siteType: string,
-  projectName: string,
-  city: string,
-  description: string,
-  theme: string,
-  primaryColor: string,
-  ambiance: string,
-  sections: string[],
-  animLevel: string,
+  siteType: string, projectName: string, city: string, description: string,
+  theme: string, primaryColor: string, ambiance: string, sections: string[], animLevel: string,
 ): string {
   if (!siteType && !projectName && !description) return ''
-
   const who = projectName ? `"${projectName}"` : 'mon projet'
   const where = city ? ` basé à ${city}` : ''
   const desc = description ? ` ${description.trim()}.` : ''
-  const secs = sections.length
-    ? `Sections obligatoires : ${sections.join(', ')}.`
-    : ''
-
+  const secs = sections.length ? `Sections obligatoires : ${sections.join(', ')}.` : ''
   const animDetail =
     animLevel === 'Simple'
       ? 'transitions CSS douces sur hover et apparition.'
       : animLevel === 'Avancé'
       ? 'fadeUp au scroll via IntersectionObserver, cards 3D hover (perspective + rotateY), navigation sticky animée.'
       : 'particules CSS @keyframes dans le hero, cartes avec flip 3D, texte avec effet typewriter, parallaxe multi-couches, révélations cinématiques au scroll.'
-
   return (
     `Crée un site web ${siteType || 'professionnel'} pour ${who}${where}.${desc} ` +
     `Style ${theme} avec couleur principale ${primaryColor}, ambiance ${ambiance}. ` +
@@ -126,7 +93,7 @@ function StepCard({ n, title, children }: { n: number; title: string; children: 
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: n * 0.05 }}
-      className="glass rounded-2xl p-6 border border-white/5"
+      className="glass rounded-2xl p-5 md:p-6 border border-white/5"
     >
       <div className="flex items-center gap-3 mb-5">
         <span className="w-7 h-7 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-400 text-xs font-bold flex items-center justify-center flex-shrink-0">
@@ -160,19 +127,19 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
 export default function PromptBuilderPage() {
   const router = useRouter()
 
-  const [siteType,      setSiteType]      = useState('')
-  const [projectName,   setProjectName]   = useState('')
-  const [city,          setCity]          = useState('')
-  const [description,   setDescription]  = useState('')
-  const [theme,         setTheme]         = useState('Sombre')
-  const [primaryColor,  setPrimaryColor]  = useState('#7c6ffa')
-  const [ambiance,      setAmbiance]      = useState('Moderne')
-  const [sections,      setSections]      = useState<string[]>(
+  const [siteType,     setSiteType]     = useState('')
+  const [projectName,  setProjectName]  = useState('')
+  const [city,         setCity]         = useState('')
+  const [description,  setDescription]  = useState('')
+  const [theme,        setTheme]        = useState('Sombre')
+  const [primaryColor, setPrimaryColor] = useState('#7c6ffa')
+  const [ambiance,     setAmbiance]     = useState('Moderne')
+  const [sections,     setSections]     = useState<string[]>(
     SECTIONS_OPTIONS.filter((s) => s.default).map((s) => s.label)
   )
-  const [animLevel,     setAnimLevel]     = useState('Avancé')
-  const [copied,        setCopied]        = useState(false)
-  const [showResult,    setShowResult]    = useState(false)
+  const [animLevel,    setAnimLevel]    = useState('Avancé')
+  const [copied,       setCopied]       = useState(false)
+  const [showResult,   setShowResult]   = useState(false)
 
   const prompt = useMemo(
     () => buildPrompt(siteType, projectName, city, description, theme, primaryColor, ambiance, sections, animLevel),
@@ -183,14 +150,9 @@ export default function PromptBuilderPage() {
     setSections((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])
 
   const handleBuild = () => {
-    if (!prompt) {
-      toast.error('Remplis au moins le type de site ou une description')
-      return
-    }
+    if (!prompt) { toast.error('Remplis au moins le type de site ou une description'); return }
     setShowResult(true)
-    setTimeout(() => {
-      document.getElementById('prompt-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 100)
+    setTimeout(() => document.getElementById('prompt-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
   }
 
   const handleCopy = async () => {
@@ -200,54 +162,24 @@ export default function PromptBuilderPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleUse = () => {
-    router.push(`/generate?prompt=${encodeURIComponent(prompt)}`)
-  }
+  const handleUse = () => router.push(`/generate?prompt=${encodeURIComponent(prompt)}`)
 
   return (
     <div className="min-h-screen bg-[#080810] text-white">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 glass border-r border-white/5 flex flex-col p-6 z-40">
-        <Link href="/" className="flex items-center gap-2.5 mb-10">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8L7 12L13 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="text-lg font-bold">Create<span className="gradient-text">It</span></span>
-        </Link>
-        <nav className="flex-1 space-y-1">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                item.active
-                  ? 'bg-violet-500/15 text-violet-300 border border-violet-500/20'
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <span className="text-base">{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
+      <DashboardSidebar activeHref="/prompt-builder" />
 
-      {/* Main */}
-      <main className="ml-64 p-8 pb-24">
+      <main className="md:ml-64 p-4 md:p-8 pb-24 pt-16 md:pt-8">
         <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="mb-10">
-            <h1 className="text-3xl font-black text-white mb-2">
+          <div className="mb-8 md:mb-10">
+            <h1 className="text-2xl md:text-3xl font-black text-white mb-2">
               🪄 Créer un <span className="gradient-text">prompt</span>
             </h1>
-            <p className="text-white/40">
+            <p className="text-white/40 text-sm">
               Configure ton site étape par étape pour obtenir un prompt optimisé.
             </p>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-4 md:space-y-5">
 
             {/* Step 1 — Type */}
             <StepCard n={1} title="Type de site">
@@ -257,14 +189,14 @@ export default function PromptBuilderPage() {
                     key={label}
                     type="button"
                     onClick={() => setSiteType(label === siteType ? '' : label)}
-                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-center transition-all ${
+                    className={`flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border text-center transition-all ${
                       siteType === label
                         ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
                         : 'border-white/5 text-white/40 hover:border-white/15 hover:text-white/70'
                     }`}
                   >
                     <span className="text-xl leading-none">{icon}</span>
-                    <span className="text-[11px] font-medium leading-tight">{label}</span>
+                    <span className="text-[10px] md:text-[11px] font-medium leading-tight">{label}</span>
                   </button>
                 ))}
               </div>
@@ -273,7 +205,7 @@ export default function PromptBuilderPage() {
             {/* Step 2 — Infos */}
             <StepCard n={2} title="Nom, ville & description">
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     type="text"
                     value={projectName}
@@ -302,7 +234,6 @@ export default function PromptBuilderPage() {
             {/* Step 3 — Style */}
             <StepCard n={3} title="Style visuel">
               <div className="space-y-5">
-                {/* Thème */}
                 <div>
                   <p className="text-xs text-white/40 mb-2.5 font-medium">Thème</p>
                   <div className="grid grid-cols-3 gap-2">
@@ -324,7 +255,6 @@ export default function PromptBuilderPage() {
                   </div>
                 </div>
 
-                {/* Couleur principale */}
                 <div>
                   <p className="text-xs text-white/40 mb-2.5 font-medium">Couleur principale</p>
                   <div className="flex items-center gap-3 flex-wrap">
@@ -353,7 +283,6 @@ export default function PromptBuilderPage() {
                   </div>
                 </div>
 
-                {/* Ambiance */}
                 <div>
                   <p className="text-xs text-white/40 mb-2.5 font-medium">Ambiance</p>
                   <div className="flex flex-wrap gap-2">
@@ -376,13 +305,9 @@ export default function PromptBuilderPage() {
                       onClick={() => toggleSection(label)}
                       className="flex items-center gap-2.5 cursor-pointer group py-1.5 px-2.5 rounded-lg hover:bg-white/5 transition-colors"
                     >
-                      <span
-                        className={`w-4 h-4 rounded flex-shrink-0 border flex items-center justify-center transition-all ${
-                          checked
-                            ? 'bg-violet-500 border-violet-500'
-                            : 'border-white/20 group-hover:border-white/40'
-                        }`}
-                      >
+                      <span className={`w-4 h-4 rounded flex-shrink-0 border flex items-center justify-center transition-all ${
+                        checked ? 'bg-violet-500 border-violet-500' : 'border-white/20 group-hover:border-white/40'
+                      }`}>
                         {checked && (
                           <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
                             <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -444,7 +369,7 @@ export default function PromptBuilderPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="glass rounded-2xl p-6 border border-violet-500/20"
+                  className="glass rounded-2xl p-5 md:p-6 border border-violet-500/20"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -461,7 +386,7 @@ export default function PromptBuilderPage() {
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 font-mono leading-relaxed resize-none focus:outline-none mb-4"
                   />
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={handleCopy}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
@@ -470,32 +395,13 @@ export default function PromptBuilderPage() {
                           : 'border-white/10 text-white/70 hover:border-white/20 hover:text-white'
                       }`}
                     >
-                      {copied ? (
-                        <>
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
-                          </svg>
-                          Copié !
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                          </svg>
-                          Copier le prompt
-                        </>
-                      )}
+                      {copied ? '✓ Copié !' : 'Copier le prompt'}
                     </button>
-
                     <button
                       onClick={handleUse}
                       className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-sm font-bold transition-all"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
-                      </svg>
-                      Utiliser ce prompt
+                      ✦ Utiliser ce prompt
                     </button>
                   </div>
                 </motion.div>
