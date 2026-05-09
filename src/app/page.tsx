@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LampContainer } from "@/components/ui/lamp";
 import { SparklesCore } from "@/components/ui/sparkles";
+import TemplatesSection from "@/components/landing/TemplatesSection";
 
 const TYPEWRITER_PROMPTS = [
   "Crée un site pour mon restaurant italien...",
@@ -14,16 +15,6 @@ const TYPEWRITER_PROMPTS = [
   "Crée un site pour mon agence créative...",
 ];
 
-const TEMPLATES = [
-  { label: "Restaurant", icon: "🍕" },
-  { label: "Portfolio", icon: "🎨" },
-  { label: "Agence", icon: "💼" },
-  { label: "E-commerce", icon: "🛍️" },
-  { label: "Blog", icon: "📝" },
-  { label: "SaaS", icon: "🚀" },
-  { label: "Association", icon: "🤝" },
-  { label: "Landing page", icon: "⚡" },
-];
 
 const STATS = [
   { value: 2847, label: "sites créés", suffix: "" },
@@ -336,34 +327,7 @@ export default function HomePage() {
       </section>
 
       {/* Templates */}
-      <section id="templates" className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-14">
-            <h2 className="text-4xl font-black mb-4" style={{ color: "#e2e8f0" }}>Tous types de sites</h2>
-            <p style={{ color: "#64748b" }}>Restaurants, portfolios, SaaS — l&apos;IA s&apos;adapte à tout</p>
-          </motion.div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {TEMPLATES.map((t, i) => (
-              <motion.button
-                key={t.label}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={i * 0.5}
-                onClick={() => { setPrompt(`Crée un site ${t.label.toLowerCase()} moderne et professionnel`); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="p-6 rounded-2xl text-left transition-all duration-200 group"
-                style={{ background: "#0a0a1f", border: "1px solid #1e1b4b" }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#5b21b6"; e.currentTarget.style.boxShadow = "0 0 20px rgba(91,33,182,0.15)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1e1b4b"; e.currentTarget.style.boxShadow = "none"; }}
-              >
-                <div className="text-3xl mb-3">{t.icon}</div>
-                <div className="font-semibold text-sm" style={{ color: "#e2e8f0" }}>{t.label}</div>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      </section>
+      <TemplatesSection onSelect={(p) => { setPrompt(p); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
 
       {/* How it works */}
       <section id="how" className="py-24 px-6 border-t" style={{ background: "#06061a", borderColor: "#0f0f2e" }}>
