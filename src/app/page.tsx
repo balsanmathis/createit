@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LampContainer } from "@/components/ui/lamp";
 import { SparklesCore } from "@/components/ui/sparkles";
+import { DemoSection } from "@/components/landing/DemoSection";
 
 const TYPEWRITER_PROMPTS = [
   "Crée un site pour mon restaurant italien...",
@@ -345,6 +346,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Demo */}
+      <DemoSection />
 
       {/* Pricing */}
       <section id="tarifs" className="py-24 px-6 border-t" style={{ borderColor: "#0f0f2e" }}>
