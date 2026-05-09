@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Toaster } from 'sonner'
+import SessionRefresher from '@/components/SessionRefresher'
 import './globals.css'
 
 const geistSans = Geist({
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="antialiased">
+        <SessionRefresher />
         {children}
         <Toaster
           theme="dark"

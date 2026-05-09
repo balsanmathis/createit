@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 
 interface Props {
   user: User
@@ -47,7 +48,7 @@ export default function SettingsClient({ user, profile, subscription }: Props) {
       const res = await fetch('/api/stripe/create-portal', { method: 'POST' })
       const data = await res.json()
       if (data.url) window.location.href = data.url
-      else toast.error('Erreur lors de l\'ouverture du portail')
+      else toast.error("Erreur lors de l'ouverture du portail")
     } catch {
       toast.error('Erreur réseau')
     } finally {
@@ -57,67 +58,37 @@ export default function SettingsClient({ user, profile, subscription }: Props) {
 
   return (
     <div className="min-h-screen bg-[#080810] text-white">
-      <aside className="fixed left-0 top-0 h-full w-64 glass border-r border-white/5 flex flex-col p-6 z-40">
-        <Link href="/" className="flex items-center gap-2.5 mb-10">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8L7 12L13 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="text-lg font-bold">Create<span className="gradient-text">It</span></span>
-        </Link>
-        <nav className="flex-1 space-y-1">
-          {[
-            { href: '/dashboard',      icon: '⊞', label: 'Dashboard' },
-            { href: '/generate',       icon: '✦', label: 'Générer' },
-            { href: '/prompt-builder', icon: '🪄', label: 'Créer un prompt' },
-            { href: '/settings',       icon: '◎', label: 'Paramètres', active: true },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                item.active
-                  ? 'bg-violet-500/15 text-violet-300 border border-violet-500/20'
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <span className="text-base">{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
+      <DashboardSidebar activeHref="/settings" />
 
-      <main className="ml-64 p-8">
+      <main className="md:ml-64 p-4 md:p-8 pt-16 md:pt-8">
         <div className="max-w-2xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl font-black text-white mb-8">Paramètres</h1>
+            <h1 className="text-2xl md:text-3xl font-black text-white mb-6 md:mb-8">Paramètres</h1>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Profile */}
-              <div className="glass rounded-2xl p-6 border border-white/5">
+              <div className="glass rounded-2xl p-5 md:p-6 border border-white/5">
                 <h2 className="text-lg font-semibold text-white mb-4">Profil</h2>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-lg font-bold">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-lg font-bold flex-shrink-0">
                     {user.email?.[0].toUpperCase()}
                   </div>
-                  <div>
-                    <p className="font-medium text-white">{user.email}</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-white truncate">{user.email}</p>
                     <p className="text-sm text-white/40">ID: {user.id.slice(0, 8)}...</p>
                   </div>
                 </div>
               </div>
 
               {/* Language */}
-              <div className="glass rounded-2xl p-6 border border-white/5">
+              <div className="glass rounded-2xl p-5 md:p-6 border border-white/5">
                 <h2 className="text-lg font-semibold text-white mb-4">Langue / Language</h2>
                 <div className="flex gap-3">
                   {(['fr', 'en'] as const).map((lang) => (
                     <button
                       key={lang}
                       onClick={() => handleLocaleChange(lang)}
-                      className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                      className={`flex-1 py-3 rounded-xl font-medium transition-all text-sm ${
                         locale === lang
                           ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg'
                           : 'glass border border-white/10 text-white/60 hover:text-white hover:border-violet-500/30'
@@ -130,11 +101,11 @@ export default function SettingsClient({ user, profile, subscription }: Props) {
               </div>
 
               {/* Subscription */}
-              <div className="glass rounded-2xl p-6 border border-white/5">
+              <div className="glass rounded-2xl p-5 md:p-6 border border-white/5">
                 <h2 className="text-lg font-semibold text-white mb-4">Abonnement</h2>
                 {subscription ? (
                   <div>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
                       <div>
                         <p className="font-semibold text-white capitalize">{subscription.plan}</p>
                         <p className="text-sm text-white/40">
@@ -150,14 +121,14 @@ export default function SettingsClient({ user, profile, subscription }: Props) {
                       <button
                         onClick={handleManageSubscription}
                         disabled={openingPortal}
-                        className="glass border border-violet-500/30 text-violet-300 hover:text-violet-200 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+                        className="glass border border-violet-500/30 text-violet-300 hover:text-violet-200 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 self-start sm:self-auto"
                       >
                         {openingPortal ? 'Ouverture...' : 'Gérer →'}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <p className="text-white/50">Aucun abonnement actif</p>
                     <Link
                       href="/pricing"
@@ -170,7 +141,7 @@ export default function SettingsClient({ user, profile, subscription }: Props) {
               </div>
 
               {/* Danger zone */}
-              <div className="glass rounded-2xl p-6 border border-red-500/10">
+              <div className="glass rounded-2xl p-5 md:p-6 border border-red-500/10">
                 <h2 className="text-lg font-semibold text-white mb-4">Zone dangereuse</h2>
                 <button
                   onClick={handleLogout}

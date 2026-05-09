@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LampContainer } from "@/components/ui/lamp";
 import { SparklesCore } from "@/components/ui/sparkles";
-import { DemoSection } from "@/components/landing/DemoSection";
 
 const TYPEWRITER_PROMPTS = [
   "Crée un site pour mon restaurant italien...",
@@ -82,6 +81,7 @@ export default function HomePage() {
   const [typeIdx, setTypeIdx] = useState(0);
   const [typeText, setTypeText] = useState("");
   const [navOpaque, setNavOpaque] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [cursor, setCursor] = useState({ x: -400, y: -400 });
   const [counts, setCounts] = useState(STATS.map(() => 0));
   const statsRef = useRef<HTMLDivElement>(null);
@@ -198,7 +198,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <Link href="/auth/login" className="text-sm px-4 py-2 rounded-lg border transition-colors hover:text-white" style={{ color: "#94a3b8", borderColor: "#1e1b4b" }}>
               Se connecter
             </Link>
@@ -209,8 +209,49 @@ export default function HomePage() {
               Commencer gratuitement
             </Link>
           </div>
+
+          {/* Mobile burger */}
+          <button
+            onClick={() => setMobileNavOpen(o => !o)}
+            className="md:hidden w-10 h-10 flex items-center justify-center"
+            style={{ color: "#94a3b8" }}
+            aria-label="Menu"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {mobileNavOpen
+                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+              }
+            </svg>
+          </button>
         </div>
       </nav>
+
+      {/* Mobile nav menu */}
+      {mobileNavOpen && (
+        <div
+          className="md:hidden fixed top-16 left-0 right-0 z-40 px-6 py-4 flex flex-col gap-3"
+          style={{ background: "rgba(4,4,15,0.97)", borderBottom: "1px solid rgba(30,27,75,0.5)", backdropFilter: "blur(12px)" }}
+        >
+          {["Fonctionnalités", "Templates", "Tarifs", "Docs"].map((l) => (
+            <a
+              key={l}
+              href={`#${l.toLowerCase()}`}
+              onClick={() => setMobileNavOpen(false)}
+              className="text-sm py-2 border-b"
+              style={{ color: "#94a3b8", borderColor: "#0f0f2e" }}
+            >{l}</a>
+          ))}
+          <div className="flex gap-3 pt-2">
+            <Link href="/auth/login" onClick={() => setMobileNavOpen(false)} className="flex-1 text-center text-sm py-2.5 rounded-lg border" style={{ color: "#94a3b8", borderColor: "#1e1b4b" }}>
+              Se connecter
+            </Link>
+            <Link href="/auth/signup" onClick={() => setMobileNavOpen(false)} className="flex-1 text-center text-sm font-semibold text-white py-2.5 rounded-full" style={{ background: "#5b21b6" }}>
+              Commencer
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Hero — LampContainer + Sparkles */}
       <div className="relative">
@@ -232,7 +273,7 @@ export default function HomePage() {
             initial="hidden"
             animate="visible"
           >
-            <motion.h1 variants={fadeUp} custom={0} className="text-6xl md:text-7xl font-black leading-[0.9] tracking-tight mb-6">
+            <motion.h1 variants={fadeUp} custom={0} className="text-4xl sm:text-6xl md:text-7xl font-black leading-[0.9] tracking-tight mb-6">
               <span className="bg-gradient-to-r from-slate-200 via-[#7c3aed] to-[#1d4ed8] bg-clip-text text-transparent">
                 Créez des sites web
               </span>
@@ -282,7 +323,7 @@ export default function HomePage() {
 
       {/* Stats */}
       <section ref={statsRef} className="py-16 border-y" style={{ borderColor: "#0f0f2e" }}>
-        <div className="max-w-4xl mx-auto px-6 grid grid-cols-3 gap-8 text-center">
+        <div className="max-w-4xl mx-auto px-6 grid grid-cols-3 gap-4 md:gap-8 text-center">
           {STATS.map((stat, i) => (
             <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
               <div className="text-4xl font-black mb-1" style={{ color: "#e2e8f0" }}>
@@ -346,9 +387,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Demo */}
-      <DemoSection />
 
       {/* Pricing */}
       <section id="tarifs" className="py-24 px-6 border-t" style={{ borderColor: "#0f0f2e" }}>

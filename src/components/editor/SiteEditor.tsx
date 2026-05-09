@@ -415,22 +415,22 @@ export default function SiteEditor({ site }: Props) {
     <div className="h-screen bg-[#080810] text-white flex flex-col overflow-hidden">
 
       {/* ── Top bar ── */}
-      <div className="h-14 glass border-b border-white/5 flex items-center justify-between px-4 flex-shrink-0 z-30">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-white/50 hover:text-white transition-colors">
+      <div className="h-14 glass border-b border-white/5 flex items-center justify-between px-3 md:px-4 flex-shrink-0 z-30 gap-2">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          <Link href="/dashboard" className="text-white/50 hover:text-white transition-colors flex-shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
             </svg>
           </Link>
-          <div className="h-5 w-px bg-white/10" />
-          <h1 className="text-sm font-semibold text-white truncate max-w-xs">{site.name}</h1>
+          <div className="hidden md:block h-5 w-px bg-white/10" />
+          <h1 className="text-sm font-semibold text-white truncate max-w-[120px] md:max-w-xs">{site.name}</h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
           {/* Edit mode toggle */}
           <button
             onClick={toggleEditMode}
-            className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-all ${
+            className={`flex items-center gap-1.5 text-sm px-2 md:px-3 py-1.5 rounded-lg border transition-all ${
               editMode
                 ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
                 : 'glass border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white'
@@ -440,40 +440,40 @@ export default function SiteEditor({ site }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
             </svg>
-            {editMode ? 'Édition ON' : 'Édition OFF'}
+            <span className="hidden sm:inline">{editMode ? 'Édition ON' : 'Édition OFF'}</span>
           </button>
 
           {/* Fullscreen */}
           <button
             onClick={handleFullscreen}
             title="Ouvrir en plein écran"
-            className="flex items-center gap-1.5 text-sm glass px-3 py-1.5 rounded-lg border border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white transition-all"
+            className="flex items-center gap-1.5 text-sm glass px-2 md:px-3 py-1.5 rounded-lg border border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white transition-all"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"/>
             </svg>
-            Plein écran
+            <span className="hidden md:inline">Plein écran</span>
           </button>
 
           {/* Download */}
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="flex items-center gap-1.5 text-sm glass px-3 py-1.5 rounded-lg border border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white transition-all disabled:opacity-50"
+            className="hidden sm:flex items-center gap-1.5 text-sm glass px-2 md:px-3 py-1.5 rounded-lg border border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white transition-all disabled:opacity-50"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
-            {downloading ? 'Préparation…' : 'Télécharger'}
+            <span className="hidden md:inline">{downloading ? 'Préparation…' : 'Télécharger'}</span>
           </button>
 
           {/* Save */}
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 text-sm bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-4 py-1.5 rounded-lg text-white font-medium transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 text-sm bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-3 md:px-4 py-1.5 rounded-lg text-white font-medium transition-all disabled:opacity-50"
           >
             {saving ? (
               <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -485,7 +485,7 @@ export default function SiteEditor({ site }: Props) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
               </svg>
             )}
-            {saving ? 'Sauvegarde…' : 'Sauvegarder'}
+            <span className="hidden sm:inline">{saving ? 'Sauvegarde…' : 'Sauvegarder'}</span>
           </button>
         </div>
       </div>

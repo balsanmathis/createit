@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import Link from 'next/link'
+import { toast } from 'sonner'
 
 const PLANS = [
   {
@@ -91,6 +92,34 @@ interface PricingSectionProps {
 }
 
 export default function PricingSection({ locale = 'fr' }: PricingSectionProps) {
+  const [loading, setLoading] = useState<string | null>(null)
+
+  const handleCheckout = async (planKey: string) => {
+    setLoading(planKey)
+    try {
+      const res = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planKey }),
+      })
+      const data = await res.json()
+
+      if (res.status === 401) {
+        window.location.href = `/auth/login?redirect=/pricing`
+        return
+      }
+      if (!res.ok || !data.url) {
+        toast.error(data.error || (locale === 'fr' ? 'Erreur lors du checkout' : 'Checkout error'))
+        return
+      }
+      window.location.href = data.url
+    } catch {
+      toast.error(locale === 'fr' ? 'Erreur réseau' : 'Network error')
+    } finally {
+      setLoading(null)
+    }
+  }
+
   return (
     <section id="pricing" className="py-32 px-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(124,109,250,0.07)_0%,transparent_60%)]" />
@@ -164,16 +193,25 @@ export default function PricingSection({ locale = 'fr' }: PricingSectionProps) {
                 ))}
               </ul>
 
-              <Link
-                href={`/auth/signup?plan=${plan.key}`}
-                className={`w-full text-center py-3 rounded-xl font-semibold transition-all duration-200 ${
+              <button
+                onClick={() => handleCheckout(plan.key)}
+                disabled={loading === plan.key}
+                className={`w-full text-center py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed ${
                   plan.popular
                     ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg hover:shadow-violet-500/25'
                     : 'glass border border-white/10 hover:border-violet-500/30 text-white hover:text-violet-200'
                 }`}
               >
-                {locale === 'fr' ? 'Commencer' : 'Get started'}
-              </Link>
+                {loading === plan.key && (
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                )}
+                {loading === plan.key
+                  ? (locale === 'fr' ? 'Chargement...' : 'Loading...')
+                  : (locale === 'fr' ? 'Commencer' : 'Get started')}
+              </button>
             </motion.div>
           ))}
         </div>
