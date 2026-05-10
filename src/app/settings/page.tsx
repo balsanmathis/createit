@@ -3,17 +3,25 @@ import { createClient } from '@/lib/supabase/server'
 import SettingsClient from './SettingsClient'
 
 export default async function SettingsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  if (!user) redirect('/auth/login')
+    if (authError || !user) redirect('/auth/login')
 
-  const { data: profile } = await supabase.from('users').select('*').eq('id', user.id).single()
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', user.id)
-    .single()
+    const [profileResult, subscriptionResult] = await Promise.all([
+      supabase.from('users').select('*').eq('id', user.id).single(),
+      supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
+    ])
 
-  return <SettingsClient user={user} profile={profile} subscription={subscription} />
+    return (
+      <SettingsClient
+        user={user}
+        profile={profileResult.data}
+        subscription={subscriptionResult.data}
+      />
+    )
+  } catch {
+    redirect('/auth/login')
+  }
 }

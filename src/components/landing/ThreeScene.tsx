@@ -85,7 +85,7 @@ export default function ThreeScene() {
     scene.add(particles)
 
     // Floating orbs
-    const orbData: { mesh: THREE.Mesh; speed: number; offset: number }[] = []
+    const orbData: { mesh: THREE.Mesh; geo: THREE.SphereGeometry; mat: THREE.MeshStandardMaterial; speed: number; offset: number }[] = []
     const orbColors = [0x7c6dfa, 0xa78bfa, 0x6366f1, 0x8b5cf6]
     for (let i = 0; i < 5; i++) {
       const geo = new THREE.SphereGeometry(0.08 + Math.random() * 0.12, 16, 16)
@@ -104,7 +104,7 @@ export default function ThreeScene() {
         Math.sin(angle) * (2.5 + Math.random())
       )
       scene.add(orb)
-      orbData.push({ mesh: orb, speed: 0.3 + Math.random() * 0.5, offset: i * 1.2 })
+      orbData.push({ mesh: orb, geo, mat, speed: 0.3 + Math.random() * 0.5, offset: i * 1.2 })
     }
 
     // Lights
@@ -152,12 +152,10 @@ export default function ThreeScene() {
       innerSphere.rotation.y = -t * 0.05
       particles.rotation.y = t * 0.02
 
-      // Mouse parallax
       camera.position.x += (mouseX * 0.8 - camera.position.x) * 0.03
       camera.position.y += (mouseY * 0.5 - camera.position.y) * 0.03
       camera.lookAt(scene.position)
 
-      // Animate orbs
       orbData.forEach(({ mesh, speed, offset }) => {
         mesh.position.y += Math.sin(t * speed + offset) * 0.005
         mesh.rotation.y = t * speed
@@ -171,7 +169,18 @@ export default function ThreeScene() {
       cancelAnimationFrame(animId)
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('resize', handleResize)
+
+      // Dispose all Three.js resources to prevent WebGL memory leaks
+      sphereGeometry.dispose()
+      sphereMaterial.dispose()
+      innerGeo.dispose()
+      innerMat.dispose()
+      particleGeo.dispose()
+      particleMat.dispose()
+      orbData.forEach(({ geo, mat }) => { geo.dispose(); mat.dispose() })
+
       renderer.dispose()
+      renderer.forceContextLoss()
       if (mount.contains(renderer.domElement)) {
         mount.removeChild(renderer.domElement)
       }

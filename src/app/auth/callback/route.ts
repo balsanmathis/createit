@@ -8,7 +8,11 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/dashboard'
   const base = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
 
-  if (code) {
+  if (!code) {
+    return NextResponse.redirect(`${base}/auth/login?error=missing_code`)
+  }
+
+  try {
     const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,7 +33,11 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${base}${next}`)
     }
-  }
 
-  return NextResponse.redirect(`${base}/auth/login?error=callback_error`)
+    console.error('[auth/callback] exchange error:', error.message)
+    return NextResponse.redirect(`${base}/auth/login?error=exchange_failed`)
+  } catch (err) {
+    console.error('[auth/callback] unexpected error:', err)
+    return NextResponse.redirect(`${base}/auth/login?error=callback_error`)
+  }
 }

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PROTECTED_ROUTES = ['/dashboard', '/generate', '/sites', '/settings']
+const PROTECTED_ROUTES = ['/dashboard', '/generate', '/sites', '/settings', '/prompt-builder']
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -25,7 +25,13 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data: { user: u }, error } = await supabase.auth.getUser()
+    if (!error) user = u
+  } catch {
+    // non-fatal — treat as unauthenticated
+  }
 
   const pathname = request.nextUrl.pathname
   const isProtected = PROTECTED_ROUTES.some((route) => pathname.startsWith(route))

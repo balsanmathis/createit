@@ -8,19 +8,24 @@ interface Props {
 
 export default async function SitePage({ params }: Props) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/auth/login')
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  const { data: site } = await supabase
-    .from('sites')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single()
+    if (authError || !user) redirect('/auth/login')
 
-  if (!site) notFound()
+    const { data: site, error: siteError } = await supabase
+      .from('sites')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single()
 
-  return <SiteEditor site={site} />
+    if (siteError || !site) notFound()
+
+    return <SiteEditor site={site} />
+  } catch {
+    redirect('/auth/login')
+  }
 }
