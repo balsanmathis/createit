@@ -155,18 +155,15 @@ body {
 /* Medical preview */
 @keyframes pulse-med{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.8}}
 
-/* Carousel scroll */
+/* Carousel scroll — translate3d forces GPU layer, no gap (use margin-right on cards) */
 @keyframes scrollCarousel {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
 }
 @keyframes scrollCarouselReverse {
-  0%   { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
 }
-
-/* Fitness neon glow */
-@keyframes neon-glow { 0%,100%{box-shadow:0 0 4px rgba(57,255,20,0.4)} 50%{box-shadow:0 0 12px rgba(57,255,20,0.9)} }
 
 /* ─── Utility classes ─────────────────────────────────────────── */
 
@@ -180,14 +177,16 @@ body {
 
 .carousel-track {
   display: flex;
-  gap: 16px;
   width: max-content;
-  animation: scrollCarousel 40s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  animation: scrollCarousel 38s linear infinite;
 }
 
 .carousel-track-reverse {
   display: flex;
-  gap: 16px;
   width: max-content;
-  animation: scrollCarouselReverse 45s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  animation: scrollCarouselReverse 44s linear infinite;
 }
