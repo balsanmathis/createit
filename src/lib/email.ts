@@ -1,7 +1,13 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = process.env.RESEND_FROM_EMAIL ?? 'CreateIt <hello@create-it.app>'
+
+function getResend(): Resend {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not configured')
+  }
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 export function generateWelcomeCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -109,6 +115,7 @@ export async function sendWelcomeEmail(to: string, promoCode: string): Promise<v
 </body>
 </html>`
 
+  const resend = getResend()
   await resend.emails.send({
     from: FROM,
     to,
