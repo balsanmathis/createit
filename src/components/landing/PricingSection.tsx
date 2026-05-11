@@ -93,6 +93,7 @@ interface PricingSectionProps {
 
 export default function PricingSection({ locale = 'fr' }: PricingSectionProps) {
   const [loading, setLoading] = useState<string | null>(null)
+  const [promoCode, setPromoCode] = useState('')
 
   const handleCheckout = async (planKey: string) => {
     setLoading(planKey)
@@ -100,7 +101,7 @@ export default function PricingSection({ locale = 'fr' }: PricingSectionProps) {
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planKey }),
+        body: JSON.stringify({ plan: planKey, promoCode: promoCode.trim() || undefined }),
       })
       const data = await res.json()
 
@@ -146,6 +147,28 @@ export default function PricingSection({ locale = 'fr' }: PricingSectionProps) {
               : 'Choose the plan that fits your needs. No commitment, cancel anytime.'}
           </p>
         </motion.div>
+
+        {/* Promo code input */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center gap-3 rounded-2xl px-5 py-3.5 max-w-sm w-full" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <svg className="w-4 h-4 shrink-0" style={{ color: 'rgba(124,58,237,0.7)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            <input
+              type="text"
+              value={promoCode}
+              onChange={e => setPromoCode(e.target.value.toUpperCase())}
+              placeholder={locale === 'fr' ? 'Code promo (optionnel)' : 'Promo code (optional)'}
+              className="flex-1 bg-transparent outline-none text-sm"
+              style={{ color: '#e2e8f0' }}
+            />
+            {promoCode && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.2)', color: '#c4b5fd' }}>
+                ✓
+              </span>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {PLANS.map((plan, i) => (

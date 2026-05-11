@@ -7,6 +7,8 @@ import type { Site } from '@/types'
 
 interface Props {
   site: Site
+  tokensUsed: number   // -1 = admin (unlimited)
+  tokensLimit: number  // -1 = admin (unlimited)
 }
 
 // ─── Offline sanitizer ────────────────────────────────────────────────────────
@@ -305,13 +307,55 @@ function ImagePopup({ currentSrc, onConfirm, onClose }: ImagePopupProps) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function SiteEditor({ site }: Props) {
+export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
   const [html, setHtml] = useState(site.html_content)
   const [editMode, setEditMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [imgPopup, setImgPopup] = useState<{ src: string } | null>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  // AI Modify panel
+  const [aiPanelOpen, setAiPanelOpen] = useState(false)
+  const [aiInstruction, setAiInstruction] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [currentTokensUsed, setCurrentTokensUsed] = useState(tokensUsed)
+  const currentTokensLimit = tokensLimit
+
+  const TOKEN_COST_MODIFY = 8_000
+  const isAdmin = tokensUsed === -1
+  const tokensRemaining = isAdmin ? Infinity : Math.max(0, currentTokensLimit - currentTokensUsed)
+  const canModify = isAdmin || tokensRemaining >= TOKEN_COST_MODIFY
+
+  const handleAiModify = async () => {
+    if (!aiInstruction.trim() || aiLoading) return
+    setAiLoading(true)
+    try {
+      const res = await fetch(`/api/sites/${site.id}/ai-modify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instruction: aiInstruction.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.needsUpgrade) {
+          toast.error(data.error, { duration: 6000, action: { label: 'Choisir un plan', onClick: () => window.location.href = '/pricing' } })
+        } else {
+          toast.error(data.error || 'Erreur lors de la modification')
+        }
+        return
+      }
+      setHtml(data.html)
+      writeToIframe(data.html)
+      setCurrentTokensUsed(data.tokensUsed)
+      setAiInstruction('')
+      toast.success('Site modifié avec succès !')
+    } catch {
+      toast.error('Erreur lors de la modification')
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   // Write HTML into the iframe via srcdoc + scroll fix override
   const writeToIframe = useCallback((content: string) => {
@@ -427,6 +471,19 @@ export default function SiteEditor({ site }: Props) {
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+          {/* AI Modify */}
+          <button
+            onClick={() => setAiPanelOpen(o => !o)}
+            className={`flex items-center gap-1.5 text-sm px-2 md:px-3 py-1.5 rounded-lg border transition-all ${
+              aiPanelOpen
+                ? 'bg-violet-600/30 border-violet-500/50 text-violet-200'
+                : 'glass border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white'
+            }`}
+          >
+            <span className="text-sm">✨</span>
+            <span className="hidden sm:inline">Modifier avec l&apos;IA</span>
+          </button>
+
           {/* Edit mode toggle */}
           <button
             onClick={toggleEditMode}
@@ -496,6 +553,126 @@ export default function SiteEditor({ site }: Props) {
           <p className="text-xs text-violet-300/80">
             ✏️ Mode édition actif — double-cliquez sur un texte ou une image pour le modifier
           </p>
+        </div>
+      )}
+
+      {/* ── AI Modify panel ── */}
+      {aiPanelOpen && (
+        <div className="absolute right-0 top-14 bottom-0 w-80 glass border-l border-white/10 flex flex-col z-20 shadow-2xl" style={{ background: 'rgba(8,8,20,0.97)' }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <span>✨</span>
+              <span className="text-sm font-bold text-white">Modifier avec l&apos;IA</span>
+            </div>
+            <button onClick={() => setAiPanelOpen(false)} className="text-white/40 hover:text-white transition-colors">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Token balance */}
+            {!isAdmin && (
+              <div className="glass rounded-xl p-3 border border-white/5">
+                <p className="text-xs text-white/40 mb-1.5">Tokens restants</p>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm font-bold text-white">
+                    {tokensRemaining.toLocaleString('fr-FR')}
+                  </span>
+                  <span className="text-xs text-white/30">/ {currentTokensLimit.toLocaleString('fr-FR')}</span>
+                </div>
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.max(0, 100 - (currentTokensUsed / currentTokensLimit) * 100)}%`,
+                      background: tokensRemaining < TOKEN_COST_MODIFY * 2
+                        ? 'linear-gradient(90deg, #ef4444, #f97316)'
+                        : 'linear-gradient(90deg, #7c6dfa, #4f46e5)',
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-white/25 mt-1.5">
+                  Coût : {TOKEN_COST_MODIFY.toLocaleString('fr-FR')} tokens par modification
+                </p>
+              </div>
+            )}
+
+            {isAdmin && (
+              <div className="glass rounded-xl p-3 border border-amber-500/20">
+                <p className="text-xs text-amber-300">⚡ Mode admin — modifications illimitées</p>
+              </div>
+            )}
+
+            {/* Instruction input */}
+            <div>
+              <label className="block text-xs font-medium text-white/50 mb-2">
+                Décrivez les modifications souhaitées
+              </label>
+              <textarea
+                value={aiInstruction}
+                onChange={e => setAiInstruction(e.target.value)}
+                placeholder={"Change la couleur principale en bleu\nAjoute une section témoignages\nRends le design plus moderne\nAjoute un formulaire de contact"}
+                rows={6}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/20 focus:border-violet-500/40 focus:outline-none transition-colors resize-none"
+                disabled={aiLoading}
+              />
+            </div>
+
+            {/* Examples */}
+            <div className="space-y-1.5">
+              <p className="text-xs text-white/30 font-medium">Exemples rapides</p>
+              {[
+                'Change la couleur principale en bleu nuit',
+                'Ajoute une section témoignages avec 3 avis',
+                'Rends le design plus minimaliste',
+                'Ajoute un footer avec les liens légaux',
+              ].map(ex => (
+                <button
+                  key={ex}
+                  onClick={() => setAiInstruction(ex)}
+                  className="block w-full text-left text-xs px-3 py-2 rounded-lg border border-white/5 text-white/40 hover:text-white/70 hover:border-violet-500/20 transition-all"
+                >
+                  {ex}
+                </button>
+              ))}
+            </div>
+
+            {!canModify && !isAdmin && (
+              <div className="glass rounded-xl p-3 border border-red-500/20">
+                <p className="text-xs text-red-400 mb-2">Tokens insuffisants pour une modification.</p>
+                <a href="/pricing" className="block text-center text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 py-2 rounded-lg">
+                  Choisir un plan →
+                </a>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-white/10">
+            <button
+              onClick={handleAiModify}
+              disabled={!aiInstruction.trim() || aiLoading || (!isAdmin && !canModify)}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all text-sm"
+            >
+              {aiLoading ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Modification en cours…
+                </>
+              ) : (
+                <>✨ Appliquer les modifications</>
+              )}
+            </button>
+            {!isAdmin && (
+              <p className="text-center text-xs text-white/20 mt-2">
+                Coûte {TOKEN_COST_MODIFY.toLocaleString('fr-FR')} tokens
+              </p>
+            )}
+          </div>
         </div>
       )}
 

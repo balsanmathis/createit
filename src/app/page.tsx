@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { createBrowserClient } from "@supabase/ssr";
 import { LampContainer } from "@/components/ui/lamp";
 import { SparklesCore } from "@/components/ui/sparkles";
 import TemplatesSection from "@/components/landing/TemplatesSection";
@@ -30,28 +31,40 @@ const STEPS = [
 
 const PRICING = [
   {
+    name: "Gratuit",
+    price: 0,
+    tokens: "16 000",
+    features: ["16 000 tokens offerts", "1 site test", "Export HTML/ZIP", "Éditeur visuel"],
+    cta: "Commencer gratuitement",
+    highlight: false,
+    href: "/auth/signup",
+  },
+  {
     name: "Starter",
     price: 20,
-    sites: 10,
-    features: ["10 sites/mois", "Export HTML/ZIP", "Éditeur visuel", "Support email"],
+    tokens: "160 000",
+    features: ["160 000 tokens/mois", "Export HTML/ZIP", "Éditeur visuel", "Support email"],
     cta: "Commencer",
     highlight: false,
+    href: "/pricing",
   },
   {
     name: "Pro",
     price: 45,
-    sites: 30,
-    features: ["30 sites/mois", "Export HTML/ZIP", "Éditeur visuel avancé", "Templates premium", "Support prioritaire"],
+    tokens: "480 000",
+    features: ["480 000 tokens/mois", "Export HTML/ZIP", "Éditeur visuel avancé", "Templates premium", "Support prioritaire"],
     cta: "Choisir Pro",
     highlight: true,
+    href: "/pricing",
   },
   {
     name: "Agency",
     price: 250,
-    sites: 200,
-    features: ["200 sites/mois", "Export HTML/ZIP", "Marque blanche", "API access", "Support dédié"],
+    tokens: "3 200 000",
+    features: ["3 200 000 tokens/mois", "Export HTML/ZIP", "Marque blanche", "API access", "Support dédié"],
     cta: "Contacter",
     highlight: false,
+    href: "/pricing",
   },
 ];
 
@@ -75,8 +88,23 @@ export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [cursor, setCursor] = useState({ x: -400, y: -400 });
   const [counts, setCounts] = useState(STATS.map(() => 0));
+  const [bannerVisible, setBannerVisible] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const statsRef = useRef<HTMLDivElement>(null);
   const statsAnimated = useRef(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("promo_banner_dismissed") !== "1") {
+      setBannerVisible(true);
+    }
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsAuthenticated(!!user);
+    });
+  }, []);
 
   useEffect(() => {
     const move = (e: MouseEvent) => setCursor({ x: e.clientX, y: e.clientY });
@@ -129,11 +157,51 @@ export default function HomePage() {
 
   const handleGenerate = () => {
     if (!prompt.trim()) return;
-    router.push(`/generate?prompt=${encodeURIComponent(prompt.trim())}`);
+    if (isAuthenticated) {
+      router.push(`/generate?prompt=${encodeURIComponent(prompt.trim())}`);
+    } else {
+      router.push(`/try?prompt=${encodeURIComponent(prompt.trim())}`);
+    }
   };
 
   return (
     <div className="min-h-screen text-white overflow-x-hidden" style={{ background: "#04040f" }}>
+      {/* Promo banner */}
+      {bannerVisible && (
+        <div
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-10 h-10"
+          style={{ background: "linear-gradient(90deg, #3b0764, #1e1b4b)" }}
+        >
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.9)" }}>
+            🎁 Inscrivez-vous maintenant et obtenez{" "}
+            <span className="font-bold" style={{ color: "#c4b5fd" }}>-20% à vie</span>{" "}
+            sur votre premier plan
+          </p>
+          <Link
+            href="/auth/signup"
+            className="text-xs font-semibold text-white px-3 py-1 rounded-full transition-colors"
+            style={{ background: "#5b21b6" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#6d28d9")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#5b21b6")}
+          >
+            En profiter →
+          </Link>
+          <button
+            onClick={() => {
+              localStorage.setItem("promo_banner_dismissed", "1");
+              setBannerVisible(false);
+            }}
+            className="absolute right-4 text-lg leading-none transition-colors"
+            style={{ color: "rgba(255,255,255,0.4)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "white")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+            aria-label="Fermer"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Cursor glow */}
       <div
         className="pointer-events-none fixed z-50"
@@ -163,8 +231,9 @@ export default function HomePage() {
 
       {/* Navbar */}
       <nav
-        className="fixed top-0 left-0 right-0 z-40 transition-all duration-300"
+        className="fixed left-0 right-0 z-40 transition-all duration-300"
         style={{
+          top: bannerVisible ? "40px" : "0px",
           background: navOpaque ? "rgba(4,4,15,0.85)" : "transparent",
           backdropFilter: navOpaque ? "blur(12px)" : "none",
           borderBottom: navOpaque ? "1px solid rgba(30,27,75,0.5)" : "1px solid transparent",
@@ -354,7 +423,7 @@ export default function HomePage() {
             <h2 className="text-4xl font-black mb-4" style={{ color: "#e2e8f0" }}>Tarifs simples</h2>
             <p style={{ color: "#64748b" }}>Sans engagement, sans surprise</p>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {PRICING.map((plan, i) => (
               <motion.div
                 key={plan.name}
@@ -363,7 +432,7 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className="relative rounded-2xl p-8"
+                className="relative rounded-2xl p-7"
                 style={{
                   background: "#080820",
                   border: plan.highlight ? "1px solid #5b21b6" : "1px solid #1e1b4b",
@@ -376,13 +445,19 @@ export default function HomePage() {
                     Populaire
                   </div>
                 )}
-                <h3 className="text-lg font-bold mb-1" style={{ color: "#e2e8f0" }}>{plan.name}</h3>
+                <h3 className="text-base font-bold mb-1" style={{ color: "#e2e8f0" }}>{plan.name}</h3>
                 <div className="flex items-end gap-1 mb-1">
-                  <span className="text-4xl font-black" style={{ color: "#e2e8f0" }}>{plan.price}€</span>
-                  <span className="mb-1" style={{ color: "#64748b" }}>/mois</span>
+                  {plan.price === 0 ? (
+                    <span className="text-3xl font-black" style={{ color: "#e2e8f0" }}>Gratuit</span>
+                  ) : (
+                    <>
+                      <span className="text-3xl font-black" style={{ color: "#e2e8f0" }}>{plan.price}€</span>
+                      <span className="mb-1 text-sm" style={{ color: "#64748b" }}>/mois</span>
+                    </>
+                  )}
                 </div>
-                <p className="text-sm mb-6" style={{ color: "#7c3aed" }}>{plan.sites} sites/mois</p>
-                <ul className="space-y-3 mb-8">
+                <p className="text-xs mb-5 font-medium" style={{ color: "#7c3aed" }}>{plan.tokens} tokens{plan.price > 0 ? "/mois" : " offerts"}</p>
+                <ul className="space-y-2.5 mb-7">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm" style={{ color: "#94a3b8" }}>
                       <span style={{ color: "#7c3aed" }}>✓</span>{f}
@@ -390,8 +465,8 @@ export default function HomePage() {
                   ))}
                 </ul>
                 <Link
-                  href="/auth/signup"
-                  className="block text-center font-semibold py-3 rounded-xl transition-all text-white"
+                  href={plan.href}
+                  className="block text-center font-semibold py-2.5 rounded-xl transition-all text-white text-sm"
                   style={{ background: plan.highlight ? "#5b21b6" : "transparent", border: plan.highlight ? "none" : "1px solid #1e1b4b" }}
                   onMouseEnter={(e) => { if (plan.highlight) e.currentTarget.style.background = "#6d28d9"; else e.currentTarget.style.borderColor = "#5b21b6"; }}
                   onMouseLeave={(e) => { if (plan.highlight) e.currentTarget.style.background = "#5b21b6"; else e.currentTarget.style.borderColor = "#1e1b4b"; }}

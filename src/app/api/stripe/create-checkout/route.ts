@@ -9,11 +9,24 @@ export async function POST(request: Request) {
 
     if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
-    const { plan } = await request.json()
+    const { plan, promoCode } = await request.json()
     const planConfig = PLANS[plan as keyof typeof PLANS]
     if (!planConfig) return NextResponse.json({ error: 'Plan invalide' }, { status: 400 })
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+
+    // Look up promotion code in Stripe if provided
+    let discounts: { promotion_code: string }[] | undefined
+    if (promoCode?.trim()) {
+      try {
+        const promoCodes = await stripe.promotionCodes.list({ code: promoCode.trim(), limit: 1, active: true })
+        if (promoCodes.data.length > 0) {
+          discounts = [{ promotion_code: promoCodes.data[0].id }]
+        }
+      } catch {
+        // Invalid promo code — ignore, let Stripe handle it
+      }
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -22,6 +35,8 @@ export async function POST(request: Request) {
       success_url: `${appUrl}/dashboard?success=1`,
       cancel_url: `${appUrl}/pricing?canceled=1`,
       customer_email: user.email,
+      allow_promotion_codes: !discounts,  // show Stripe's own promo field if no pre-applied code
+      ...(discounts ? { discounts } : {}),
       metadata: { user_id: user.id, plan },
       subscription_data: { metadata: { user_id: user.id, plan } },
     })

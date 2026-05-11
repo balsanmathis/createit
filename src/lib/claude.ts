@@ -84,3 +84,40 @@ export async function generateWebsite(prompt: string): Promise<string> {
 
   return html.trim()
 }
+
+const MODIFY_SYSTEM = `Tu es un expert développeur web. Tu reçois un site HTML complet et des instructions de modification.
+RÈGLES :
+- Applique EXACTEMENT les modifications demandées
+- Retourne UNIQUEMENT le HTML complet (commence par <!DOCTYPE html>, termine par </html>)
+- Conserve tout le contenu existant sauf ce qui est explicitement modifié
+- Garde les mêmes styles, animations et structure sauf si demandé autrement
+- Le HTML retourné doit être complet et valide`
+
+export async function modifyWebsite(currentHtml: string, instruction: string): Promise<string> {
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+
+  // Limit input to prevent context overflow while keeping enough for context
+  const htmlSnippet = currentHtml.length > 80_000
+    ? currentHtml.slice(0, 40_000) + '\n<!-- ... -->\n' + currentHtml.slice(-10_000)
+    : currentHtml
+
+  const { text, stopReason } = await streamCall(anthropic, {
+    model: 'claude-sonnet-4-6',
+    max_tokens: 16000,
+    system: MODIFY_SYSTEM,
+    messages: [{
+      role: 'user',
+      content: `HTML actuel :\n\`\`\`html\n${htmlSnippet}\n\`\`\`\n\nModifications à apporter : ${instruction}`,
+    }],
+  })
+
+  let html = text
+  console.log(`[claude:modify] ${html.length} chars | stop=${stopReason} | closed=${isClosed(html)}`)
+
+  if (!isClosed(html)) {
+    if (!/<\/body>/i.test(html)) html += '\n</body>'
+    html += '\n</html>'
+  }
+
+  return html.trim()
+}

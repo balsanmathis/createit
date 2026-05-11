@@ -24,12 +24,21 @@ export default function SignupPage() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const { error: signUpError } = await supabase.auth.signUp({ email, password });
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
 
     if (signUpError) {
       setError(signUpError.message);
       setLoading(false);
       return;
+    }
+
+    // Send welcome email with promo code (fire & forget — don't block navigation)
+    if (data?.user) {
+      fetch('/api/auth/welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      }).catch(() => {/* non-blocking */})
     }
 
     router.push("/dashboard");

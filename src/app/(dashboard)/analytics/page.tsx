@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
+import PromoCodesManager from '@/components/admin/PromoCodesManager'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 const VERCEL_ANALYTICS_URL = 'https://vercel.com/balsanmathis-projects/createit/analytics'
@@ -115,11 +117,18 @@ function PlanBadge({ plan }: { plan: string }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function AnalyticsPage() {
+interface Props {
+  searchParams: Promise<{ tab?: string }>
+}
+
+export default async function AnalyticsPage({ searchParams }: Props) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user || user.email !== ADMIN_EMAIL) redirect('/dashboard')
+
+  const { tab } = await searchParams
+  const activeTab = tab === 'promo' ? 'promo' : 'overview'
 
   const [stats, recentUsers, recentSites, revenue] = await Promise.all([
     getStats(),
@@ -138,7 +147,7 @@ export default async function AnalyticsPage() {
         <div className="max-w-5xl mx-auto">
 
           {/* Header */}
-          <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
+          <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-black text-white">Analytics</h1>
               <p className="text-white/30 text-sm mt-0.5">create-it.app — {monthLabel}</p>
@@ -161,94 +170,125 @@ export default async function AnalyticsPage() {
             </a>
           </div>
 
-          {/* Stats cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="glass rounded-2xl p-5 border border-indigo-500/20 bg-indigo-500/5">
-              <p className="text-3xl font-black text-white">{stats.totalUsers.toLocaleString('fr-FR')}</p>
-              <p className="text-xs text-white/40 mt-1">Utilisateurs inscrits</p>
-              <p className="text-xs text-white/25 mt-1">+{stats.usersThisMonth} ce mois</p>
-            </div>
-
-            <div className="glass rounded-2xl p-5 border border-violet-500/20 bg-violet-500/5">
-              <p className="text-3xl font-black text-white">{stats.sitesToday.toLocaleString('fr-FR')}</p>
-              <p className="text-xs text-white/40 mt-1">Sites générés aujourd&apos;hui</p>
-            </div>
-
-            <div className="glass rounded-2xl p-5 border border-violet-500/20 bg-violet-500/5">
-              <p className="text-3xl font-black text-white">{stats.sitesThisMonth.toLocaleString('fr-FR')}</p>
-              <p className="text-xs text-white/40 mt-1">Sites générés ce mois</p>
-              <p className="text-xs text-white/25 mt-1">{stats.totalSites} au total</p>
-            </div>
-
-            <div className="glass rounded-2xl p-5 border border-amber-500/20 bg-amber-500/5">
-              <p className="text-3xl font-black text-white">
-                {revenue.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} €
-              </p>
-              <p className="text-xs text-white/40 mt-1">Revenus {monthLabel}</p>
-            </div>
+          {/* Tabs */}
+          <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <Link
+              href="/analytics"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={activeTab === 'overview'
+                ? { background: 'rgba(124,58,237,0.25)', color: '#c4b5fd', border: '1px solid rgba(124,58,237,0.3)' }
+                : { color: 'rgba(255,255,255,0.4)', border: '1px solid transparent' }}
+            >
+              Vue d&apos;ensemble
+            </Link>
+            <Link
+              href="/analytics?tab=promo"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={activeTab === 'promo'
+                ? { background: 'rgba(124,58,237,0.25)', color: '#c4b5fd', border: '1px solid rgba(124,58,237,0.3)' }
+                : { color: 'rgba(255,255,255,0.4)', border: '1px solid transparent' }}
+            >
+              Codes promo
+            </Link>
           </div>
 
-          {/* Recent activity */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            {/* Last 5 registrations */}
-            <div className="glass rounded-2xl border border-white/5 overflow-hidden">
-              <div className="px-6 py-4 border-b border-white/5 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0"></span>
-                <h2 className="text-sm font-bold text-white">Dernières inscriptions</h2>
-              </div>
-              {recentUsers.length === 0 ? (
-                <p className="px-6 py-5 text-white/25 text-sm">Aucun utilisateur</p>
-              ) : (
-                <div className="divide-y divide-white/5">
-                  {recentUsers.map(u => (
-                    <div key={u.id} className="flex items-center gap-3 px-6 py-3.5">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500/30 to-indigo-500/30 border border-white/10 flex items-center justify-center text-xs text-white/60 font-semibold shrink-0">
-                        {u.email?.[0]?.toUpperCase() ?? '?'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white/70 truncate">{u.email}</p>
-                        <p className="text-xs text-white/25">{fmt(u.created_at)}</p>
-                      </div>
-                      <PlanBadge plan={u.plan} />
-                    </div>
-                  ))}
+          {activeTab === 'overview' && (
+            <>
+              {/* Stats cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="glass rounded-2xl p-5 border border-indigo-500/20 bg-indigo-500/5">
+                  <p className="text-3xl font-black text-white">{stats.totalUsers.toLocaleString('fr-FR')}</p>
+                  <p className="text-xs text-white/40 mt-1">Utilisateurs inscrits</p>
+                  <p className="text-xs text-white/25 mt-1">+{stats.usersThisMonth} ce mois</p>
                 </div>
-              )}
-            </div>
 
-            {/* Last 5 generated sites */}
-            <div className="glass rounded-2xl border border-white/5 overflow-hidden">
-              <div className="px-6 py-4 border-b border-white/5 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></span>
-                <h2 className="text-sm font-bold text-white">Derniers sites générés</h2>
-              </div>
-              {recentSites.length === 0 ? (
-                <p className="px-6 py-5 text-white/25 text-sm">Aucun site généré</p>
-              ) : (
-                <div className="divide-y divide-white/5">
-                  {recentSites.map(s => (
-                    <div key={s.id} className="flex items-center gap-3 px-6 py-3.5">
-                      <div className="w-8 h-8 rounded-lg bg-violet-500/15 border border-violet-500/20 flex items-center justify-center shrink-0">
-                        <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white/70 truncate">{s.name || 'Sans titre'}</p>
-                        <p className="text-xs text-white/25 truncate">
-                          {s.userEmail ?? `${s.user_id.slice(0, 8)}…`}
-                        </p>
-                      </div>
-                      <p className="text-xs text-white/25 shrink-0">{fmt(s.created_at)}</p>
-                    </div>
-                  ))}
+                <div className="glass rounded-2xl p-5 border border-violet-500/20 bg-violet-500/5">
+                  <p className="text-3xl font-black text-white">{stats.sitesToday.toLocaleString('fr-FR')}</p>
+                  <p className="text-xs text-white/40 mt-1">Sites générés aujourd&apos;hui</p>
                 </div>
-              )}
-            </div>
 
-          </div>
+                <div className="glass rounded-2xl p-5 border border-violet-500/20 bg-violet-500/5">
+                  <p className="text-3xl font-black text-white">{stats.sitesThisMonth.toLocaleString('fr-FR')}</p>
+                  <p className="text-xs text-white/40 mt-1">Sites générés ce mois</p>
+                  <p className="text-xs text-white/25 mt-1">{stats.totalSites} au total</p>
+                </div>
+
+                <div className="glass rounded-2xl p-5 border border-amber-500/20 bg-amber-500/5">
+                  <p className="text-3xl font-black text-white">
+                    {revenue.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} €
+                  </p>
+                  <p className="text-xs text-white/40 mt-1">Revenus {monthLabel}</p>
+                </div>
+              </div>
+
+              {/* Recent activity */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Last 5 registrations */}
+                <div className="glass rounded-2xl border border-white/5 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-white/5 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0"></span>
+                    <h2 className="text-sm font-bold text-white">Dernières inscriptions</h2>
+                  </div>
+                  {recentUsers.length === 0 ? (
+                    <p className="px-6 py-5 text-white/25 text-sm">Aucun utilisateur</p>
+                  ) : (
+                    <div className="divide-y divide-white/5">
+                      {recentUsers.map(u => (
+                        <div key={u.id} className="flex items-center gap-3 px-6 py-3.5">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500/30 to-indigo-500/30 border border-white/10 flex items-center justify-center text-xs text-white/60 font-semibold shrink-0">
+                            {u.email?.[0]?.toUpperCase() ?? '?'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white/70 truncate">{u.email}</p>
+                            <p className="text-xs text-white/25">{fmt(u.created_at)}</p>
+                          </div>
+                          <PlanBadge plan={u.plan} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Last 5 generated sites */}
+                <div className="glass rounded-2xl border border-white/5 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-white/5 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></span>
+                    <h2 className="text-sm font-bold text-white">Derniers sites générés</h2>
+                  </div>
+                  {recentSites.length === 0 ? (
+                    <p className="px-6 py-5 text-white/25 text-sm">Aucun site généré</p>
+                  ) : (
+                    <div className="divide-y divide-white/5">
+                      {recentSites.map(s => (
+                        <div key={s.id} className="flex items-center gap-3 px-6 py-3.5">
+                          <div className="w-8 h-8 rounded-lg bg-violet-500/15 border border-violet-500/20 flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white/70 truncate">{s.name || 'Sans titre'}</p>
+                            <p className="text-xs text-white/25 truncate">
+                              {s.userEmail ?? `${s.user_id.slice(0, 8)}…`}
+                            </p>
+                          </div>
+                          <p className="text-xs text-white/25 shrink-0">{fmt(s.created_at)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </>
+          )}
+
+          {activeTab === 'promo' && (
+            <PromoCodesManager />
+          )}
+
         </div>
       </main>
     </div>

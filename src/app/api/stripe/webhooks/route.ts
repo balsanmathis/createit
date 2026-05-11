@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@supabase/supabase-js'
+import { PLAN_TOKEN_LIMITS } from '@/types'
 import type Stripe from 'stripe'
 
 function getSupabaseAdmin() {
@@ -44,13 +45,14 @@ export async function POST(request: Request) {
         if (session.mode !== 'subscription') break
 
         const userId = session.metadata?.user_id
-        const plan = session.metadata?.plan
-        const customerId = session.customer as string
+        const plan   = session.metadata?.plan as keyof typeof PLAN_TOKEN_LIMITS | undefined
+        const customerId    = session.customer as string
         const subscriptionId = session.subscription as string
 
         if (!userId || !plan) break
 
-        const sub = await stripe.subscriptions.retrieve(subscriptionId)
+        const sub         = await stripe.subscriptions.retrieve(subscriptionId)
+        const tokensLimit = PLAN_TOKEN_LIMITS[plan] ?? PLAN_TOKEN_LIMITS.starter
 
         await supabaseAdmin.from('subscriptions').upsert({
           user_id: userId,
@@ -64,6 +66,8 @@ export async function POST(request: Request) {
         await supabaseAdmin.from('users').upsert({
           id: userId,
           plan,
+          tokens_used: 0,
+          tokens_limit: tokensLimit,
           sites_used_this_month: 0,
         }, { onConflict: 'id' })
         break
@@ -71,11 +75,11 @@ export async function POST(request: Request) {
 
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        const sub = event.data.object as Stripe.Subscription
+        const sub    = event.data.object as Stripe.Subscription
         const userId = sub.metadata?.user_id
         if (!userId) break
 
-        const plan = sub.metadata?.plan || 'starter'
+        const plan   = (sub.metadata?.plan || 'starter') as keyof typeof PLAN_TOKEN_LIMITS
         const status = sub.status
 
         await supabaseAdmin.from('subscriptions').upsert({
@@ -88,44 +92,52 @@ export async function POST(request: Request) {
         }, { onConflict: 'user_id' })
 
         if (status === 'canceled' || status === 'unpaid') {
-          await supabaseAdmin.from('users').update({ plan: null }).eq('id', userId)
+          await supabaseAdmin.from('users').update({
+            plan: 'free',
+            tokens_limit: PLAN_TOKEN_LIMITS.free,
+            tokens_used: 0,
+          }).eq('id', userId)
         }
         break
       }
 
       case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice
+        const invoice        = event.data.object as Stripe.Invoice
         const subscriptionId = getSubscriptionIdFromInvoice(invoice)
         if (!subscriptionId) break
 
-        const sub = await stripe.subscriptions.retrieve(subscriptionId)
+        const sub    = await stripe.subscriptions.retrieve(subscriptionId)
         const userId = sub.metadata?.user_id
         if (!userId) break
+
+        const plan        = (sub.metadata?.plan || 'starter') as keyof typeof PLAN_TOKEN_LIMITS
+        const tokensLimit = PLAN_TOKEN_LIMITS[plan] ?? PLAN_TOKEN_LIMITS.starter
 
         await supabaseAdmin.from('subscriptions').update({
           status: 'active',
           current_period_end: monthFromNow(),
         }).eq('user_id', userId)
 
-        // New billing period → reset monthly generation counter
-        await supabaseAdmin.from('users').update({ sites_used_this_month: 0 }).eq('id', userId)
+        // Monthly reset
+        await supabaseAdmin.from('users').update({
+          tokens_used: 0,
+          tokens_limit: tokensLimit,
+          sites_used_this_month: 0,
+        }).eq('id', userId)
         break
       }
 
       case 'invoice.payment_failed': {
-        // Payment failed (card declined, expired, etc.).
-        // Stripe will retry automatically; meanwhile we mark the subscription
-        // as past_due so the generate route blocks new site creation.
-        const invoice = event.data.object as Stripe.Invoice
+        const invoice        = event.data.object as Stripe.Invoice
         const subscriptionId = getSubscriptionIdFromInvoice(invoice)
         if (!subscriptionId) break
 
-        const sub = await stripe.subscriptions.retrieve(subscriptionId)
+        const sub    = await stripe.subscriptions.retrieve(subscriptionId)
         const userId = sub.metadata?.user_id
         if (!userId) break
 
         await supabaseAdmin.from('subscriptions').update({
-          status: sub.status, // 'past_due' or 'unpaid'
+          status: sub.status,
         }).eq('stripe_subscription_id', subscriptionId)
 
         console.warn(`Payment failed for user ${userId} — subscription ${subscriptionId} is now ${sub.status}`)
