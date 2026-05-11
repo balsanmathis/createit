@@ -2,52 +2,109 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
-import { BetaAnalyticsDataClient } from '@google-analytics/data'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
-import AdminChart from '@/components/admin/AdminChart'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
+const VERCEL_ANALYTICS_URL = 'https://vercel.com/balsanmathis-projects/createit/analytics'
 
-interface SupabaseStats {
+interface AdminStats {
   totalUsers: number
-  totalSites: number
   usersThisMonth: number
+  sitesToday: number
   sitesThisMonth: number
+  totalSites: number
 }
 
-interface AnalyticsData {
-  visitors: { today: number; week: number; month: number }
-  topPages: { path: string; views: number }[]
-  chartData: { date: string; users: number }[]
+interface RecentUser {
+  id: string
+  email: string
+  plan: string
+  created_at: string
 }
 
-async function getSupabaseStats(): Promise<SupabaseStats> {
+interface RecentSite {
+  id: string
+  name: string
+  user_id: string
+  created_at: string
+  userEmail?: string
+}
+
+async function getAdminStats(): Promise<AdminStats> {
   const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+  const now = new Date()
+  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString()
+  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString()
 
-  const [usersTotal, sitesTotal, usersMonth, sitesMonth] = await Promise.all([
+  const [usersTotal, usersMonth, sitesDay, sitesMonth, sitesTotal] = await Promise.all([
     supabase.from('users').select('*', { count: 'exact', head: true }),
+    supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', startOfMonth),
+    supabase.from('sites').select('*', { count: 'exact', head: true }).gte('created_at', startOfDay),
+    supabase.from('sites').select('*', { count: 'exact', head: true }).gte('created_at', startOfMonth),
     supabase.from('sites').select('*', { count: 'exact', head: true }),
-    supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', firstDayOfMonth),
-    supabase.from('sites').select('*', { count: 'exact', head: true }).gte('created_at', firstDayOfMonth),
   ])
 
   return {
     totalUsers: usersTotal.count ?? 0,
-    totalSites: sitesTotal.count ?? 0,
     usersThisMonth: usersMonth.count ?? 0,
+    sitesToday: sitesDay.count ?? 0,
     sitesThisMonth: sitesMonth.count ?? 0,
+    totalSites: sitesTotal.count ?? 0,
   }
+}
+
+async function getRecentUsers(): Promise<RecentUser[]> {
+  const supabase = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data } = await supabase
+    .from('users')
+    .select('id, email, plan, created_at')
+    .order('created_at', { ascending: false })
+    .limit(5)
+
+  return (data ?? []) as RecentUser[]
+}
+
+async function getRecentSites(): Promise<RecentSite[]> {
+  const supabase = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data: sites } = await supabase
+    .from('sites')
+    .select('id, name, user_id, created_at')
+    .order('created_at', { ascending: false })
+    .limit(5)
+
+  if (!sites || sites.length === 0) return []
+
+  const userIds = [...new Set(sites.map((s: { user_id: string }) => s.user_id))]
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, email')
+    .in('id', userIds)
+
+  const emailMap = new Map((users ?? []).map((u: { id: string; email: string }) => [u.id, u.email]))
+
+  return sites.map((s: { id: string; name: string; user_id: string; created_at: string }) => ({
+    ...s,
+    userEmail: emailMap.get(s.user_id) as string | undefined,
+  }))
 }
 
 async function getStripeRevenue(): Promise<number> {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+  const now = new Date()
   const firstDayOfMonth = Math.floor(
-    new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime() / 1000
+    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).getTime() / 1000
   )
 
   let revenue = 0
@@ -71,124 +128,45 @@ async function getStripeRevenue(): Promise<number> {
   return revenue
 }
 
-async function getAnalyticsData(): Promise<AnalyticsData | null> {
-  if (
-    !process.env.GA_PROPERTY_ID ||
-    !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
-    !process.env.GOOGLE_PRIVATE_KEY
-  ) {
-    return null
-  }
-
-  try {
-    const ga = new BetaAnalyticsDataClient({
-      credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      },
-    })
-
-    const prop = `properties/${process.env.GA_PROPERTY_ID}`
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const results: any[] = await Promise.all([
-      ga.runReport({ property: prop, dateRanges: [{ startDate: 'today', endDate: 'today' }], metrics: [{ name: 'activeUsers' }] }),
-      ga.runReport({ property: prop, dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }], metrics: [{ name: 'activeUsers' }] }),
-      ga.runReport({ property: prop, dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }], metrics: [{ name: 'activeUsers' }] }),
-      ga.runReport({
-        property: prop,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'pagePath' }],
-        metrics: [{ name: 'screenPageViews' }],
-        orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
-        limit: 8,
-      }),
-      ga.runReport({
-        property: prop,
-        dateRanges: [{ startDate: '29daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'date' }],
-        metrics: [{ name: 'activeUsers' }],
-        orderBys: [{ dimension: { dimensionName: 'date' } }],
-      }),
-    ])
-
-    // Each result is a tuple [response, request, metadata] from the gRPC client
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getMetric = (res: any) => parseInt(res[0]?.rows?.[0]?.metricValues?.[0]?.value ?? '0')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getRows = (res: any): any[] => res[0]?.rows ?? []
-
-    return {
-      visitors: {
-        today: getMetric(results[0]),
-        week: getMetric(results[1]),
-        month: getMetric(results[2]),
-      },
-      topPages: getRows(results[3]).map((row: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
-        path: row.dimensionValues?.[0]?.value ?? '/',
-        views: parseInt(row.metricValues?.[0]?.value ?? '0'),
-      })),
-      chartData: getRows(results[4]).map((row: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
-        date: row.dimensionValues?.[0]?.value ?? '',
-        users: parseInt(row.metricValues?.[0]?.value ?? '0'),
-      })),
-    }
-  } catch (err) {
-    console.error('[Admin] GA Data API error:', err)
-    return null
-  }
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
-function StatCard({
-  label,
-  value,
-  sub,
-  icon,
-  accent,
-}: {
-  label: string
-  value: string
-  sub?: string
-  icon: string
-  accent: 'violet' | 'indigo' | 'amber' | 'emerald'
-}) {
-  const styles = {
-    violet: 'border-violet-500/20 bg-violet-500/5',
-    indigo: 'border-indigo-500/20 bg-indigo-500/5',
-    amber: 'border-amber-500/20 bg-amber-500/5',
-    emerald: 'border-emerald-500/20 bg-emerald-500/5',
+function PlanBadge({ plan }: { plan: string }) {
+  const styles: Record<string, string> = {
+    starter: 'bg-blue-500/20 text-blue-300 border-blue-500/20',
+    pro: 'bg-violet-500/20 text-violet-300 border-violet-500/20',
+    agency: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/20',
   }
-
+  const label = plan || 'gratuit'
   return (
-    <div className={`glass rounded-2xl p-5 border ${styles[accent]} flex flex-col gap-3`}>
-      <span className="text-2xl">{icon}</span>
-      <div>
-        <p className="text-2xl font-black text-white tracking-tight">{value}</p>
-        <p className="text-xs text-white/40 mt-0.5">{label}</p>
-        {sub && <p className="text-xs text-white/25 mt-1">{sub}</p>}
-      </div>
-    </div>
+    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${styles[plan] ?? 'bg-white/5 text-white/30 border-white/10'}`}>
+      {label}
+    </span>
   )
 }
 
 export default async function AdminPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user || user.email !== ADMIN_EMAIL) {
     redirect('/dashboard')
   }
 
-  const [supabaseStats, stripeRevenue, analyticsData] = await Promise.all([
-    getSupabaseStats(),
+  const [stats, recentUsers, recentSites, revenue] = await Promise.all([
+    getAdminStats(),
+    getRecentUsers(),
+    getRecentSites(),
     getStripeRevenue(),
-    getAnalyticsData(),
   ])
 
-  const now = new Date()
-  const monthLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  const monthLabel = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
 
   return (
     <div className="min-h-screen bg-[#080810] text-white">
@@ -209,127 +187,122 @@ export default async function AdminPage() {
       </DashboardSidebar>
 
       <main className="md:ml-64 p-4 md:p-8 pt-16 md:pt-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
 
           {/* Header */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/20 flex items-center justify-center text-xl">
-              ⚡
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black text-white">Admin Dashboard</h1>
-              <p className="text-white/30 text-sm">create-it.app — {monthLabel}</p>
-            </div>
-          </div>
-
-          {/* GA not configured banner */}
-          {!analyticsData && (
-            <div className="glass rounded-2xl p-4 border border-white/5 mb-6 flex items-start gap-3">
-              <span className="text-white/20 text-lg mt-0.5">📊</span>
+          <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/20 flex items-center justify-center text-xl">
+                ⚡
+              </div>
               <div>
-                <p className="text-sm text-white/50 font-medium">Google Analytics Data API non configuré</p>
-                <p className="text-xs text-white/25 mt-0.5">
-                  Ajoutez <code className="text-violet-400/70">GA_PROPERTY_ID</code>,{' '}
-                  <code className="text-violet-400/70">GOOGLE_SERVICE_ACCOUNT_EMAIL</code> et{' '}
-                  <code className="text-violet-400/70">GOOGLE_PRIVATE_KEY</code> dans vos variables d&apos;environnement.
-                </p>
+                <h1 className="text-2xl md:text-3xl font-black text-white">Admin Dashboard</h1>
+                <p className="text-white/30 text-sm">create-it.app — {monthLabel}</p>
               </div>
             </div>
-          )}
-
-          {/* Stats grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            {analyticsData ? (
-              <>
-                <StatCard
-                  label="Visiteurs aujourd'hui"
-                  value={analyticsData.visitors.today.toLocaleString('fr-FR')}
-                  icon="👁"
-                  accent="violet"
-                />
-                <StatCard
-                  label="Visiteurs cette semaine"
-                  value={analyticsData.visitors.week.toLocaleString('fr-FR')}
-                  icon="📈"
-                  accent="violet"
-                />
-                <StatCard
-                  label="Visiteurs ce mois"
-                  value={analyticsData.visitors.month.toLocaleString('fr-FR')}
-                  icon="🌐"
-                  accent="violet"
-                />
-              </>
-            ) : (
-              <>
-                <StatCard label="Visiteurs aujourd'hui" value="—" icon="👁" accent="violet" />
-                <StatCard label="Visiteurs cette semaine" value="—" icon="📈" accent="violet" />
-                <StatCard label="Visiteurs ce mois" value="—" icon="🌐" accent="violet" />
-              </>
-            )}
-
-            <StatCard
-              label="Utilisateurs inscrits"
-              value={supabaseStats.totalUsers.toLocaleString('fr-FR')}
-              sub={`+${supabaseStats.usersThisMonth} ce mois`}
-              icon="👤"
-              accent="indigo"
-            />
-            <StatCard
-              label="Sites générés"
-              value={supabaseStats.totalSites.toLocaleString('fr-FR')}
-              sub={`+${supabaseStats.sitesThisMonth} ce mois`}
-              icon="🖥"
-              accent="indigo"
-            />
-            <StatCard
-              label={`Revenus — ${monthLabel}`}
-              value={`${stripeRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} €`}
-              icon="💰"
-              accent="amber"
-            />
+            <a
+              href={VERCEL_ANALYTICS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 glass border border-white/10 text-white/60 hover:text-white hover:border-violet-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Voir le trafic complet
+              <svg className="w-3 h-3 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
           </div>
 
-          {/* 30-day chart */}
-          {analyticsData && analyticsData.chartData.length > 0 && (
-            <div className="glass rounded-2xl p-6 border border-white/5 mb-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-base font-bold text-white">Visiteurs — 30 derniers jours</h2>
-                <span className="text-xs text-white/25">
-                  {analyticsData.chartData.reduce((s, d) => s + d.users, 0).toLocaleString('fr-FR')} au total
-                </span>
-              </div>
-              <AdminChart data={analyticsData.chartData} />
+          {/* Stats cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="glass rounded-2xl p-5 border border-indigo-500/20 bg-indigo-500/5 lg:col-span-1 col-span-2 sm:col-span-1">
+              <p className="text-3xl font-black text-white">{stats.totalUsers.toLocaleString('fr-FR')}</p>
+              <p className="text-xs text-white/40 mt-1">Utilisateurs inscrits</p>
+              <p className="text-xs text-white/25 mt-1">+{stats.usersThisMonth} ce mois</p>
             </div>
-          )}
 
-          {/* Top pages */}
-          {analyticsData && analyticsData.topPages.length > 0 && (
+            <div className="glass rounded-2xl p-5 border border-violet-500/20 bg-violet-500/5">
+              <p className="text-3xl font-black text-white">{stats.sitesToday.toLocaleString('fr-FR')}</p>
+              <p className="text-xs text-white/40 mt-1">Sites générés aujourd&apos;hui</p>
+            </div>
+
+            <div className="glass rounded-2xl p-5 border border-violet-500/20 bg-violet-500/5">
+              <p className="text-3xl font-black text-white">{stats.sitesThisMonth.toLocaleString('fr-FR')}</p>
+              <p className="text-xs text-white/40 mt-1">Sites générés ce mois</p>
+              <p className="text-xs text-white/25 mt-1">{stats.totalSites} au total</p>
+            </div>
+
+            <div className="glass rounded-2xl p-5 border border-amber-500/20 bg-amber-500/5">
+              <p className="text-3xl font-black text-white">
+                {revenue.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} €
+              </p>
+              <p className="text-xs text-white/40 mt-1">Revenus {monthLabel}</p>
+            </div>
+          </div>
+
+          {/* Recent activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* Recent users */}
             <div className="glass rounded-2xl p-6 border border-white/5">
-              <h2 className="text-base font-bold text-white mb-5">Pages les plus visitées — 30 jours</h2>
-              <div className="space-y-4">
-                {analyticsData.topPages.map((page, i) => {
-                  const pct = (page.views / analyticsData.topPages[0].views) * 100
-                  return (
-                    <div key={page.path} className="flex items-center gap-4">
-                      <span className="text-white/20 text-xs font-mono w-4 shrink-0">{i + 1}</span>
-                      <span className="flex-1 text-white/60 text-sm font-mono truncate min-w-0">{page.path}</span>
-                      <span className="text-white/40 text-xs shrink-0">
-                        {page.views.toLocaleString('fr-FR')} vues
-                      </span>
-                      <div className="w-20 h-1 bg-white/5 rounded-full overflow-hidden shrink-0">
-                        <div
-                          className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full"
-                          style={{ width: `${pct}%` }}
-                        />
+              <h2 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                Dernières inscriptions
+              </h2>
+              {recentUsers.length === 0 ? (
+                <p className="text-white/25 text-sm">Aucun utilisateur</p>
+              ) : (
+                <div className="space-y-3.5">
+                  {recentUsers.map(u => (
+                    <div key={u.id} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500/30 to-indigo-500/30 border border-white/10 flex items-center justify-center text-xs text-white/60 font-semibold shrink-0">
+                        {u.email?.[0]?.toUpperCase() ?? '?'}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white/70 truncate">{u.email}</p>
+                        <p className="text-xs text-white/25">{formatDate(u.created_at)}</p>
+                      </div>
+                      <PlanBadge plan={u.plan} />
                     </div>
-                  )
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
 
+            {/* Recent sites */}
+            <div className="glass rounded-2xl p-6 border border-white/5">
+              <h2 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                Derniers sites générés
+              </h2>
+              {recentSites.length === 0 ? (
+                <p className="text-white/25 text-sm">Aucun site généré</p>
+              ) : (
+                <div className="space-y-3.5">
+                  {recentSites.map(s => (
+                    <div key={s.id} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-violet-500/15 border border-violet-500/20 flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white/70 truncate">{s.name || 'Sans titre'}</p>
+                        <p className="text-xs text-white/25 truncate">
+                          {s.userEmail ?? `${s.user_id.slice(0, 8)}…`}
+                        </p>
+                      </div>
+                      <p className="text-xs text-white/25 shrink-0 text-right">{formatDate(s.created_at)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
       </main>
     </div>

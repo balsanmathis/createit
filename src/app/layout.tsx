@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Toaster } from 'sonner'
+import { Analytics } from '@vercel/analytics/next'
 import SessionRefresher from '@/components/SessionRefresher'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import GoogleAnalytics from '@/components/GoogleAnalytics'
 import './globals.css'
 
 const geistSans = Geist({
@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="antialiased">
-        <GoogleAnalytics />
+        <Analytics />
         <SessionRefresher />
         <ErrorBoundary>
           {children}
