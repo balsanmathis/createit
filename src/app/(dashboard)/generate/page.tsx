@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
+import { createClient } from '@/lib/supabase/client'
+
+const ADMIN_EMAIL = 'balsanmathis08@gmail.com'
 
 function GenerateForm() {
   const router = useRouter()
@@ -14,6 +17,28 @@ function GenerateForm() {
   const [siteName, setSiteName] = useState('')
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'idle' | 'generating' | 'saving'>('idle')
+  const [tokens, setTokens] = useState<{ used: number; limit: number } | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      setIsAdmin(user.email === ADMIN_EMAIL)
+      supabase
+        .from('users')
+        .select('tokens_used, tokens_limit')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setTokens({ used: data.tokens_used, limit: data.tokens_limit })
+        })
+    })
+  }, [])
+
+  const tokensRemaining = tokens ? Math.max(0, tokens.limit - tokens.used) : null
+  const tokenPct = tokens && tokens.limit > 0 ? (tokensRemaining! / tokens.limit) * 100 : 100
+  const noTokens = !isAdmin && tokensRemaining === 0
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -51,6 +76,10 @@ function GenerateForm() {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleGenerate()
   }
 
+  const tokenColor = tokenPct > 50 ? '#4ade80' : tokenPct > 20 ? '#f97316' : '#ef4444'
+  const tokenBg = tokenPct > 50 ? 'rgba(74,222,128,0.1)' : tokenPct > 20 ? 'rgba(249,115,22,0.1)' : 'rgba(239,68,68,0.1)'
+  const tokenBorder = tokenPct > 50 ? 'rgba(74,222,128,0.2)' : tokenPct > 20 ? 'rgba(249,115,22,0.2)' : 'rgba(239,68,68,0.2)'
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -72,6 +101,33 @@ function GenerateForm() {
           Décris ton site en quelques mots — l&apos;IA s&apos;occupe du reste.
         </p>
       </div>
+
+      {/* Token indicator */}
+      {!isAdmin && tokens && (
+        <div
+          className="flex items-center justify-between px-4 py-2.5 rounded-xl mb-4 text-sm"
+          style={{ background: tokenBg, border: `1px solid ${tokenBorder}` }}
+        >
+          <span className="text-white/50">Tokens disponibles</span>
+          <span className="font-semibold tabular-nums" style={{ color: tokenColor }}>
+            {tokensRemaining!.toLocaleString('fr-FR')} / {tokens.limit.toLocaleString('fr-FR')}
+          </span>
+        </div>
+      )}
+
+      {/* Upgrade banner when out of tokens */}
+      {noTokens && (
+        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <p className="text-sm text-red-300 mb-3">Tu n&apos;as plus de tokens disponibles.</p>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2 rounded-lg transition-all"
+            style={{ background: 'rgba(124,58,237,0.25)', color: '#c4b5fd', border: '1px solid rgba(124,58,237,0.4)' }}
+          >
+            Obtenir plus de tokens →
+          </Link>
+        </div>
+      )}
 
       <div className="glass rounded-2xl p-4 md:p-6 border border-white/5">
         {/* Site name */}
@@ -105,7 +161,7 @@ function GenerateForm() {
 
           <button
             onClick={handleGenerate}
-            disabled={loading || !prompt.trim()}
+            disabled={loading || !prompt.trim() || noTokens}
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg hover:shadow-violet-500/30 text-sm"
           >
             {loading ? (

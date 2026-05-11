@@ -468,6 +468,21 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
           </Link>
           <div className="hidden md:block h-5 w-px bg-white/10" />
           <h1 className="text-sm font-semibold text-white truncate max-w-[120px] md:max-w-xs">{site.name}</h1>
+          {/* Token pill */}
+          {!isAdmin && (() => {
+            const pct = currentTokensLimit > 0 ? (tokensRemaining / currentTokensLimit) * 100 : 0
+            const color = pct > 50 ? '#4ade80' : pct > 20 ? '#f97316' : '#ef4444'
+            const bg = pct > 50 ? 'rgba(74,222,128,0.1)' : pct > 20 ? 'rgba(249,115,22,0.1)' : 'rgba(239,68,68,0.1)'
+            const border = pct > 50 ? 'rgba(74,222,128,0.2)' : pct > 20 ? 'rgba(249,115,22,0.2)' : 'rgba(239,68,68,0.2)'
+            return (
+              <span
+                className="hidden md:inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
+                style={{ background: bg, border: `1px solid ${border}`, color }}
+              >
+                {tokensRemaining === Infinity ? '∞' : tokensRemaining.toLocaleString('fr-FR')} tokens
+              </span>
+            )
+          })()}
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">

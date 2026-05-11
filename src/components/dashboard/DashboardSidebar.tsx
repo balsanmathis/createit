@@ -28,11 +28,21 @@ interface Props {
 export default function DashboardSidebar({ activeHref, children }: Props) {
   const [open, setOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [tokens, setTokens] = useState<{ used: number; limit: number } | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
-      setIsAdmin(user?.email === ADMIN_EMAIL)
+      if (!user) return
+      setIsAdmin(user.email === ADMIN_EMAIL)
+      supabase
+        .from('users')
+        .select('tokens_used, tokens_limit')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setTokens({ used: data.tokens_used, limit: data.tokens_limit })
+        })
     })
   }, [])
 
@@ -112,6 +122,44 @@ export default function DashboardSidebar({ activeHref, children }: Props) {
         </nav>
 
         {children}
+
+        {/* ── Token bar ── */}
+        {tokens && !isAdmin && (() => {
+          const remaining = Math.max(0, tokens.limit - tokens.used)
+          const pct = tokens.limit > 0 ? (tokens.used / tokens.limit) * 100 : 100
+          const barColor = pct > 80 ? '#ef4444' : pct > 50 ? '#f97316' : '#7c3aed'
+          const textColor = pct > 80 ? '#fca5a5' : pct > 50 ? '#fdba74' : '#c4b5fd'
+          return (
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs text-white/35">Tokens</span>
+                <span className="text-xs font-semibold" style={{ color: textColor }}>
+                  {remaining.toLocaleString('fr-FR')} restants
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden mb-1.5">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${Math.max(0, 100 - pct)}%`, background: barColor }}
+                />
+              </div>
+              <p className="text-xs text-white/20">
+                {tokens.used.toLocaleString('fr-FR')} / {tokens.limit.toLocaleString('fr-FR')} utilisés
+              </p>
+              {remaining === 0 && (
+                <Link
+                  href="/pricing"
+                  className="mt-2 flex items-center justify-center gap-1 text-xs font-semibold py-2 rounded-lg transition-all"
+                  style={{ background: 'rgba(124,58,237,0.2)', color: '#c4b5fd', border: '1px solid rgba(124,58,237,0.3)' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.35)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.2)')}
+                >
+                  Obtenir plus de tokens →
+                </Link>
+              )}
+            </div>
+          )
+        })()}
       </aside>
     </>
   )
