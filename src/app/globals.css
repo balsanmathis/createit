@@ -160,6 +160,13 @@ body {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+@keyframes scrollCarouselReverse {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+/* Fitness neon glow */
+@keyframes neon-glow { 0%,100%{box-shadow:0 0 4px rgba(57,255,20,0.4)} 50%{box-shadow:0 0 12px rgba(57,255,20,0.9)} }
 
 /* ─── Utility classes ─────────────────────────────────────────── */
 
@@ -178,6 +185,9 @@ body {
   animation: scrollCarousel 40s linear infinite;
 }
 
-.carousel-track:hover {
-  animation-play-state: paused;
+.carousel-track-reverse {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  animation: scrollCarouselReverse 45s linear infinite;
 }

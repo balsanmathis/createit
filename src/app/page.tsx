@@ -164,6 +164,14 @@ export default function HomePage() {
     }
   };
 
+  const handleTemplateSelect = (p: string) => {
+    if (isAuthenticated) {
+      router.push(`/generate?prompt=${encodeURIComponent(p)}`);
+    } else {
+      router.push(`/try?prompt=${encodeURIComponent(p)}`);
+    }
+  };
+
   return (
     <div className="min-h-screen text-white overflow-x-hidden" style={{ background: "#04040f" }}>
       {/* Promo banner */}
@@ -391,7 +399,7 @@ export default function HomePage() {
       </section>
 
       {/* Templates */}
-      <TemplatesSection onSelect={(p) => { setPrompt(p); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+      <TemplatesSection onSelect={handleTemplateSelect} />
 
       {/* How it works */}
       <section id="how" className="py-24 px-6 border-t" style={{ background: "#06061a", borderColor: "#0f0f2e" }}>
