@@ -1,14 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+
+const ADMIN_EMAIL = 'balsanmathis08@gmail.com'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',      icon: '⊞', label: 'Dashboard' },
-  { href: '/generate',       icon: '✦', label: 'Générer' },
+  { href: '/dashboard',      icon: '⊞',  label: 'Dashboard' },
+  { href: '/generate',       icon: '✦',  label: 'Générer' },
   { href: '/prompt-builder', icon: '🪄', label: 'Créer un prompt' },
-  { href: '/settings',       icon: '◎', label: 'Paramètres' },
+  { href: '/settings',       icon: '◎',  label: 'Paramètres' },
 ]
+
+const AnalyticsIcon = () => (
+  <svg className="w-[15px] h-[15px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+)
 
 interface Props {
   activeHref: string
@@ -17,6 +27,23 @@ interface Props {
 
 export default function DashboardSidebar({ activeHref, children }: Props) {
   const [open, setOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsAdmin(user?.email === ADMIN_EMAIL)
+    })
+  }, [])
+
+  // Insert Analytics before Paramètres when admin
+  const navItems = isAdmin
+    ? [
+        ...NAV_ITEMS.slice(0, 3),
+        { href: '/analytics', icon: null as null, label: 'Analytics' },
+        NAV_ITEMS[3],
+      ]
+    : NAV_ITEMS
 
   return (
     <>
@@ -65,7 +92,7 @@ export default function DashboardSidebar({ activeHref, children }: Props) {
         </Link>
 
         <nav className="flex-1 space-y-1">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -76,7 +103,9 @@ export default function DashboardSidebar({ activeHref, children }: Props) {
                   : 'text-white/50 hover:text-white hover:bg-white/5'
               }`}
             >
-              <span className="text-base">{item.icon}</span>
+              <span className="text-base flex items-center justify-center w-4">
+                {item.icon === null ? <AnalyticsIcon /> : item.icon}
+              </span>
               {item.label}
             </Link>
           ))}
