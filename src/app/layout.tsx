@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono, Syne, DM_Sans } from 'next/font/google'
+import { Geist, Geist_Mono, Syne, DM_Sans, Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
 import { Analytics } from '@vercel/analytics/next'
 import SessionRefresher from '@/components/SessionRefresher'
@@ -27,6 +27,12 @@ const dmSans = DM_Sans({
   subsets: ['latin'],
 })
 
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   title: 'CreateIt — Générateur de sites web par IA',
   description: 'Créez des sites web professionnels en quelques secondes grâce à l\'IA. Décrivez votre site, l\'IA le génère instantanément.',
@@ -44,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} ${dmSans.variable}`}>
+    <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} ${dmSans.variable} ${inter.variable}`}>
       <body className="antialiased">
         <Analytics />
         <SessionRefresher />

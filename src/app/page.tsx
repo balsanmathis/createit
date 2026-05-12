@@ -1,757 +1,913 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { createBrowserClient } from "@supabase/ssr";
-import TemplatesSection from "@/components/landing/TemplatesSection";
 
-/* ─── Data ─────────────────────────────────────────────────────── */
+/* ─── Font token ─────────────────────────────────────────────────
+   CSS variable injected by next/font/google in layout.tsx          */
+const F = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
-const TYPEWRITER_PROMPTS = [
-  "Crée un site pour mon restaurant italien...",
-  "Crée un portfolio de photographe...",
-  "Crée une landing page pour mon SaaS...",
-  "Crée un site pour mon agence créative...",
-];
+/* ═══════════════════════════════════════════════════════════════
+   MINI-SITE PREVIEW CARDS (CSS only, no images)
+   Card dimensions: 220 × 160px, marginRight 16px
+   5 cards/row × 236px = 1180px = exactly 50% of doubled track
+═══════════════════════════════════════════════════════════════ */
 
-const QUICK_TAGS = ["Restaurant", "Portfolio", "SaaS", "Agence", "E-commerce", "Blog"];
+function CardRestaurant() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#0a0a0a", borderRadius: 8, overflow: "hidden", border: "1px solid #1a1a1a", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", borderBottom: "1px solid rgba(212,175,55,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#d4af37", fontSize: 7.5, fontWeight: 700, letterSpacing: 3, fontFamily: F }}>LE JARDIN</span>
+        <div style={{ display: "flex", gap: 8, fontSize: 6.5, color: "rgba(255,255,255,0.35)", fontFamily: F }}><span>Menu</span><span>Réserver</span></div>
+      </div>
+      <div style={{ padding: "18px 12px", textAlign: "center" }}>
+        <div style={{ fontSize: 6, color: "rgba(255,255,255,0.3)", letterSpacing: 4, marginBottom: 6, fontFamily: F }}>RESTAURANT · PARIS</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: "#f5f0e8", lineHeight: 1.2, fontFamily: "Georgia, serif", marginBottom: 12 }}>Cuisine<br />Française</div>
+        <div style={{ display: "inline-block", fontSize: 7, padding: "3px 10px", border: "1px solid rgba(212,175,55,0.4)", color: "#d4af37", borderRadius: 20, fontFamily: F }}>Réserver une table</div>
+      </div>
+    </div>
+  );
+}
 
-const STATS = [
-  { value: 2847, label: "sites créés", suffix: "" },
-  { value: 98, label: "satisfaits", suffix: "%" },
-  { value: 30, label: "secondes en moyenne", suffix: "s" },
-];
+function CardPortfolio() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#f8f8f8", borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", background: "#0f172a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "white", fontSize: 8, fontWeight: 700, fontFamily: F }}>JM</span>
+        <div style={{ display: "flex", gap: 8, fontSize: 6.5, color: "rgba(255,255,255,0.5)", fontFamily: F }}><span>Work</span><span>About</span></div>
+      </div>
+      <div style={{ padding: "14px 14px" }}>
+        <div style={{ fontSize: 6.5, color: "#94a3b8", letterSpacing: 2, marginBottom: 6, fontFamily: F }}>DESIGNER & CRÉATIF</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", lineHeight: 1.2, letterSpacing: -0.5, marginBottom: 10, fontFamily: F }}>Jean Moreau<br />— Designer</div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {["Branding", "Web", "Motion"].map((s) => (
+            <span key={s} style={{ fontSize: 6, padding: "2px 6px", background: "#f1f5f9", borderRadius: 4, color: "#64748b", fontFamily: F }}>{s}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardAgence() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#0f172a", borderRadius: 8, overflow: "hidden", border: "1px solid #1e293b", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", borderBottom: "1px solid #1e293b", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#60a5fa", fontSize: 8, fontWeight: 800, fontFamily: F }}>◈ PIXEL</span>
+        <div style={{ display: "flex", gap: 8, fontSize: 6.5, color: "rgba(255,255,255,0.3)", fontFamily: F }}><span>Work</span><span>Contact</span></div>
+      </div>
+      <div style={{ padding: "14px 12px" }}>
+        <div style={{ fontSize: 6, color: "#60a5fa", letterSpacing: 3, marginBottom: 8, fontFamily: F }}>DIGITAL AGENCY</div>
+        <div style={{ fontSize: 17, fontWeight: 800, color: "white", lineHeight: 1.15, letterSpacing: -0.5, marginBottom: 10, fontFamily: F }}>On crée des<br />expériences.</div>
+        <div style={{ fontSize: 7, padding: "3px 10px", display: "inline-block", background: "#2563eb", color: "white", borderRadius: 4, fontFamily: F }}>Voir nos projets</div>
+      </div>
+    </div>
+  );
+}
+
+function CardBoutique() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#fdf6f0", borderRadius: 8, overflow: "hidden", border: "1px solid #f0e4d8", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", borderBottom: "1px solid #f0e4d8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#9c5738", fontSize: 7.5, fontWeight: 700, letterSpacing: 2, fontFamily: F }}>MAISON DORÉE</span>
+        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "#b8927a", fontFamily: F }}><span>Boutique</span><span>Panier</span></div>
+      </div>
+      <div style={{ padding: "10px 12px" }}>
+        <div style={{ fontSize: 6, color: "#b8927a", letterSpacing: 2, marginBottom: 6, fontFamily: F }}>ARTISANAT FRANÇAIS</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "#3d1f14", fontFamily: "Georgia, serif", marginBottom: 8 }}>Collections<br />Printemps 2025</div>
+        <div style={{ display: "flex", gap: 5 }}>
+          {["Céramique", "Linge", "Décor"].map((s) => (
+            <span key={s} style={{ fontSize: 5.5, padding: "2px 5px", border: "1px solid #e8c9ba", borderRadius: 3, color: "#9c5738", fontFamily: F }}>{s}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardBlog() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#fff", borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#0f172a", fontSize: 8, fontWeight: 700, fontFamily: "Georgia, serif" }}>Le Carnet</span>
+        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "#94a3b8", fontFamily: F }}><span>Articles</span><span>À propos</span></div>
+      </div>
+      <div style={{ padding: "10px 12px" }}>
+        <div style={{ fontSize: 6, color: "#64748b", letterSpacing: 2, marginBottom: 6, fontFamily: F }}>VOYAGE · CULTURE · VIE</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", fontFamily: "Georgia, serif", lineHeight: 1.3, marginBottom: 8 }}>Les Marchés de<br />Marrakech en Hiver</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 6, color: "#64748b", fontFamily: F }}>ML</div>
+          <span style={{ fontSize: 6.5, color: "#94a3b8", fontFamily: F }}>Marie Laurent · 15 jan.</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardSaas() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#020817", borderRadius: 8, overflow: "hidden", border: "1px solid #0f1729", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", borderBottom: "1px solid #0f1729", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#06b6d4", fontSize: 8, fontWeight: 800, fontFamily: F }}>◆ DataFlow</span>
+        <div style={{ fontSize: 6.5, padding: "1px 6px", background: "rgba(6,182,212,0.15)", borderRadius: 10, color: "#06b6d4", fontFamily: F }}>Dashboard</div>
+      </div>
+      <div style={{ padding: "10px 12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5, marginBottom: 8 }}>
+          {[["Projets", "12"], ["Clients", "48"], ["Rev.", "€4.2k"], ["Score", "98%"]].map(([label, val]) => (
+            <div key={label} style={{ background: "#0f172a", borderRadius: 5, padding: "5px 7px" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#e2e8f0", fontFamily: F }}>{val}</div>
+              <div style={{ fontSize: 6, color: "#475569", fontFamily: F }}>{label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ height: 3, background: "#0f172a", borderRadius: 2 }}>
+          <div style={{ height: "100%", width: "72%", background: "#06b6d4", borderRadius: 2 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardAvocat() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#1a1a2e", borderRadius: 8, overflow: "hidden", border: "1px solid #2d1b35", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", borderBottom: "1px solid rgba(139,0,0,0.3)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#c9a96e", fontSize: 7.5, fontWeight: 700, letterSpacing: 2, fontFamily: F }}>CABINET MOREAU</span>
+        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "rgba(255,255,255,0.3)", fontFamily: F }}><span>Expertise</span><span>Contact</span></div>
+      </div>
+      <div style={{ padding: "14px 12px" }}>
+        <div style={{ fontSize: 6, color: "#8b0000", letterSpacing: 3, marginBottom: 8, fontFamily: F }}>DROIT DES AFFAIRES</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#f5f0e8", fontFamily: "Georgia, serif", lineHeight: 1.3, marginBottom: 10 }}>Votre intérêt,<br />notre priorité.</div>
+        <div style={{ display: "inline-block", fontSize: 7, padding: "3px 10px", border: "1px solid rgba(139,0,0,0.5)", color: "#c9a96e", borderRadius: 3, fontFamily: F }}>Prendre RDV</div>
+      </div>
+    </div>
+  );
+}
+
+function CardMedecin() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#f0f9ff", borderRadius: 8, overflow: "hidden", border: "1px solid #bae6fd", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", borderBottom: "1px solid #e0f2fe", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ color: "white", fontSize: 7, fontWeight: 700 }}>+</span>
+          </div>
+          <span style={{ color: "#0284c7", fontSize: 7.5, fontWeight: 700, fontFamily: F }}>Dr. Sarah Chen</span>
+        </div>
+        <span style={{ fontSize: 6.5, color: "#64748b", fontFamily: F }}>Généraliste</span>
+      </div>
+      <div style={{ padding: "12px 12px" }}>
+        <div style={{ fontSize: 6, color: "#0284c7", letterSpacing: 2, marginBottom: 6, fontFamily: F }}>CONSULTATION · PARIS 8e</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#0c4a6e", lineHeight: 1.3, marginBottom: 8, fontFamily: F }}>Une médecine<br />attentive et humaine.</div>
+        <div style={{ display: "flex", gap: 5 }}>
+          <div style={{ fontSize: 7, padding: "3px 8px", background: "#0284c7", color: "white", borderRadius: 4, fontFamily: F }}>Prendre RDV</div>
+          <div style={{ fontSize: 7, padding: "3px 8px", background: "#e0f2fe", color: "#0284c7", borderRadius: 4, fontFamily: F }}>Téléconsult.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardCoach() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#0a0a0a", borderRadius: 8, overflow: "hidden", border: "1px solid #1a1a1a", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", borderBottom: "1px solid rgba(251,146,60,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#fb923c", fontSize: 8, fontWeight: 800, fontFamily: F }}>MOMENTUM</span>
+        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "rgba(255,255,255,0.3)", fontFamily: F }}><span>Méthode</span><span>Contact</span></div>
+      </div>
+      <div style={{ padding: "14px 12px", textAlign: "center" }}>
+        <div style={{ fontSize: 7, color: "#fb923c", letterSpacing: 3, marginBottom: 10, fontFamily: F }}>COACHING PROFESSIONNEL</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: "white", letterSpacing: -0.3, lineHeight: 1.4, marginBottom: 10, fontFamily: F }}>Transform.<br />Agir.<br />Réussir.</div>
+        <div style={{ fontSize: 7, padding: "3px 12px", display: "inline-block", background: "#fb923c", color: "black", borderRadius: 20, fontWeight: 700, fontFamily: F }}>Démarrer</div>
+      </div>
+    </div>
+  );
+}
+
+function CardArchitecte() {
+  return (
+    <div style={{ width: 220, height: 160, background: "#f5f5f0", borderRadius: 8, overflow: "hidden", border: "1px solid #e8e8e0", flexShrink: 0, marginRight: 16 }}>
+      <div style={{ padding: "7px 10px", borderBottom: "1px solid #e2e2da", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#0f172a", fontSize: 7.5, fontWeight: 700, letterSpacing: 2, fontFamily: F }}>STUDIO BLANC</span>
+        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "#94a3b8", fontFamily: F }}><span>Projets</span><span>Contact</span></div>
+      </div>
+      <div style={{ padding: "14px 12px" }}>
+        <div style={{ fontSize: 6, color: "#94a3b8", letterSpacing: 3, marginBottom: 8, fontFamily: F }}>ARCHITECTURE</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "#0f172a", letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 10, fontFamily: F }}>Créer des espaces<br />qui inspirent.</div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {["Résidentiel", "Commercial", "Interior"].map((s) => (
+            <span key={s} style={{ fontSize: 5.5, padding: "2px 5px", border: "1px solid #cbd5e1", borderRadius: 3, color: "#64748b", fontFamily: F }}>{s}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const ROW_A = [CardRestaurant, CardPortfolio, CardAgence, CardBoutique, CardBlog];
+const ROW_B = [CardSaas, CardAvocat, CardMedecin, CardCoach, CardArchitecte];
+
+/* ─── Data ───────────────────────────────────────────────────────── */
+
+const TAGS = ["Restaurant", "Portfolio", "Boutique", "Agence", "Blog", "Coach"];
+
+const TAG_EXAMPLES: Record<string, string> = {
+  Restaurant: "Site pour un restaurant gastronomique français à Paris",
+  Portfolio:  "Portfolio pour un photographe lifestyle minimaliste",
+  Boutique:   "Boutique en ligne d'artisanat et déco maison",
+  Agence:     "Site pour une agence de design et communication créative",
+  Blog:       "Blog de voyage avec articles et photos",
+  Coach:      "Site de coaching professionnel et développement personnel",
+};
 
 const STEPS = [
-  { num: "01", icon: "✍️", title: "Décrivez", desc: "Décrivez votre site en langage naturel. Type, style, sections — dites tout." },
-  { num: "02", icon: "⚡", title: "L'IA génère", desc: "Claude AI génère un site complet, beau et professionnel en moins de 30 secondes." },
-  { num: "03", icon: "📦", title: "Téléchargez", desc: "Exportez en ZIP, publiez ou continuez à éditer visuellement." },
+  { num: "01", title: "Décrivez",       desc: "Tapez ce que vous voulez. Un restaurant, un portfolio, une boutique..." },
+  { num: "02", title: "On crée",        desc: "Votre site est généré en quelques secondes, complet et professionnel." },
+  { num: "03", title: "Vous exportez",  desc: "Téléchargez votre site en ZIP. Prêt à mettre en ligne ou à revendre." },
 ];
 
 const PRICING = [
   {
     name: "Gratuit",
-    price: 0,
-    tokens: "16 000",
-    features: ["16 000 tokens offerts", "1 site test", "Export HTML/ZIP", "Éditeur visuel"],
+    label: "0€",
+    period: true,
+    tokens: "16 000 tokens",
+    sub: "1 site test",
+    features: ["Génération de site", "Export ZIP", "Éditeur visuel"],
     cta: "Commencer gratuitement",
+    primary: false,
     highlight: false,
     href: "/auth/signup",
   },
   {
     name: "Starter",
-    price: 20,
-    tokens: "160 000",
-    features: ["160 000 tokens/mois", "Export HTML/ZIP", "Éditeur visuel", "Support email"],
-    cta: "Commencer",
+    label: "20€",
+    period: true,
+    tokens: "160 000 tokens",
+    sub: "~10 sites/mois",
+    features: ["Tout du gratuit", "Sites illimités en édition", "Support email"],
+    cta: "Choisir Starter",
+    primary: false,
     highlight: false,
     href: "/pricing",
   },
   {
     name: "Pro",
-    price: 45,
-    tokens: "480 000",
-    features: ["480 000 tokens/mois", "Export HTML/ZIP", "Éditeur visuel avancé", "Templates premium", "Support prioritaire"],
+    label: "45€",
+    period: true,
+    tokens: "480 000 tokens",
+    sub: "~30 sites/mois",
+    features: ["Tout du Starter", "Modification avancée", "Support prioritaire"],
     cta: "Choisir Pro",
+    primary: true,
     highlight: true,
     href: "/pricing",
   },
   {
     name: "Agency",
-    price: 250,
-    tokens: "3 200 000",
-    features: ["3 200 000 tokens/mois", "Export HTML/ZIP", "Marque blanche", "API access", "Support dédié"],
-    cta: "Contacter",
+    label: "250€",
+    period: true,
+    tokens: "3 200 000 tokens",
+    sub: "~200 sites/mois",
+    features: ["Tout du Pro", "Volume illimité", "Account manager"],
+    cta: "Choisir Agency",
+    primary: false,
     highlight: false,
     href: "/pricing",
   },
 ];
 
 const TESTIMONIALS = [
-  { name: "Sophie Martin", role: "Restauratrice", avatar: "SM", text: "Mon site de restaurant était prêt en moins d'une minute. Exactement ce dont j'avais besoin.", stars: 5 },
-  { name: "Lucas Bernard", role: "Freelance designer", avatar: "LB", text: "J'ai généré mon portfolio complet en décrivant mon style. Le résultat était bluffant.", stars: 5 },
-  { name: "Marie Dubois", role: "Fondatrice SaaS", avatar: "MD", text: "Notre landing page convertit mieux que celle faite par notre agence. Et ça nous a coûté 45€.", stars: 5 },
+  {
+    name: "Sophie Martin",
+    role: "Restauratrice",
+    text: "Mon site était prêt en quelques secondes. Exactement le rendu que j'avais en tête, sans m'y connaître en technique.",
+    stars: 5,
+  },
+  {
+    name: "Lucas Bernard",
+    role: "Freelance designer",
+    text: "J'ai généré mon portfolio complet juste en décrivant mon style. Le résultat était vraiment bluffant.",
+    stars: 5,
+  },
+  {
+    name: "Marie Dubois",
+    role: "Fondatrice startup",
+    text: "Notre landing page convertit mieux que celle faite par notre agence, pour une fraction du prix.",
+    stars: 5,
+  },
 ];
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.55, ease: "easeOut" as const },
-  }),
-};
-
-/* ─── Shared style tokens ───────────────────────────────────────── */
-const SYNE = "var(--font-syne), sans-serif";
-const DM   = "var(--font-dm-sans), Arial, sans-serif";
-const BLUE = "#3b82f6";
-const BLUE_DARK = "#2563eb";
-const BLUE_DEEP = "#1d4ed8";
-const BORDER = "rgba(59,130,246,0.15)";
-const TEXT   = "#f8fafc";
-const MUTED  = "rgba(255,255,255,0.4)";
-const CARD   = "#080820";
-
-/* ─── Component ─────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+═══════════════════════════════════════════════════════════════ */
 
 export default function HomePage() {
   const router = useRouter();
-  const [prompt, setPrompt] = useState("");
-  const [typeIdx, setTypeIdx] = useState(0);
-  const [typeText, setTypeText] = useState("");
-  const [navOpaque, setNavOpaque] = useState(false);
+  const [prompt, setPrompt]               = useState("");
+  const [navOpaque, setNavOpaque]         = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [cursor, setCursor] = useState({ x: -400, y: -400 });
-  const [counts, setCounts] = useState(STATS.map(() => 0));
   const [bannerVisible, setBannerVisible] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const statsAnimated = useRef(false);
+  const [inputFocused, setInputFocused]   = useState(false);
 
-  /* Auth + banner */
+  /* ── Init: banner visibility + auth check ── */
   useEffect(() => {
-    if (localStorage.getItem("promo_banner_dismissed") !== "1") setBannerVisible(true);
+    if (localStorage.getItem("promo_banner_dismissed") !== "1") {
+      setBannerVisible(true);
+    }
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    supabase.auth.getUser().then(({ data: { user } }) => setIsAuthenticated(!!user));
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsAuthenticated(!!user);
+    });
   }, []);
 
-  /* Cursor glow */
+  /* ── Navbar becomes opaque on scroll ── */
   useEffect(() => {
-    const move = (e: MouseEvent) => setCursor({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", move);
-    return () => window.removeEventListener("mousemove", move);
-  }, []);
-
-  /* Navbar scroll */
-  useEffect(() => {
-    const onScroll = () => setNavOpaque(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll);
+    const onScroll = () => setNavOpaque(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* Typewriter */
+  /* ── Vanilla scroll reveal (IntersectionObserver) ── */
   useEffect(() => {
-    const full = TYPEWRITER_PROMPTS[typeIdx];
-    let i = 0;
-    setTypeText("");
-    const t = setInterval(() => {
-      i++;
-      setTypeText(full.slice(0, i));
-      if (i >= full.length) {
-        clearInterval(t);
-        setTimeout(() => setTypeIdx((p) => (p + 1) % TYPEWRITER_PROMPTS.length), 2200);
-      }
-    }, 38);
-    return () => clearInterval(t);
-  }, [typeIdx]);
-
-  /* Stats count-up */
-  useEffect(() => {
-    const el = statsRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !statsAnimated.current) {
-        statsAnimated.current = true;
-        STATS.forEach((stat, i) => {
-          const steps = 60;
-          const inc = stat.value / steps;
-          let cur = 0;
-          const timer = setInterval(() => {
-            cur = Math.min(cur + inc, stat.value);
-            setCounts((prev) => { const n = [...prev]; n[i] = Math.floor(cur); return n; });
-            if (cur >= stat.value) clearInterval(timer);
-          }, 1800 / steps);
+    const els = document.querySelectorAll<HTMLElement>(".reveal");
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            obs.unobserve(entry.target);
+          }
         });
-      }
-    }, { threshold: 0.4 });
-    obs.observe(el);
+      },
+      { threshold: 0.1 }
+    );
+    els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 
+  /* ── Generate handler ── */
   const handleGenerate = () => {
     if (!prompt.trim()) return;
-    router.push(isAuthenticated
-      ? `/generate?prompt=${encodeURIComponent(prompt.trim())}`
-      : `/try?prompt=${encodeURIComponent(prompt.trim())}`
-    );
+    const encoded = encodeURIComponent(prompt.trim());
+    router.push(isAuthenticated ? `/generate?prompt=${encoded}` : `/try?prompt=${encoded}`);
   };
 
-  const handleTemplateSelect = (p: string) => {
-    router.push(isAuthenticated
-      ? `/generate?prompt=${encodeURIComponent(p)}`
-      : `/try?prompt=${encodeURIComponent(p)}`
-    );
-  };
+  /* ── Layout offsets ── */
+  const bannerH   = 36;
+  const navH      = 56;
+  const navTop    = bannerVisible ? bannerH : 0;
+  const heroPadT  = bannerVisible ? bannerH + navH + 56 : navH + 56;
 
-  const navTop = bannerVisible ? "40px" : "0px";
+  /* ── Prompt bar border/shadow ── */
+  const promptBorder = inputFocused
+    ? { border: "1.5px solid #2563eb", boxShadow: "0 0 0 3px rgba(37,99,235,0.1), 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)" }
+    : { border: "1.5px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)" };
 
   return (
-    <div style={{ background: "#04040f", fontFamily: DM }} className="min-h-screen text-white overflow-x-hidden">
+    <div className="light-page" style={{ fontFamily: F, background: "#ffffff", color: "#0f172a", overflowX: "hidden" }}>
 
-      {/* ── Promo banner ──────────────────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════
+          PROMO BANNER
+      ══════════════════════════════════════════════════════════ */}
       {bannerVisible && (
         <div
-          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-10 h-10"
-          style={{ background: "#1e3a8a" }}
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-4"
+          style={{ height: bannerH, background: "#eff6ff", borderBottom: "1px solid #bfdbfe" }}
         >
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.9)" }}>
-            🎁 Inscrivez-vous et obtenez{" "}
-            <strong className="text-white">-20% à vie</strong>{" "}
-            sur votre premier plan
+          <p style={{ fontSize: 13, color: "#1d4ed8", fontFamily: F }}>
+            🎁 Offre de lancement —{" "}
+            <strong>20% de réduction à vie</strong>{" "}
+            avec votre code de bienvenue
           </p>
           <Link
-            href="/auth/signup"
-            className="text-xs font-semibold px-3 py-1 rounded-full transition-colors"
-            style={{ background: "white", color: "#1e3a8a" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#eff6ff")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+            href="/pricing"
+            style={{ fontSize: 13, color: "#2563eb", textDecoration: "underline", fontFamily: F, fontWeight: 500 }}
           >
-            En profiter →
+            En profiter
           </Link>
           <button
-            onClick={() => { localStorage.setItem("promo_banner_dismissed", "1"); setBannerVisible(false); }}
-            className="absolute right-4 text-lg leading-none transition-colors"
-            style={{ color: "rgba(255,255,255,0.5)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "white")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
-            aria-label="Fermer"
-          >×</button>
+            onClick={() => {
+              localStorage.setItem("promo_banner_dismissed", "1");
+              setBannerVisible(false);
+            }}
+            className="absolute right-4 flex items-center justify-center w-6 h-6 rounded transition-colors hover:bg-blue-100"
+            style={{ color: "#64748b", fontSize: 16, lineHeight: 1 }}
+            aria-label="Fermer la bannière"
+          >
+            ×
+          </button>
         </div>
       )}
 
-      {/* ── Cursor glow ───────────────────────────────────────────── */}
-      <div
-        className="pointer-events-none fixed z-50"
-        style={{
-          left: cursor.x - 200,
-          top: cursor.y - 200,
-          width: 400,
-          height: 400,
-          background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)",
-          borderRadius: "50%",
-          filter: "blur(20px)",
-          transition: "left 0.06s, top 0.06s",
-        }}
-      />
-
-      {/* ── Fixed background blobs ────────────────────────────────── */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex: 0 }}>
-        <div style={{
-          position: "absolute", top: "8%", left: "5%",
-          width: 700, height: 700,
-          background: "radial-gradient(circle, rgba(29,78,216,0.16) 0%, rgba(59,130,246,0.06) 50%, transparent 70%)",
-          filter: "blur(70px)",
-          animation: "blobFloat1 20s ease-in-out infinite",
-        }} />
-        <div style={{
-          position: "absolute", bottom: "10%", right: "5%",
-          width: 600, height: 600,
-          background: "radial-gradient(circle, rgba(59,130,246,0.14) 0%, rgba(96,165,250,0.05) 50%, transparent 70%)",
-          filter: "blur(70px)",
-          animation: "blobFloat2 26s ease-in-out infinite",
-        }} />
-      </div>
-
-      {/* ── Navbar ────────────────────────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════
+          NAVBAR
+      ══════════════════════════════════════════════════════════ */}
       <nav
-        className="fixed left-0 right-0 z-40 transition-all duration-300"
+        className="fixed left-0 right-0 z-40 transition-all duration-200"
         style={{
           top: navTop,
-          background: navOpaque ? "rgba(4,4,15,0.85)" : "transparent",
-          backdropFilter: navOpaque ? "blur(12px)" : "none",
-          WebkitBackdropFilter: navOpaque ? "blur(12px)" : "none",
-          borderBottom: navOpaque ? `1px solid ${BORDER}` : "1px solid transparent",
+          height: navH,
+          background: navOpaque ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.98)",
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+          borderBottom: "1px solid #e2e8f0",
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div
+          className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between"
+          style={{ fontFamily: F }}
+        >
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: `linear-gradient(135deg, ${BLUE_DEEP}, ${BLUE})` }}
-            >
-              <span className="text-white text-sm font-bold">✦</span>
-            </div>
-            <span className="text-lg font-bold" style={{ color: TEXT, fontFamily: SYNE }}>
-              Create<span style={{ color: BLUE }}>It</span>
+          <Link href="/" className="flex items-center" style={{ textDecoration: "none" }}>
+            <span style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", letterSpacing: -0.3 }}>
+              Create<span style={{ color: "#2563eb" }}>It</span>
             </span>
           </Link>
 
           {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-8 text-sm" style={{ color: MUTED }}>
-            {[["Fonctionnalités", "#fonctionnalites"], ["Templates", "#templates"], ["Tarifs", "#tarifs"]].map(([label, href]) => (
-              <a key={label} href={href} className="hover:text-white transition-colors">{label}</a>
-            ))}
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#exemples"      style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Exemples</a>
+            <Link href="/pricing"    style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Tarifs</Link>
+            <Link href="/auth/login" style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Se connecter</Link>
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/auth/login"
-              className="text-sm px-4 py-2 rounded-lg transition-colors hover:text-white"
-              style={{ color: MUTED, border: "1px solid rgba(255,255,255,0.1)" }}
-            >
-              Se connecter
-            </Link>
+          <div className="hidden md:block">
             <Link
               href="/auth/signup"
-              className="text-sm font-semibold text-white px-5 py-2 rounded-full transition-all"
-              style={{ background: BLUE_DARK }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = BLUE)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = BLUE_DARK)}
+              className="transition-colors"
+              style={{ fontSize: 14, fontWeight: 500, color: "white", background: "#0f172a", padding: "8px 16px", borderRadius: 6, textDecoration: "none" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#1e293b")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#0f172a")}
             >
-              Commencer gratuitement
+              Commencer
             </Link>
           </div>
 
           {/* Mobile burger */}
           <button
             onClick={() => setMobileNavOpen((o) => !o)}
-            className="md:hidden w-10 h-10 flex items-center justify-center"
-            style={{ color: MUTED }}
+            className="md:hidden flex flex-col items-center justify-center w-10 h-10 gap-1.5"
             aria-label="Menu"
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {mobileNavOpen
-                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              }
-            </svg>
+            <span className="block w-5 h-0.5 transition-all" style={{ background: "#0f172a" }} />
+            <span className="block w-5 h-0.5 transition-all" style={{ background: "#0f172a" }} />
+            <span className="block w-5 h-0.5 transition-all" style={{ background: "#0f172a" }} />
           </button>
         </div>
       </nav>
 
-      {/* ── Mobile nav ────────────────────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════
+          MOBILE MENU (full screen overlay)
+      ══════════════════════════════════════════════════════════ */}
       {mobileNavOpen && (
         <div
-          className="md:hidden fixed left-0 right-0 z-40 px-6 py-4 flex flex-col gap-3"
-          style={{
-            top: bannerVisible ? "96px" : "64px",
-            background: "rgba(4,4,15,0.97)",
-            borderBottom: `1px solid ${BORDER}`,
-            backdropFilter: "blur(12px)",
-          }}
+          className="fixed inset-0 z-30 flex flex-col"
+          style={{ background: "#ffffff", paddingTop: navTop + navH, fontFamily: F }}
         >
-          {[["Fonctionnalités", "#fonctionnalites"], ["Templates", "#templates"], ["Tarifs", "#tarifs"]].map(([label, href]) => (
+          <div className="flex flex-col p-6 gap-1">
             <a
-              key={label}
-              href={href}
+              href="#exemples"
               onClick={() => setMobileNavOpen(false)}
-              className="text-sm py-2 border-b"
-              style={{ color: MUTED, borderColor: "#0f1729" }}
-            >{label}</a>
-          ))}
-          <div className="flex gap-3 pt-2">
-            <Link href="/auth/login" onClick={() => setMobileNavOpen(false)}
-              className="flex-1 text-center text-sm py-2.5 rounded-lg border"
-              style={{ color: MUTED, borderColor: "rgba(255,255,255,0.1)" }}
+              className="py-4 text-lg border-b"
+              style={{ color: "#0f172a", textDecoration: "none", borderColor: "#f1f5f9" }}
+            >Exemples</a>
+            <Link
+              href="/pricing"
+              onClick={() => setMobileNavOpen(false)}
+              className="py-4 text-lg border-b"
+              style={{ color: "#0f172a", textDecoration: "none", borderColor: "#f1f5f9" }}
+            >Tarifs</Link>
+            <Link
+              href="/auth/login"
+              onClick={() => setMobileNavOpen(false)}
+              className="py-4 text-lg border-b"
+              style={{ color: "#0f172a", textDecoration: "none", borderColor: "#f1f5f9" }}
             >Se connecter</Link>
-            <Link href="/auth/signup" onClick={() => setMobileNavOpen(false)}
-              className="flex-1 text-center text-sm font-semibold text-white py-2.5 rounded-full"
-              style={{ background: BLUE_DARK }}
-            >Commencer</Link>
+            <div className="pt-6 flex flex-col gap-3">
+              <Link
+                href="/auth/signup"
+                onClick={() => setMobileNavOpen(false)}
+                className="text-center py-3 rounded-lg text-white font-medium"
+                style={{ background: "#0f172a", textDecoration: "none" }}
+              >Commencer gratuitement</Link>
+            </div>
           </div>
+          <button
+            onClick={() => setMobileNavOpen(false)}
+            className="absolute top-4 right-5 text-2xl"
+            style={{ color: "#94a3b8", top: navTop + navH + 12 }}
+            aria-label="Fermer le menu"
+          >×</button>
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════════
           HERO
-      ══════════════════════════════════════════════════════════════ */}
+      ══════════════════════════════════════════════════════════ */}
       <section
-        className="relative min-h-screen flex flex-col items-center justify-center px-6 text-center"
-        style={{ paddingTop: bannerVisible ? "140px" : "100px", paddingBottom: "80px", zIndex: 1 }}
+        className="flex flex-col items-center text-center px-6"
+        style={{ paddingTop: heroPadT, paddingBottom: 80, background: "#ffffff" }}
       >
-        {/* Hero-local stronger blobs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div style={{
-            position: "absolute", top: "20%", left: "12%",
-            width: 440, height: 440,
-            background: `radial-gradient(circle, rgba(29,78,216,0.22) 0%, transparent 65%)`,
-            filter: "blur(90px)",
-            animation: "blobFloat1 16s ease-in-out infinite",
-          }} />
-          <div style={{
-            position: "absolute", top: "10%", right: "12%",
-            width: 380, height: 380,
-            background: `radial-gradient(circle, rgba(96,165,250,0.18) 0%, transparent 65%)`,
-            filter: "blur(90px)",
-            animation: "blobFloat2 20s ease-in-out infinite",
-          }} />
-        </div>
-
-        {/* Badge */}
-        <motion.div
-          initial="hidden" animate="visible" variants={fadeUp} custom={0}
-          className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full mb-8 text-sm font-medium"
-          style={{ background: "rgba(59,130,246,0.08)", border: `1px solid rgba(59,130,246,0.25)`, color: "#60a5fa" }}
-        >
-          <span
-            className="w-2 h-2 rounded-full"
-            style={{ background: BLUE, boxShadow: `0 0 8px ${BLUE}`, animation: "pulse-glow 2s ease-in-out infinite" }}
-          />
-          Créateur de sites web IA
-        </motion.div>
-
-        {/* Headline */}
-        <motion.h1
-          initial="hidden" animate="visible" variants={fadeUp} custom={1}
-          className="mb-6 font-extrabold leading-[0.92]"
+        {/* Eyebrow */}
+        <p
           style={{
-            fontFamily: SYNE,
-            letterSpacing: "-1.5px",
-            fontSize: "clamp(2.8rem, 8vw, 5.5rem)",
-            color: TEXT,
+            fontSize: 13,
+            color: "#64748b",
+            letterSpacing: "0.02em",
+            marginBottom: 24,
+            fontFamily: F,
+            animation: "heroFadeIn 0.5s ease-out both",
           }}
         >
-          Créez des sites web
-          <br />
-          <span style={{
-            background: "linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}>
-            en quelques mots
-          </span>
-        </motion.h1>
-
-        {/* Subtitle */}
-        <motion.p
-          initial="hidden" animate="visible" variants={fadeUp} custom={2}
-          className="text-lg mb-10 max-w-xl leading-relaxed"
-          style={{ color: MUTED }}
-        >
-          Décrivez votre site, notre IA le crée en 30 secondes.<br />
-          Beau, professionnel, prêt à vendre.
-        </motion.p>
+          Créez votre site en quelques secondes.
+        </p>
 
         {/* Prompt bar */}
-        <motion.div
-          initial="hidden" animate="visible" variants={fadeUp} custom={3}
-          className="w-full max-w-2xl mb-4"
+        <div
+          className="w-full"
+          style={{
+            maxWidth: 620,
+            marginBottom: 8,
+            animation: "heroFadeIn 0.5s ease-out 0.1s both",
+          }}
         >
           <div
-            className="relative flex items-center rounded-2xl p-2 transition-all"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(59,130,246,0.2)" }}
+            className="flex items-center rounded-xl overflow-hidden"
+            style={{
+              height: 56,
+              background: "white",
+              borderRadius: 12,
+              transition: "border 0.15s, box-shadow 0.15s",
+              ...promptBorder,
+            }}
           >
             <input
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-              placeholder={typeText || TYPEWRITER_PROMPTS[0]}
-              className="flex-1 bg-transparent outline-none px-4 py-3 text-base"
-              style={{ color: TEXT, fontFamily: DM }}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              placeholder="Décrivez votre site... ex: restaurant italien à Lyon"
+              className="flex-1 bg-transparent outline-none"
+              style={{
+                padding: "0 16px",
+                fontSize: 15,
+                color: "#0f172a",
+                fontFamily: F,
+              }}
             />
             <button
               onClick={handleGenerate}
-              className="shrink-0 text-white font-semibold px-6 py-3 rounded-xl transition-all text-sm"
-              style={{ background: BLUE_DARK, fontFamily: DM }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = BLUE)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = BLUE_DARK)}
+              className="shrink-0 transition-colors"
+              style={{
+                height: 40,
+                padding: "0 20px",
+                margin: 8,
+                background: "#2563eb",
+                color: "white",
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: F,
+                border: "none",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#1d4ed8")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#2563eb")}
             >
-              Générer →
+              Créer →
             </button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Quick-tags */}
-        <motion.div
-          initial="hidden" animate="visible" variants={fadeUp} custom={4}
-          className="flex flex-wrap gap-2 justify-center mb-6"
+        {/* Suggestion tags */}
+        <div
+          className="flex flex-wrap gap-2 justify-center"
+          style={{ marginBottom: 32, animation: "heroFadeIn 0.5s ease-out 0.2s both" }}
         >
-          {QUICK_TAGS.map((tag) => (
+          {TAGS.map((tag) => (
             <button
               key={tag}
-              onClick={() => setPrompt(`Crée un site ${tag.toLowerCase()} professionnel`)}
-              className="text-xs px-3 py-1.5 rounded-full transition-all"
-              style={{ background: "rgba(59,130,246,0.08)", border: BORDER, color: "#60a5fa" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(59,130,246,0.18)"; e.currentTarget.style.color = "#93c5fd"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(59,130,246,0.08)"; e.currentTarget.style.color = "#60a5fa"; }}
+              onClick={() => setPrompt(TAG_EXAMPLES[tag])}
+              className="transition-colors"
+              style={{
+                fontSize: 12,
+                color: "#64748b",
+                background: "#f1f5f9",
+                padding: "4px 12px",
+                borderRadius: 20,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: F,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#e2e8f0")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#f1f5f9")}
             >
               {tag}
             </button>
           ))}
-        </motion.div>
+        </div>
 
-        <motion.p
-          initial="hidden" animate="visible" variants={fadeUp} custom={5}
-          className="text-sm"
-          style={{ color: "rgba(255,255,255,0.25)" }}
+        {/* Social proof */}
+        <p
+          style={{
+            fontSize: 13,
+            color: "#94a3b8",
+            fontFamily: F,
+            animation: "heroFadeIn 0.5s ease-out 0.3s both",
+          }}
         >
-          Sans carte bancaire • Export ZIP inclus
-        </motion.p>
+          Plus de 2 800 sites créés ce mois
+        </p>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          STATS
-      ══════════════════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════════════
+          EXAMPLES CAROUSEL
+      ══════════════════════════════════════════════════════════ */}
       <section
-        ref={statsRef}
-        className="py-16 border-y relative"
-        style={{ borderColor: BORDER, zIndex: 1 }}
+        id="exemples"
+        className="reveal"
+        style={{ background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", padding: "64px 0" }}
       >
-        <div className="max-w-4xl mx-auto px-6 grid grid-cols-3 gap-4 md:gap-8 text-center">
-          {STATS.map((stat, i) => (
-            <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
-              <div
-                className="text-4xl font-extrabold mb-1"
-                style={{ fontFamily: SYNE, color: TEXT }}
-              >
-                {counts[i].toLocaleString()}{stat.suffix}
-              </div>
-              <div className="text-sm" style={{ color: MUTED }}>{stat.label}</div>
-            </motion.div>
-          ))}
+        <div className="text-center" style={{ marginBottom: 40, fontFamily: F }}>
+          <h2 style={{ fontSize: 22, fontWeight: 600, color: "#0f172a", letterSpacing: -0.3, marginBottom: 8 }}>
+            Ce que vous pouvez créer
+          </h2>
+          <p style={{ fontSize: 14, color: "#64748b" }}>
+            Des sites professionnels dans tous les styles
+          </p>
+        </div>
+
+        <div className="carousel-wrapper" style={{ overflow: "hidden" }}>
+          {/* Row 1 — left to right */}
+          <div style={{ position: "relative", marginBottom: 14, overflow: "hidden" }}>
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 120, background: "linear-gradient(90deg,#f8fafc,transparent)", zIndex: 10, pointerEvents: "none" }} />
+            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 120, background: "linear-gradient(-90deg,#f8fafc,transparent)", zIndex: 10, pointerEvents: "none" }} />
+            <div className="examples-track">
+              {[...ROW_A, ...ROW_A].map((Card, i) => (
+                <Card key={`a-${i}`} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 — right to left */}
+          <div style={{ position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 120, background: "linear-gradient(90deg,#f8fafc,transparent)", zIndex: 10, pointerEvents: "none" }} />
+            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 120, background: "linear-gradient(-90deg,#f8fafc,transparent)", zIndex: 10, pointerEvents: "none" }} />
+            <div className="examples-track-reverse">
+              {[...ROW_B, ...ROW_B].map((Card, i) => (
+                <Card key={`b-${i}`} />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          TEMPLATES CAROUSEL
-      ══════════════════════════════════════════════════════════════ */}
-      <div id="templates" style={{ position: "relative", zIndex: 1 }}>
-        <TemplatesSection onSelect={handleTemplateSelect} />
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════════
           HOW IT WORKS
-      ══════════════════════════════════════════════════════════════ */}
+      ══════════════════════════════════════════════════════════ */}
       <section
-        id="fonctionnalites"
-        className="py-24 px-6 border-t relative"
-        style={{ background: "rgba(6,6,24,0.6)", borderColor: BORDER, zIndex: 1 }}
+        className="reveal"
+        style={{ background: "#ffffff", padding: "80px 24px" }}
       >
-        <div className="max-w-5xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-14">
-            <h2
-              className="text-4xl font-extrabold mb-4"
-              style={{ fontFamily: SYNE, letterSpacing: "-1.5px", color: TEXT }}
-            >
-              Comment ça marche
-            </h2>
-            <p style={{ color: MUTED }}>Trois étapes, moins d&apos;une minute</p>
-          </motion.div>
+        <div className="max-w-3xl mx-auto" style={{ fontFamily: F }}>
+          <h2
+            className="text-center"
+            style={{ fontSize: 28, fontWeight: 600, color: "#0f172a", letterSpacing: -0.3, marginBottom: 48 }}
+          >
+            Simple comme bonjour
+          </h2>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="flex flex-col md:flex-row">
             {STEPS.map((step, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
-                className="rounded-2xl p-6 transition-all duration-200"
-                style={{ background: CARD, border: `1px solid ${BORDER}` }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)")}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = BORDER)}
+                className={`flex-1 ${i < 2 ? "md:border-r border-[#e2e8f0]" : ""} ${i > 0 ? "border-t md:border-t-0" : ""}`}
+                style={{
+                  padding: "0 0 32px",
+                  borderColor: "#e2e8f0",
+                }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-lg mb-4"
-                  style={{ background: "rgba(29,78,216,0.18)", border: "1px solid rgba(59,130,246,0.2)" }}
+                  style={{
+                    paddingTop: i > 0 ? 32 : 0,
+                    paddingLeft: i > 0 ? 0 : 0,
+                    paddingRight: 0,
+                  }}
+                  className={`${i > 0 ? "md:pl-10 pt-8 md:pt-0" : ""} ${i < 2 ? "md:pr-10" : ""}`}
                 >
-                  {step.icon}
+                  <div style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600, letterSpacing: "0.1em", marginBottom: 12 }}>
+                    {step.num}
+                  </div>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, color: "#0f172a", marginBottom: 8 }}>{step.title}</h3>
+                  <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6 }}>{step.desc}</p>
                 </div>
-                <div className="text-xs font-mono mb-2" style={{ color: BLUE }}>{step.num}</div>
-                <h3 className="text-lg font-bold mb-2" style={{ color: TEXT, fontFamily: SYNE }}>{step.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: MUTED }}>{step.desc}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════════
           PRICING
-      ══════════════════════════════════════════════════════════════ */}
-      <section id="tarifs" className="py-24 px-6 border-t relative" style={{ borderColor: BORDER, zIndex: 1 }}>
-        <div className="max-w-5xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-14">
-            <h2
-              className="text-4xl font-extrabold mb-4"
-              style={{ fontFamily: SYNE, letterSpacing: "-1.5px", color: TEXT }}
-            >
-              Tarifs simples
+      ══════════════════════════════════════════════════════════ */}
+      <section
+        id="tarifs"
+        className="reveal"
+        style={{ background: "#f8fafc", padding: "80px 24px", borderTop: "1px solid #e2e8f0" }}
+      >
+        <div className="max-w-5xl mx-auto" style={{ fontFamily: F }}>
+          <div className="text-center" style={{ marginBottom: 48 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 600, color: "#0f172a", letterSpacing: -0.3, marginBottom: 8 }}>
+              Tarifs simples et transparents
             </h2>
-            <p style={{ color: MUTED }}>Sans engagement, sans surprise</p>
-          </motion.div>
+            <p style={{ fontSize: 14, color: "#64748b" }}>
+              Commencez gratuitement, évoluez selon vos besoins
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
-            {PRICING.map((plan, i) => (
-              <motion.div
+            {PRICING.map((plan) => (
+              <div
                 key={plan.name}
-                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
-                className="relative rounded-2xl p-7"
+                className="relative rounded-xl bg-white"
                 style={{
-                  background: CARD,
-                  border: plan.highlight ? `1px solid ${BLUE}` : `1px solid ${BORDER}`,
-                  boxShadow: plan.highlight ? "0 0 48px rgba(59,130,246,0.18)" : "none",
-                  transform: plan.highlight ? "scale(1.03)" : "scale(1)",
+                  padding: 24,
+                  border: plan.highlight ? "2px solid #2563eb" : "1px solid #e2e8f0",
                 }}
               >
                 {plan.highlight && (
                   <div
-                    className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-semibold text-white"
-                    style={{ background: `linear-gradient(90deg, ${BLUE_DEEP}, ${BLUE})` }}
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-medium text-white"
+                    style={{ background: "#2563eb", fontSize: 12, fontFamily: F }}
                   >
                     Populaire
                   </div>
                 )}
-                <h3 className="text-base font-bold mb-1" style={{ color: TEXT, fontFamily: SYNE }}>{plan.name}</h3>
-                <div className="flex items-end gap-1 mb-1">
-                  {plan.price === 0 ? (
-                    <span className="text-3xl font-black" style={{ color: TEXT, fontFamily: SYNE }}>Gratuit</span>
-                  ) : (
-                    <>
-                      <span className="text-3xl font-black" style={{ color: TEXT, fontFamily: SYNE }}>{plan.price}€</span>
-                      <span className="mb-1 text-sm" style={{ color: MUTED }}>/mois</span>
-                    </>
-                  )}
+
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", marginBottom: 8, fontFamily: F }}>{plan.name}</p>
+
+                <div className="flex items-baseline gap-1" style={{ marginBottom: 4 }}>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: "#0f172a", letterSpacing: -0.5, fontFamily: F }}>{plan.label}</span>
+                  {plan.period && <span style={{ fontSize: 13, color: "#94a3b8", fontFamily: F }}>/mois</span>}
                 </div>
-                <p className="text-xs mb-5 font-medium" style={{ color: BLUE }}>
-                  {plan.tokens} tokens{plan.price > 0 ? "/mois" : " offerts"}
-                </p>
-                <ul className="space-y-2.5 mb-7">
+
+                <p style={{ fontSize: 12, color: "#2563eb", fontWeight: 500, marginBottom: 4, fontFamily: F }}>{plan.tokens}</p>
+                <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 20, fontFamily: F }}>{plan.sub}</p>
+
+                <ul className="space-y-2.5" style={{ marginBottom: 24 }}>
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-                      <span style={{ color: BLUE }}>✓</span>{f}
+                    <li key={f} className="flex items-start gap-2" style={{ fontSize: 13, color: "#64748b", fontFamily: F }}>
+                      <span style={{ color: "#059669", marginTop: 1 }}>✓</span>
+                      {f}
                     </li>
                   ))}
                 </ul>
+
                 <Link
                   href={plan.href}
-                  className="block text-center font-semibold py-2.5 rounded-xl transition-all text-white text-sm"
+                  className="block text-center rounded-lg transition-colors"
                   style={{
-                    background: plan.highlight ? BLUE_DARK : "transparent",
-                    border: plan.highlight ? "none" : `1px solid rgba(59,130,246,0.25)`,
+                    padding: "10px 0",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    fontFamily: F,
+                    textDecoration: "none",
+                    background: plan.primary ? "#2563eb" : "transparent",
+                    color: plan.primary ? "white" : "#0f172a",
+                    border: plan.primary ? "none" : "1px solid #e2e8f0",
                   }}
                   onMouseEnter={(e) => {
-                    if (plan.highlight) e.currentTarget.style.background = BLUE;
-                    else e.currentTarget.style.borderColor = BLUE;
+                    if (plan.primary) e.currentTarget.style.background = "#1d4ed8";
+                    else e.currentTarget.style.borderColor = "#cbd5e1";
                   }}
                   onMouseLeave={(e) => {
-                    if (plan.highlight) e.currentTarget.style.background = BLUE_DARK;
-                    else e.currentTarget.style.borderColor = "rgba(59,130,246,0.25)";
+                    if (plan.primary) e.currentTarget.style.background = "#2563eb";
+                    else e.currentTarget.style.borderColor = "#e2e8f0";
                   }}
                 >
                   {plan.cta}
                 </Link>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════════
           TESTIMONIALS
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="py-24 px-6 border-t relative" style={{ borderColor: BORDER, zIndex: 1 }}>
-        <div className="max-w-5xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-14">
-            <h2
-              className="text-4xl font-extrabold mb-4"
-              style={{ fontFamily: SYNE, letterSpacing: "-1.5px", color: TEXT }}
-            >
-              Ils ont créé avec CreateIt
-            </h2>
-          </motion.div>
+      ══════════════════════════════════════════════════════════ */}
+      <section
+        className="reveal"
+        style={{ background: "#ffffff", padding: "80px 24px" }}
+      >
+        <div className="max-w-5xl mx-auto" style={{ fontFamily: F }}>
+          <h2
+            className="text-center"
+            style={{ fontSize: 28, fontWeight: 600, color: "#0f172a", letterSpacing: -0.3, marginBottom: 48 }}
+          >
+            Ce qu&apos;ils en disent
+          </h2>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map((t, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
-                className="rounded-2xl p-6"
-                style={{ background: CARD, border: `1px solid rgba(59,130,246,0.1)` }}
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 10,
+                  padding: 24,
+                  fontFamily: F,
+                }}
               >
-                <div className="flex gap-0.5 mb-4">
+                <div className="flex gap-0.5" style={{ marginBottom: 16 }}>
                   {Array.from({ length: t.stars }).map((_, j) => (
-                    <span key={j} className="text-yellow-400 text-sm">★</span>
+                    <span key={j} style={{ color: "#f59e0b", fontSize: 14 }}>★</span>
                   ))}
                 </div>
-                <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <p style={{ fontSize: 15, color: "#0f172a", lineHeight: 1.7, marginBottom: 20 }}>
                   &ldquo;{t.text}&rdquo;
                 </p>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                    style={{ background: `linear-gradient(135deg, ${BLUE_DEEP}, ${BLUE})` }}
-                  >
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold" style={{ color: TEXT }}>{t.name}</div>
-                    <div className="text-xs" style={{ color: MUTED }}>{t.role}</div>
-                  </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{t.name}</p>
+                  <p style={{ fontSize: 13, color: "#64748b" }}>{t.role}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════════
           FINAL CTA
-      ══════════════════════════════════════════════════════════════ */}
-      <section className="py-24 px-6 border-t relative overflow-hidden" style={{ borderColor: BORDER, zIndex: 1 }}>
-        <div
-          className="pointer-events-none absolute inset-0"
+      ══════════════════════════════════════════════════════════ */}
+      <section
+        className="reveal text-center"
+        style={{ background: "#0f172a", padding: "80px 24px", fontFamily: F }}
+      >
+        <h2 style={{ fontSize: 32, fontWeight: 600, color: "white", letterSpacing: -0.3, marginBottom: 12 }}>
+          Créez votre premier site maintenant.
+        </h2>
+        <p style={{ fontSize: 15, color: "#94a3b8", marginBottom: 32 }}>
+          Gratuit, sans carte bancaire.
+        </p>
+        <Link
+          href="/auth/signup"
+          className="inline-block transition-colors"
           style={{
-            background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(29,78,216,0.18) 0%, transparent 70%)",
+            background: "white",
+            color: "#0f172a",
+            padding: "12px 32px",
+            borderRadius: 8,
+            fontWeight: 600,
+            fontSize: 15,
+            fontFamily: F,
+            textDecoration: "none",
           }}
-        />
-        <motion.div
-          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-          className="max-w-2xl mx-auto text-center relative"
-          style={{ zIndex: 1 }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
         >
-          <h2
-            className="text-5xl font-extrabold mb-4"
-            style={{ fontFamily: SYNE, letterSpacing: "-1.5px", color: TEXT }}
-          >
-            Prêt à créer ?
-          </h2>
-          <p className="mb-8" style={{ color: MUTED }}>
-            Rejoignez des milliers de créateurs. Commencez gratuitement.
-          </p>
-          <Link
-            href="/auth/signup"
-            className="inline-flex items-center gap-2 text-white font-semibold px-8 py-4 rounded-full text-lg transition-all"
-            style={{ background: BLUE_DARK }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = BLUE)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = BLUE_DARK)}
-          >
-            Commencer gratuitement →
-          </Link>
-        </motion.div>
+          Commencer gratuitement
+        </Link>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════════
           FOOTER
-      ══════════════════════════════════════════════════════════════ */}
-      <footer className="py-12 px-6 border-t" style={{ background: "#02020a", borderColor: BORDER }}>
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: `linear-gradient(135deg, ${BLUE_DEEP}, ${BLUE})` }}
-            >
-              <span className="text-white text-xs">✦</span>
-            </div>
-            <span className="font-bold" style={{ color: TEXT, fontFamily: SYNE }}>
-              Create<span style={{ color: BLUE }}>It</span>
-            </span>
+      ══════════════════════════════════════════════════════════ */}
+      <footer style={{ background: "#f8fafc", borderTop: "1px solid #e2e8f0", padding: "32px 24px" }}>
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4" style={{ fontFamily: F }}>
+          {/* Logo + tagline */}
+          <div>
+            <Link href="/" style={{ textDecoration: "none" }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
+                Create<span style={{ color: "#2563eb" }}>It</span>
+              </span>
+            </Link>
+            <p style={{ fontSize: 13, color: "#94a3b8", marginTop: 4 }}>
+              Créez des sites en quelques secondes.
+            </p>
           </div>
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>
-            © 2025 CreateIt. Propulsé par Claude AI.
-          </p>
-          <div className="flex items-center gap-6 text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>
-            <Link href="#" className="hover:text-white transition-colors">CGU</Link>
-            <Link href="#" className="hover:text-white transition-colors">Confidentialité</Link>
-            <Link href="/auth/login" className="hover:text-white transition-colors">Connexion</Link>
+
+          {/* Links */}
+          <div className="flex items-center gap-6">
+            <Link href="/pricing"    style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Tarifs</Link>
+            <Link href="/auth/login" style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Connexion</Link>
+            <a    href="mailto:hello@create-it.app" style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Contact</a>
           </div>
+
+          {/* Copyright */}
+          <p style={{ fontSize: 13, color: "#94a3b8" }}>© 2026 CreateIt</p>
         </div>
       </footer>
 
