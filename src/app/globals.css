@@ -229,20 +229,39 @@ body {
   transform: translateY(0);
 }
 
-/* ─── Examples section carousel (40s / 35s) ──────────────────── */
+/* ─── Examples section carousel (45s / 38s, x3 duplication → -33.333%) ── */
+@keyframes scrollCarouselThird {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-33.333%, 0, 0); }
+}
+@keyframes scrollCarouselThirdReverse {
+  from { transform: translate3d(-33.333%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
 .examples-track {
   display: flex;
   width: max-content;
   will-change: transform;
   backface-visibility: hidden;
-  animation: scrollCarousel 40s linear infinite;
+  animation: scrollCarouselThird 45s linear infinite;
 }
 .examples-track-reverse {
   display: flex;
   width: max-content;
   will-change: transform;
   backface-visibility: hidden;
-  animation: scrollCarouselReverse 35s linear infinite;
+  animation: scrollCarouselThirdReverse 38s linear infinite;
+}
+
+.example-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.example-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  z-index: 2;
+  position: relative;
 }
 
 /* Light-theme scrollbar */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
@@ -11,21 +11,30 @@ const F = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', san
 
 /* ═══════════════════════════════════════════════════════════════
    MINI-SITE PREVIEW CARDS (CSS only, no images)
-   Card dimensions: 220 × 160px, marginRight 16px
-   5 cards/row × 236px = 1180px = exactly 50% of doubled track
+   Card dimensions: 280 × 200px, marginRight 16px
+   5 cards/row × 296px = 1480px = exactly 33.333% of tripled track
 ═══════════════════════════════════════════════════════════════ */
+
+const CARD_W = 280, CARD_H = 200, CARD_MR = 16;
+const cardBase: React.CSSProperties = { width: CARD_W, height: CARD_H, flexShrink: 0, marginRight: CARD_MR, borderRadius: 10, overflow: "hidden" };
 
 function CardRestaurant() {
   return (
-    <div style={{ width: 220, height: 160, background: "#0a0a0a", borderRadius: 8, overflow: "hidden", border: "1px solid #1a1a1a", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", borderBottom: "1px solid rgba(212,175,55,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#d4af37", fontSize: 7.5, fontWeight: 700, letterSpacing: 3, fontFamily: F }}>LE JARDIN</span>
-        <div style={{ display: "flex", gap: 8, fontSize: 6.5, color: "rgba(255,255,255,0.35)", fontFamily: F }}><span>Menu</span><span>Réserver</span></div>
+    <div className="example-card" style={{ ...cardBase, background: "#0c0b09", border: "1px solid #2a2318" }}>
+      <div style={{ padding: "9px 14px", borderBottom: "1px solid rgba(212,175,55,0.18)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#d4af37", fontSize: 8.5, fontWeight: 700, letterSpacing: 3.5, fontFamily: F }}>LE JARDIN</span>
+        <div style={{ display: "flex", gap: 10, fontSize: 7.5, color: "rgba(255,255,255,0.3)", fontFamily: F }}><span>Menu</span><span>Réserver</span></div>
       </div>
-      <div style={{ padding: "18px 12px", textAlign: "center" }}>
-        <div style={{ fontSize: 6, color: "rgba(255,255,255,0.3)", letterSpacing: 4, marginBottom: 6, fontFamily: F }}>RESTAURANT · PARIS</div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: "#f5f0e8", lineHeight: 1.2, fontFamily: "Georgia, serif", marginBottom: 12 }}>Cuisine<br />Française</div>
-        <div style={{ display: "inline-block", fontSize: 7, padding: "3px 10px", border: "1px solid rgba(212,175,55,0.4)", color: "#d4af37", borderRadius: 20, fontFamily: F }}>Réserver une table</div>
+      <div style={{ padding: "22px 16px", textAlign: "center" }}>
+        <div style={{ fontSize: 7, color: "rgba(212,175,55,0.45)", letterSpacing: 4, marginBottom: 8, fontFamily: F }}>RESTAURANT · PARIS</div>
+        <div style={{ fontSize: 26, fontWeight: 700, color: "#f5f0e8", lineHeight: 1.15, fontFamily: "Georgia, serif", marginBottom: 16 }}>Cuisine<br />Française</div>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 8, padding: "5px 14px", border: "1px solid rgba(212,175,55,0.35)", color: "#d4af37", borderRadius: 20, fontFamily: F }}>
+          <span>Réserver une table</span>
+        </div>
+        <div style={{ marginTop: 16, display: "flex", justifyContent: "center", gap: 4 }}>
+          {["★","★","★","★","★"].map((s,i) => <span key={i} style={{ color: "#d4af37", fontSize: 8 }}>{s}</span>)}
+          <span style={{ fontSize: 7, color: "rgba(255,255,255,0.3)", marginLeft: 4, fontFamily: F }}>4.9 (312)</span>
+        </div>
       </div>
     </div>
   );
@@ -33,17 +42,22 @@ function CardRestaurant() {
 
 function CardPortfolio() {
   return (
-    <div style={{ width: 220, height: 160, background: "#f8f8f8", borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", background: "#0f172a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "white", fontSize: 8, fontWeight: 700, fontFamily: F }}>JM</span>
-        <div style={{ display: "flex", gap: 8, fontSize: 6.5, color: "rgba(255,255,255,0.5)", fontFamily: F }}><span>Work</span><span>About</span></div>
+    <div className="example-card" style={{ ...cardBase, background: "#fafafa", border: "1px solid #e2e8f0" }}>
+      <div style={{ padding: "9px 14px", background: "#0f172a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ color: "white", fontSize: 7.5, fontWeight: 700 }}>JM</span>
+          </div>
+          <span style={{ color: "white", fontSize: 9, fontWeight: 700, fontFamily: F }}>Jean Moreau</span>
+        </div>
+        <div style={{ display: "flex", gap: 10, fontSize: 7.5, color: "rgba(255,255,255,0.45)", fontFamily: F }}><span>Work</span><span>About</span></div>
       </div>
-      <div style={{ padding: "14px 14px" }}>
-        <div style={{ fontSize: 6.5, color: "#94a3b8", letterSpacing: 2, marginBottom: 6, fontFamily: F }}>DESIGNER & CRÉATIF</div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", lineHeight: 1.2, letterSpacing: -0.5, marginBottom: 10, fontFamily: F }}>Jean Moreau<br />— Designer</div>
-        <div style={{ display: "flex", gap: 4 }}>
+      <div style={{ padding: "18px 16px" }}>
+        <div style={{ fontSize: 7, color: "#94a3b8", letterSpacing: 2.5, marginBottom: 8, fontFamily: F }}>DESIGNER & CRÉATIF</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", lineHeight: 1.15, letterSpacing: -0.5, marginBottom: 14, fontFamily: F }}>Jean Moreau<br /><span style={{ color: "#6366f1" }}>—</span> Designer</div>
+        <div style={{ display: "flex", gap: 5 }}>
           {["Branding", "Web", "Motion"].map((s) => (
-            <span key={s} style={{ fontSize: 6, padding: "2px 6px", background: "#f1f5f9", borderRadius: 4, color: "#64748b", fontFamily: F }}>{s}</span>
+            <span key={s} style={{ fontSize: 7, padding: "3px 8px", background: "#f1f5f9", borderRadius: 5, color: "#64748b", fontFamily: F, border: "1px solid #e2e8f0" }}>{s}</span>
           ))}
         </div>
       </div>
@@ -53,15 +67,15 @@ function CardPortfolio() {
 
 function CardAgence() {
   return (
-    <div style={{ width: 220, height: 160, background: "#0f172a", borderRadius: 8, overflow: "hidden", border: "1px solid #1e293b", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", borderBottom: "1px solid #1e293b", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#60a5fa", fontSize: 8, fontWeight: 800, fontFamily: F }}>◈ PIXEL</span>
-        <div style={{ display: "flex", gap: 8, fontSize: 6.5, color: "rgba(255,255,255,0.3)", fontFamily: F }}><span>Work</span><span>Contact</span></div>
+    <div className="example-card" style={{ ...cardBase, background: "#090e1a", border: "1px solid #1e293b" }}>
+      <div style={{ padding: "9px 14px", borderBottom: "1px solid #1e293b", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#60a5fa", fontSize: 9, fontWeight: 800, fontFamily: F, letterSpacing: -0.3 }}>◈ PIXEL</span>
+        <div style={{ display: "flex", gap: 10, fontSize: 7.5, color: "rgba(255,255,255,0.25)", fontFamily: F }}><span>Work</span><span>Contact</span></div>
       </div>
-      <div style={{ padding: "14px 12px" }}>
-        <div style={{ fontSize: 6, color: "#60a5fa", letterSpacing: 3, marginBottom: 8, fontFamily: F }}>DIGITAL AGENCY</div>
-        <div style={{ fontSize: 17, fontWeight: 800, color: "white", lineHeight: 1.15, letterSpacing: -0.5, marginBottom: 10, fontFamily: F }}>On crée des<br />expériences.</div>
-        <div style={{ fontSize: 7, padding: "3px 10px", display: "inline-block", background: "#2563eb", color: "white", borderRadius: 4, fontFamily: F }}>Voir nos projets</div>
+      <div style={{ padding: "18px 14px" }}>
+        <div style={{ fontSize: 7, color: "#3b82f6", letterSpacing: 3, marginBottom: 10, fontFamily: F }}>DIGITAL AGENCY</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "white", lineHeight: 1.1, letterSpacing: -0.8, marginBottom: 14, fontFamily: F }}>On crée des<br />expériences<br /><span style={{ color: "#60a5fa" }}>mémorables.</span></div>
+        <div style={{ fontSize: 8, padding: "4px 12px", display: "inline-block", background: "linear-gradient(90deg,#2563eb,#4f46e5)", color: "white", borderRadius: 5, fontFamily: F, fontWeight: 600 }}>Voir nos projets →</div>
       </div>
     </div>
   );
@@ -69,19 +83,20 @@ function CardAgence() {
 
 function CardBoutique() {
   return (
-    <div style={{ width: 220, height: 160, background: "#fdf6f0", borderRadius: 8, overflow: "hidden", border: "1px solid #f0e4d8", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", borderBottom: "1px solid #f0e4d8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#9c5738", fontSize: 7.5, fontWeight: 700, letterSpacing: 2, fontFamily: F }}>MAISON DORÉE</span>
-        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "#b8927a", fontFamily: F }}><span>Boutique</span><span>Panier</span></div>
+    <div className="example-card" style={{ ...cardBase, background: "#fdf8f4", border: "1px solid #ede0d4" }}>
+      <div style={{ padding: "9px 14px", borderBottom: "1px solid #ede0d4", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#7c3d27", fontSize: 8.5, fontWeight: 700, letterSpacing: 2.5, fontFamily: F }}>MAISON DORÉE</span>
+        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "#b8927a", fontFamily: F }}><span>Boutique</span><span>🛒</span></div>
       </div>
-      <div style={{ padding: "10px 12px" }}>
-        <div style={{ fontSize: 6, color: "#b8927a", letterSpacing: 2, marginBottom: 6, fontFamily: F }}>ARTISANAT FRANÇAIS</div>
-        <div style={{ fontSize: 15, fontWeight: 600, color: "#3d1f14", fontFamily: "Georgia, serif", marginBottom: 8 }}>Collections<br />Printemps 2025</div>
-        <div style={{ display: "flex", gap: 5 }}>
+      <div style={{ padding: "14px 16px" }}>
+        <div style={{ fontSize: 7, color: "#b8927a", letterSpacing: 2, marginBottom: 8, fontFamily: F }}>ARTISANAT FRANÇAIS</div>
+        <div style={{ fontSize: 20, fontWeight: 600, color: "#3d1f14", fontFamily: "Georgia, serif", lineHeight: 1.2, marginBottom: 12 }}>Collections<br />Printemps 2025</div>
+        <div style={{ display: "flex", gap: 5, marginBottom: 12 }}>
           {["Céramique", "Linge", "Décor"].map((s) => (
-            <span key={s} style={{ fontSize: 5.5, padding: "2px 5px", border: "1px solid #e8c9ba", borderRadius: 3, color: "#9c5738", fontFamily: F }}>{s}</span>
+            <span key={s} style={{ fontSize: 6.5, padding: "3px 7px", border: "1px solid #e8c9ba", borderRadius: 4, color: "#9c5738", fontFamily: F }}>{s}</span>
           ))}
         </div>
+        <div style={{ fontSize: 8, color: "#b8927a", fontFamily: F }}>À partir de <strong style={{ color: "#7c3d27" }}>29€</strong></div>
       </div>
     </div>
   );
@@ -89,17 +104,20 @@ function CardBoutique() {
 
 function CardBlog() {
   return (
-    <div style={{ width: 220, height: 160, background: "#fff", borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#0f172a", fontSize: 8, fontWeight: 700, fontFamily: "Georgia, serif" }}>Le Carnet</span>
-        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "#94a3b8", fontFamily: F }}><span>Articles</span><span>À propos</span></div>
+    <div className="example-card" style={{ ...cardBase, background: "#fff", border: "1px solid #e2e8f0" }}>
+      <div style={{ padding: "9px 14px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#0f172a", fontSize: 9.5, fontWeight: 700, fontFamily: "Georgia, serif" }}>Le Carnet</span>
+        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "#94a3b8", fontFamily: F }}><span>Articles</span><span>À propos</span></div>
       </div>
-      <div style={{ padding: "10px 12px" }}>
-        <div style={{ fontSize: 6, color: "#64748b", letterSpacing: 2, marginBottom: 6, fontFamily: F }}>VOYAGE · CULTURE · VIE</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", fontFamily: "Georgia, serif", lineHeight: 1.3, marginBottom: 8 }}>Les Marchés de<br />Marrakech en Hiver</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 6, color: "#64748b", fontFamily: F }}>ML</div>
-          <span style={{ fontSize: 6.5, color: "#94a3b8", fontFamily: F }}>Marie Laurent · 15 jan.</span>
+      <div style={{ padding: "14px 16px" }}>
+        <div style={{ fontSize: 7, color: "#64748b", letterSpacing: 2, marginBottom: 8, fontFamily: F }}>VOYAGE · CULTURE · VIE</div>
+        <div style={{ fontSize: 17, fontWeight: 600, color: "#0f172a", fontFamily: "Georgia, serif", lineHeight: 1.3, marginBottom: 12 }}>Les Marchés de<br />Marrakech en Hiver</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg,#f59e0b,#ef4444)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7.5, color: "white", fontWeight: 700, fontFamily: F }}>ML</div>
+          <div>
+            <div style={{ fontSize: 8, fontWeight: 600, color: "#0f172a", fontFamily: F }}>Marie Laurent</div>
+            <div style={{ fontSize: 7, color: "#94a3b8", fontFamily: F }}>15 jan. · 5 min de lecture</div>
+          </div>
         </div>
       </div>
     </div>
@@ -108,23 +126,24 @@ function CardBlog() {
 
 function CardSaas() {
   return (
-    <div style={{ width: 220, height: 160, background: "#020817", borderRadius: 8, overflow: "hidden", border: "1px solid #0f1729", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", borderBottom: "1px solid #0f1729", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#06b6d4", fontSize: 8, fontWeight: 800, fontFamily: F }}>◆ DataFlow</span>
-        <div style={{ fontSize: 6.5, padding: "1px 6px", background: "rgba(6,182,212,0.15)", borderRadius: 10, color: "#06b6d4", fontFamily: F }}>Dashboard</div>
+    <div className="example-card" style={{ ...cardBase, background: "#020817", border: "1px solid #0f1729" }}>
+      <div style={{ padding: "9px 14px", borderBottom: "1px solid #0f1729", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#06b6d4", fontSize: 9, fontWeight: 800, fontFamily: F, letterSpacing: -0.3 }}>◆ DataFlow</span>
+        <div style={{ fontSize: 7.5, padding: "2px 8px", background: "rgba(6,182,212,0.12)", borderRadius: 10, color: "#06b6d4", fontFamily: F }}>Dashboard</div>
       </div>
-      <div style={{ padding: "10px 12px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5, marginBottom: 8 }}>
-          {[["Projets", "12"], ["Clients", "48"], ["Rev.", "€4.2k"], ["Score", "98%"]].map(([label, val]) => (
-            <div key={label} style={{ background: "#0f172a", borderRadius: 5, padding: "5px 7px" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#e2e8f0", fontFamily: F }}>{val}</div>
-              <div style={{ fontSize: 6, color: "#475569", fontFamily: F }}>{label}</div>
+      <div style={{ padding: "12px 14px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
+          {[["Projets", "12", "#06b6d4"], ["Clients", "48", "#8b5cf6"], ["Rev.", "€4.2k", "#10b981"], ["Score", "98%", "#f59e0b"]].map(([label, val, color]) => (
+            <div key={label} style={{ background: "#0f172a", borderRadius: 6, padding: "7px 9px", border: "1px solid #1e293b" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: color as string, fontFamily: F }}>{val}</div>
+              <div style={{ fontSize: 7, color: "#475569", fontFamily: F, marginTop: 2 }}>{label}</div>
             </div>
           ))}
         </div>
-        <div style={{ height: 3, background: "#0f172a", borderRadius: 2 }}>
-          <div style={{ height: "100%", width: "72%", background: "#06b6d4", borderRadius: 2 }} />
+        <div style={{ height: 4, background: "#0f172a", borderRadius: 2 }}>
+          <div style={{ height: "100%", width: "72%", background: "linear-gradient(90deg,#06b6d4,#8b5cf6)", borderRadius: 2 }} />
         </div>
+        <div style={{ fontSize: 7, color: "#475569", fontFamily: F, marginTop: 4 }}>Objectif mensuel · 72%</div>
       </div>
     </div>
   );
@@ -132,15 +151,18 @@ function CardSaas() {
 
 function CardAvocat() {
   return (
-    <div style={{ width: 220, height: 160, background: "#1a1a2e", borderRadius: 8, overflow: "hidden", border: "1px solid #2d1b35", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", borderBottom: "1px solid rgba(139,0,0,0.3)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#c9a96e", fontSize: 7.5, fontWeight: 700, letterSpacing: 2, fontFamily: F }}>CABINET MOREAU</span>
-        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "rgba(255,255,255,0.3)", fontFamily: F }}><span>Expertise</span><span>Contact</span></div>
+    <div className="example-card" style={{ ...cardBase, background: "#0e0c18", border: "1px solid #1e1a2e" }}>
+      <div style={{ padding: "9px 14px", borderBottom: "1px solid rgba(201,169,110,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#c9a96e", fontSize: 8.5, fontWeight: 700, letterSpacing: 2.5, fontFamily: F }}>CABINET MOREAU</span>
+        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "rgba(255,255,255,0.25)", fontFamily: F }}><span>Expertise</span><span>Contact</span></div>
       </div>
-      <div style={{ padding: "14px 12px" }}>
-        <div style={{ fontSize: 6, color: "#8b0000", letterSpacing: 3, marginBottom: 8, fontFamily: F }}>DROIT DES AFFAIRES</div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#f5f0e8", fontFamily: "Georgia, serif", lineHeight: 1.3, marginBottom: 10 }}>Votre intérêt,<br />notre priorité.</div>
-        <div style={{ display: "inline-block", fontSize: 7, padding: "3px 10px", border: "1px solid rgba(139,0,0,0.5)", color: "#c9a96e", borderRadius: 3, fontFamily: F }}>Prendre RDV</div>
+      <div style={{ padding: "18px 16px" }}>
+        <div style={{ fontSize: 7, color: "#7c1d1d", letterSpacing: 3, marginBottom: 10, fontFamily: F }}>DROIT DES AFFAIRES</div>
+        <div style={{ fontSize: 20, fontWeight: 600, color: "#f5f0e8", fontFamily: "Georgia, serif", lineHeight: 1.3, marginBottom: 14 }}>Votre intérêt,<br />notre priorité.</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ fontSize: 8, padding: "5px 12px", border: "1px solid rgba(201,169,110,0.4)", color: "#c9a96e", borderRadius: 4, fontFamily: F }}>Prendre RDV</div>
+          <div style={{ fontSize: 8, padding: "5px 12px", background: "rgba(201,169,110,0.08)", color: "rgba(255,255,255,0.4)", borderRadius: 4, fontFamily: F }}>Nos domaines</div>
+        </div>
       </div>
     </div>
   );
@@ -148,22 +170,22 @@ function CardAvocat() {
 
 function CardMedecin() {
   return (
-    <div style={{ width: 220, height: 160, background: "#f0f9ff", borderRadius: 8, overflow: "hidden", border: "1px solid #bae6fd", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", borderBottom: "1px solid #e0f2fe", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "white", fontSize: 7, fontWeight: 700 }}>+</span>
+    <div className="example-card" style={{ ...cardBase, background: "#f0f9ff", border: "1px solid #bae6fd" }}>
+      <div style={{ padding: "9px 14px", borderBottom: "1px solid #e0f2fe", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ color: "white", fontSize: 9, fontWeight: 700 }}>+</span>
           </div>
-          <span style={{ color: "#0284c7", fontSize: 7.5, fontWeight: 700, fontFamily: F }}>Dr. Sarah Chen</span>
+          <span style={{ color: "#0284c7", fontSize: 9, fontWeight: 700, fontFamily: F }}>Dr. Sarah Chen</span>
         </div>
-        <span style={{ fontSize: 6.5, color: "#64748b", fontFamily: F }}>Généraliste</span>
+        <span style={{ fontSize: 7.5, color: "#64748b", fontFamily: F }}>Généraliste</span>
       </div>
-      <div style={{ padding: "12px 12px" }}>
-        <div style={{ fontSize: 6, color: "#0284c7", letterSpacing: 2, marginBottom: 6, fontFamily: F }}>CONSULTATION · PARIS 8e</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#0c4a6e", lineHeight: 1.3, marginBottom: 8, fontFamily: F }}>Une médecine<br />attentive et humaine.</div>
-        <div style={{ display: "flex", gap: 5 }}>
-          <div style={{ fontSize: 7, padding: "3px 8px", background: "#0284c7", color: "white", borderRadius: 4, fontFamily: F }}>Prendre RDV</div>
-          <div style={{ fontSize: 7, padding: "3px 8px", background: "#e0f2fe", color: "#0284c7", borderRadius: 4, fontFamily: F }}>Téléconsult.</div>
+      <div style={{ padding: "14px 16px" }}>
+        <div style={{ fontSize: 7, color: "#0284c7", letterSpacing: 2, marginBottom: 8, fontFamily: F }}>CONSULTATION · PARIS 8e</div>
+        <div style={{ fontSize: 17, fontWeight: 600, color: "#0c4a6e", lineHeight: 1.3, marginBottom: 14, fontFamily: F }}>Une médecine<br />attentive et humaine.</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ fontSize: 8, padding: "5px 10px", background: "#0284c7", color: "white", borderRadius: 5, fontFamily: F }}>Prendre RDV</div>
+          <div style={{ fontSize: 8, padding: "5px 10px", background: "#e0f2fe", color: "#0284c7", borderRadius: 5, fontFamily: F, border: "1px solid #bae6fd" }}>Téléconsult.</div>
         </div>
       </div>
     </div>
@@ -172,15 +194,17 @@ function CardMedecin() {
 
 function CardCoach() {
   return (
-    <div style={{ width: 220, height: 160, background: "#0a0a0a", borderRadius: 8, overflow: "hidden", border: "1px solid #1a1a1a", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", borderBottom: "1px solid rgba(251,146,60,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#fb923c", fontSize: 8, fontWeight: 800, fontFamily: F }}>MOMENTUM</span>
-        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "rgba(255,255,255,0.3)", fontFamily: F }}><span>Méthode</span><span>Contact</span></div>
+    <div className="example-card" style={{ ...cardBase, background: "#080808", border: "1px solid #1c1c1c" }}>
+      <div style={{ padding: "9px 14px", borderBottom: "1px solid rgba(251,146,60,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#fb923c", fontSize: 9, fontWeight: 800, fontFamily: F, letterSpacing: 0.5 }}>MOMENTUM</span>
+        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "rgba(255,255,255,0.25)", fontFamily: F }}><span>Méthode</span><span>Contact</span></div>
       </div>
-      <div style={{ padding: "14px 12px", textAlign: "center" }}>
-        <div style={{ fontSize: 7, color: "#fb923c", letterSpacing: 3, marginBottom: 10, fontFamily: F }}>COACHING PROFESSIONNEL</div>
-        <div style={{ fontSize: 12, fontWeight: 800, color: "white", letterSpacing: -0.3, lineHeight: 1.4, marginBottom: 10, fontFamily: F }}>Transform.<br />Agir.<br />Réussir.</div>
-        <div style={{ fontSize: 7, padding: "3px 12px", display: "inline-block", background: "#fb923c", color: "black", borderRadius: 20, fontWeight: 700, fontFamily: F }}>Démarrer</div>
+      <div style={{ padding: "18px 16px", textAlign: "center" }}>
+        <div style={{ fontSize: 7, color: "#fb923c", letterSpacing: 3, marginBottom: 12, fontFamily: F }}>COACHING PROFESSIONNEL</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "white", letterSpacing: -0.3, lineHeight: 1.35, marginBottom: 16, fontFamily: F }}>Transform.<br />Agir. Réussir.</div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+          <div style={{ fontSize: 8, padding: "5px 16px", display: "inline-block", background: "#fb923c", color: "black", borderRadius: 20, fontWeight: 700, fontFamily: F }}>Démarrer →</div>
+        </div>
       </div>
     </div>
   );
@@ -188,17 +212,17 @@ function CardCoach() {
 
 function CardArchitecte() {
   return (
-    <div style={{ width: 220, height: 160, background: "#f5f5f0", borderRadius: 8, overflow: "hidden", border: "1px solid #e8e8e0", flexShrink: 0, marginRight: 16 }}>
-      <div style={{ padding: "7px 10px", borderBottom: "1px solid #e2e2da", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#0f172a", fontSize: 7.5, fontWeight: 700, letterSpacing: 2, fontFamily: F }}>STUDIO BLANC</span>
-        <div style={{ display: "flex", gap: 6, fontSize: 6.5, color: "#94a3b8", fontFamily: F }}><span>Projets</span><span>Contact</span></div>
+    <div className="example-card" style={{ ...cardBase, background: "#f6f6f2", border: "1px solid #e2e2d8" }}>
+      <div style={{ padding: "9px 14px", borderBottom: "1px solid #e2e2d8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: "#0f172a", fontSize: 8.5, fontWeight: 700, letterSpacing: 2.5, fontFamily: F }}>STUDIO BLANC</span>
+        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "#94a3b8", fontFamily: F }}><span>Projets</span><span>Contact</span></div>
       </div>
-      <div style={{ padding: "14px 12px" }}>
-        <div style={{ fontSize: 6, color: "#94a3b8", letterSpacing: 3, marginBottom: 8, fontFamily: F }}>ARCHITECTURE</div>
-        <div style={{ fontSize: 15, fontWeight: 600, color: "#0f172a", letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 10, fontFamily: F }}>Créer des espaces<br />qui inspirent.</div>
-        <div style={{ display: "flex", gap: 4 }}>
+      <div style={{ padding: "18px 16px" }}>
+        <div style={{ fontSize: 7, color: "#94a3b8", letterSpacing: 3, marginBottom: 10, fontFamily: F }}>ARCHITECTURE · PARIS</div>
+        <div style={{ fontSize: 20, fontWeight: 600, color: "#0f172a", letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 14, fontFamily: F }}>Créer des espaces<br />qui inspirent.</div>
+        <div style={{ display: "flex", gap: 5 }}>
           {["Résidentiel", "Commercial", "Interior"].map((s) => (
-            <span key={s} style={{ fontSize: 5.5, padding: "2px 5px", border: "1px solid #cbd5e1", borderRadius: 3, color: "#64748b", fontFamily: F }}>{s}</span>
+            <span key={s} style={{ fontSize: 7, padding: "3px 7px", border: "1px solid #cbd5e1", borderRadius: 4, color: "#64748b", fontFamily: F }}>{s}</span>
           ))}
         </div>
       </div>
@@ -208,6 +232,15 @@ function CardArchitecte() {
 
 const ROW_A = [CardRestaurant, CardPortfolio, CardAgence, CardBoutique, CardBlog];
 const ROW_B = [CardSaas, CardAvocat, CardMedecin, CardCoach, CardArchitecte];
+
+const TYPEWRITER = [
+  "Un restaurant gastronomique à Paris...",
+  "Un portfolio pour photographe minimaliste...",
+  "Une boutique de bijoux artisanaux...",
+  "Un cabinet d'architecte élégant...",
+  "Une landing page SaaS qui convertit...",
+  "Un blog de voyage et lifestyle...",
+];
 
 /* ─── Data ───────────────────────────────────────────────────────── */
 
@@ -312,6 +345,8 @@ export default function HomePage() {
   const [bannerVisible, setBannerVisible] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [inputFocused, setInputFocused]   = useState(false);
+  const [phIdx, setPhIdx]                 = useState(0);
+  const [phOpacity, setPhOpacity]         = useState(1);
 
   /* ── Init: banner visibility + auth check ── */
   useEffect(() => {
@@ -352,6 +387,18 @@ export default function HomePage() {
     return () => obs.disconnect();
   }, []);
 
+  /* ── Typewriter placeholder cycle ── */
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPhOpacity(0);
+      setTimeout(() => {
+        setPhIdx((i) => (i + 1) % TYPEWRITER.length);
+        setPhOpacity(1);
+      }, 300);
+    }, 3000);
+    return () => clearInterval(id);
+  }, []);
+
   /* ── Generate handler ── */
   const handleGenerate = () => {
     if (!prompt.trim()) return;
@@ -367,8 +414,8 @@ export default function HomePage() {
 
   /* ── Prompt bar border/shadow ── */
   const promptBorder = inputFocused
-    ? { border: "1.5px solid #2563eb", boxShadow: "0 0 0 3px rgba(37,99,235,0.1), 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)" }
-    : { border: "1.5px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)" };
+    ? { border: "2px solid #2563eb", boxShadow: "0 0 0 4px rgba(37,99,235,0.1), 0 2px 8px rgba(0,0,0,0.06), 0 8px 32px rgba(37,99,235,0.08)" }
+    : { border: "2px solid #e2e8f0", boxShadow: "0 2px 8px rgba(0,0,0,0.05), 0 4px 24px rgba(0,0,0,0.06)" };
 
   return (
     <div className="light-page" style={{ fontFamily: F, background: "#ffffff", color: "#0f172a", overflowX: "hidden" }}>
@@ -516,74 +563,122 @@ export default function HomePage() {
         className="flex flex-col items-center text-center px-6"
         style={{ paddingTop: heroPadT, paddingBottom: 80, background: "#ffffff" }}
       >
-        {/* Eyebrow */}
-        <p
+        {/* H1 title */}
+        <h1
           style={{
-            fontSize: 13,
-            color: "#64748b",
-            letterSpacing: "0.02em",
-            marginBottom: 24,
+            fontSize: "clamp(28px, 5vw, 42px)",
+            fontWeight: 700,
+            color: "#0f172a",
+            letterSpacing: "-0.5px",
+            marginBottom: 10,
             fontFamily: F,
+            lineHeight: 1.15,
             animation: "heroFadeIn 0.5s ease-out both",
           }}
         >
-          Créez votre site en quelques secondes.
+          Votre site en quelques mots.
+        </h1>
+
+        {/* Subtitle */}
+        <p
+          style={{
+            fontSize: 16,
+            color: "#64748b",
+            marginBottom: 28,
+            fontFamily: F,
+            animation: "heroFadeIn 0.5s ease-out 0.08s both",
+          }}
+        >
+          Décrivez ce que vous voulez, on s&apos;occupe du reste.
         </p>
 
         {/* Prompt bar */}
         <div
           className="w-full"
           style={{
-            maxWidth: 620,
+            maxWidth: 640,
             marginBottom: 8,
-            animation: "heroFadeIn 0.5s ease-out 0.1s both",
+            animation: "heroFadeIn 0.5s ease-out 0.15s both",
           }}
         >
           <div
-            className="flex items-center rounded-xl overflow-hidden"
+            className="flex items-center"
             style={{
-              height: 56,
+              height: 68,
               background: "white",
-              borderRadius: 12,
+              borderRadius: 16,
               transition: "border 0.15s, box-shadow 0.15s",
               ...promptBorder,
             }}
           >
-            <input
-              type="text"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setInputFocused(false)}
-              placeholder="Décrivez votre site... ex: restaurant italien à Lyon"
-              className="flex-1 bg-transparent outline-none"
-              style={{
-                padding: "0 16px",
-                fontSize: 15,
-                color: "#0f172a",
-                fontFamily: F,
-              }}
-            />
+            {/* Input with animated placeholder overlay */}
+            <div className="flex-1 relative" style={{ overflow: "hidden" }}>
+              <input
+                type="text"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                placeholder=""
+                className="w-full bg-transparent outline-none"
+                style={{
+                  padding: "0 18px",
+                  fontSize: 16,
+                  color: "#0f172a",
+                  fontFamily: F,
+                  height: 68,
+                }}
+              />
+              {!prompt && (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    left: 18,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: 16,
+                    color: "#94a3b8",
+                    fontFamily: F,
+                    pointerEvents: "none",
+                    opacity: phOpacity,
+                    transition: "opacity 0.3s ease",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    maxWidth: "calc(100% - 36px)",
+                  }}
+                >
+                  {TYPEWRITER[phIdx]}
+                </span>
+              )}
+            </div>
             <button
               onClick={handleGenerate}
-              className="shrink-0 transition-colors"
+              className="shrink-0"
               style={{
-                height: 40,
-                padding: "0 20px",
+                height: 52,
+                padding: "0 28px",
                 margin: 8,
                 background: "#2563eb",
                 color: "white",
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 500,
+                borderRadius: 12,
+                fontSize: 15,
+                fontWeight: 600,
                 fontFamily: F,
                 border: "none",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
+                transition: "background 0.15s, transform 0.15s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#1d4ed8")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "#2563eb")}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#1d4ed8";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#2563eb";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
             >
               Créer →
             </button>
@@ -650,22 +745,31 @@ export default function HomePage() {
 
         <div className="carousel-wrapper" style={{ overflow: "hidden" }}>
           {/* Row 1 — left to right */}
-          <div style={{ position: "relative", marginBottom: 14, overflow: "hidden" }}>
-            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 120, background: "linear-gradient(90deg,#f8fafc,transparent)", zIndex: 10, pointerEvents: "none" }} />
-            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 120, background: "linear-gradient(-90deg,#f8fafc,transparent)", zIndex: 10, pointerEvents: "none" }} />
+          <div
+            style={{
+              marginBottom: 14,
+              overflow: "hidden",
+              WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+              maskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+            }}
+          >
             <div className="examples-track">
-              {[...ROW_A, ...ROW_A].map((Card, i) => (
+              {[...ROW_A, ...ROW_A, ...ROW_A].map((Card, i) => (
                 <Card key={`a-${i}`} />
               ))}
             </div>
           </div>
 
           {/* Row 2 — right to left */}
-          <div style={{ position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 120, background: "linear-gradient(90deg,#f8fafc,transparent)", zIndex: 10, pointerEvents: "none" }} />
-            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 120, background: "linear-gradient(-90deg,#f8fafc,transparent)", zIndex: 10, pointerEvents: "none" }} />
+          <div
+            style={{
+              overflow: "hidden",
+              WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+              maskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
+            }}
+          >
             <div className="examples-track-reverse">
-              {[...ROW_B, ...ROW_B].map((Card, i) => (
+              {[...ROW_B, ...ROW_B, ...ROW_B].map((Card, i) => (
                 <Card key={`b-${i}`} />
               ))}
             </div>
