@@ -510,20 +510,18 @@ function CarouselCard({ item, onClick }: { item: CarouselItem; onClick: (item: C
    ───────────────────────────────────────────────────────────────── */
 
 function TemplateCarousel({ onSelect }: { onSelect: (p: string) => void }) {
-  const [paused, setPaused] = useState(false)
   const [modal, setModal] = useState<CarouselItem | null>(null)
 
   const row1 = [...ROW1, ...ROW1]
   const row2 = [...ROW2, ...ROW2]
-  const play = paused ? 'paused' : 'running'
 
   return (
-    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+    <div className="carousel-wrapper">
       {/* Row 1 — left */}
       <div style={{ overflow:'hidden', position:'relative', marginBottom:14 }}>
         <div style={{ position:'absolute', left:0, top:0, bottom:0, width:100, background:'linear-gradient(90deg,#04040f,transparent)', zIndex:10, pointerEvents:'none' }} />
         <div style={{ position:'absolute', right:0, top:0, bottom:0, width:100, background:'linear-gradient(-90deg,#04040f,transparent)', zIndex:10, pointerEvents:'none' }} />
-        <div className="carousel-track" style={{ animationPlayState: play }}>
+        <div className="carousel-track">
           {row1.map((item, i) => <CarouselCard key={`r1-${item.key}-${i}`} item={item} onClick={setModal} />)}
         </div>
       </div>
@@ -532,7 +530,7 @@ function TemplateCarousel({ onSelect }: { onSelect: (p: string) => void }) {
       <div style={{ overflow:'hidden', position:'relative' }}>
         <div style={{ position:'absolute', left:0, top:0, bottom:0, width:100, background:'linear-gradient(90deg,#04040f,transparent)', zIndex:10, pointerEvents:'none' }} />
         <div style={{ position:'absolute', right:0, top:0, bottom:0, width:100, background:'linear-gradient(-90deg,#04040f,transparent)', zIndex:10, pointerEvents:'none' }} />
-        <div className="carousel-track-reverse" style={{ animationPlayState: play }}>
+        <div className="carousel-track-reverse">
           {row2.map((item, i) => <CarouselCard key={`r2-${item.key}-${i}`} item={item} onClick={setModal} />)}
         </div>
       </div>

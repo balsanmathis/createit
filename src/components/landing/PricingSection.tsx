@@ -89,11 +89,12 @@ const DESC = {
 
 interface PricingSectionProps {
   locale?: 'fr' | 'en'
+  initialPromoCode?: string
 }
 
-export default function PricingSection({ locale = 'fr' }: PricingSectionProps) {
+export default function PricingSection({ locale = 'fr', initialPromoCode }: PricingSectionProps) {
   const [loading, setLoading] = useState<string | null>(null)
-  const [promoCode, setPromoCode] = useState('')
+  const [promoCode, setPromoCode] = useState(initialPromoCode?.toUpperCase() ?? '')
 
   const handleCheckout = async (planKey: string) => {
     setLoading(planKey)

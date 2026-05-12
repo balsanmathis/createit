@@ -190,3 +190,8 @@ body {
   backface-visibility: hidden;
   animation: scrollCarouselReverse 44s linear infinite;
 }
+
+.carousel-wrapper:hover .carousel-track,
+.carousel-wrapper:hover .carousel-track-reverse {
+  animation-play-state: paused;
+}

@@ -17,7 +17,7 @@ export function generateWelcomeCode(): string {
 }
 
 export async function sendWelcomeEmail(to: string, promoCode: string): Promise<void> {
-  const pricingUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://create-it.app'}/pricing`
+  const pricingUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://create-it.app'}/pricing?promo=${encodeURIComponent(promoCode)}`
 
   const html = `<!DOCTYPE html>
 <html lang="fr">
