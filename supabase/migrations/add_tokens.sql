@@ -4,7 +4,7 @@
 -- 1. New columns on users
 ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS tokens_used    INTEGER     NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS tokens_limit   INTEGER     NOT NULL DEFAULT 16000,
+  ADD COLUMN IF NOT EXISTS tokens_limit   INTEGER     NOT NULL DEFAULT 32000,
   ADD COLUMN IF NOT EXISTS welcome_code   TEXT;
 
 -- 2. Widen plan constraint to include 'free'
@@ -25,7 +25,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.users (id, email, plan, tokens_used, tokens_limit)
-  VALUES (NEW.id, NEW.email, 'free', 0, 16000)
+  VALUES (NEW.id, NEW.email, 'free', 0, 32000)
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;

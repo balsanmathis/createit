@@ -41,7 +41,7 @@ export async function POST(
         .single()
 
       const tokensUsed  = profile?.tokens_used  ?? 0
-      const tokensLimit = profile?.tokens_limit ?? 16_000
+      const tokensLimit = profile?.tokens_limit ?? 32_000
 
       if (tokensUsed + TOKEN_COST_MODIFY > tokensLimit) {
         const isPaid = profile?.plan && profile.plan !== 'free'
@@ -92,7 +92,7 @@ export async function POST(
     return NextResponse.json({
       html: newHtml,
       tokensUsed:  updatedProfile?.tokens_used  ?? 0,
-      tokensLimit: updatedProfile?.tokens_limit ?? 16_000,
+      tokensLimit: updatedProfile?.tokens_limit ?? 32_000,
     })
   } catch (error) {
     console.error('AI modify error:', error)

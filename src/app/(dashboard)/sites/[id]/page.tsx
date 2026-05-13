@@ -26,7 +26,7 @@ export default async function SitePage({ params }: Props) {
 
     const isAdmin    = user.email === ADMIN_EMAIL
     const tokensUsed  = profileResult.data?.tokens_used  ?? 0
-    const tokensLimit = profileResult.data?.tokens_limit ?? 16_000
+    const tokensLimit = profileResult.data?.tokens_limit ?? 32_000
 
     return (
       <SiteEditor

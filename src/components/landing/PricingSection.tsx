@@ -11,14 +11,16 @@ const PLANS = [
     sites: 10,
     popular: false,
     features_fr: [
-      '10 sites générés par mois',
+      '~8 sites générés par mois',
+      '256 000 tokens inclus',
       'Éditeur visuel inclus',
       'Export ZIP',
       'Support email',
       'Historique 30 jours',
     ],
     features_en: [
-      '10 sites generated per month',
+      '~8 sites generated per month',
+      '256,000 tokens included',
       'Visual editor included',
       'ZIP export',
       'Email support',
@@ -28,10 +30,11 @@ const PLANS = [
   {
     key: 'pro',
     price: 45,
-    sites: 30,
+    sites: 25,
     popular: true,
     features_fr: [
-      '30 sites générés par mois',
+      '~25 sites générés par mois',
+      '800 000 tokens inclus',
       'Éditeur visuel inclus',
       'Export ZIP',
       'Templates 21st.dev',
@@ -39,7 +42,8 @@ const PLANS = [
       'Historique illimité',
     ],
     features_en: [
-      '30 sites generated per month',
+      '~25 sites generated per month',
+      '800,000 tokens included',
       'Visual editor included',
       'ZIP export',
       '21st.dev templates',
@@ -50,10 +54,11 @@ const PLANS = [
   {
     key: 'agency',
     price: 250,
-    sites: 200,
+    sites: 160,
     popular: false,
     features_fr: [
-      '200 sites générés par mois',
+      '~160 sites générés par mois',
+      '5 120 000 tokens inclus',
       'Éditeur visuel inclus',
       'Export ZIP',
       'Templates 21st.dev',
@@ -63,7 +68,8 @@ const PLANS = [
       'White label',
     ],
     features_en: [
-      '200 sites generated per month',
+      '~160 sites generated per month',
+      '5,120,000 tokens included',
       'Visual editor included',
       'ZIP export',
       '21st.dev templates',

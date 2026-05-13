@@ -39,13 +39,13 @@ export const PLAN_LIMITS: Record<string, number> = {
 }
 
 export const PLAN_TOKEN_LIMITS: Record<Plan, number> = {
-  free:    16_000,
-  starter: 160_000,
-  pro:     480_000,
-  agency:  3_200_000,
+  free:    32_000,
+  starter: 256_000,
+  pro:     800_000,
+  agency:  5_120_000,
 }
 
-export const TOKEN_COST_GENERATE = 16_000
+export const TOKEN_COST_GENERATE = 32_000
 export const TOKEN_COST_MODIFY   = 8_000
 
 export const PLAN_PRICES: Record<Exclude<Plan, 'free'>, { monthly: number; priceId: string }> = {
