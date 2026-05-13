@@ -233,7 +233,7 @@ function CardArchitecte() {
 const ROW_A = [CardRestaurant, CardPortfolio, CardAgence, CardBoutique, CardBlog];
 const ROW_B = [CardSaas, CardAvocat, CardMedecin, CardCoach, CardArchitecte];
 
-const TYPEWRITER = [
+const TYPEWRITER_DEFAULT = [
   "Un restaurant gastronomique à Paris...",
   "Un portfolio pour photographe minimaliste...",
   "Une boutique de bijoux artisanaux...",
@@ -241,6 +241,14 @@ const TYPEWRITER = [
   "Une landing page SaaS qui convertit...",
   "Un blog de voyage et lifestyle...",
 ];
+
+interface LandingContent {
+  banner?: { visible?: boolean; text?: string; buttonText?: string }
+  hero?: { title?: string; subtitle?: string; buttonText?: string; typewriter?: string[]; socialProof?: string }
+  howItWorks?: { title?: string; steps?: Array<{ num: string; title: string; desc: string }> }
+  testimonials?: Array<{ text: string; name: string; role: string }>
+  cta?: { title?: string; subtitle?: string; buttonText?: string }
+}
 
 /* ─── Data ───────────────────────────────────────────────────────── */
 
@@ -255,7 +263,7 @@ const TAG_EXAMPLES: Record<string, string> = {
   Coach:      "Site de coaching professionnel et développement personnel",
 };
 
-const STEPS = [
+const STEPS_DEFAULT = [
   { num: "01", title: "Décrivez",       desc: "Tapez ce que vous voulez. Un restaurant, un portfolio, une boutique..." },
   { num: "02", title: "On crée",        desc: "Votre site est généré en quelques secondes, complet et professionnel." },
   { num: "03", title: "Vous exportez",  desc: "Téléchargez votre site en ZIP. Prêt à mettre en ligne ou à revendre." },
@@ -312,7 +320,7 @@ const PRICING = [
   },
 ];
 
-const TESTIMONIALS = [
+const TESTIMONIALS_DEFAULT = [
   {
     name: "Sophie Martin",
     role: "Restauratrice",
@@ -347,8 +355,9 @@ export default function HomePage() {
   const [inputFocused, setInputFocused]   = useState(false);
   const [phIdx, setPhIdx]                 = useState(0);
   const [phOpacity, setPhOpacity]         = useState(1);
+  const [cms, setCms]                     = useState<LandingContent>({});
 
-  /* ── Init: banner visibility + auth check ── */
+  /* ── Init: banner visibility + auth check + CMS content ── */
   useEffect(() => {
     if (localStorage.getItem("promo_banner_dismissed") !== "1") {
       setBannerVisible(true);
@@ -360,6 +369,10 @@ export default function HomePage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setIsAuthenticated(!!user);
     });
+    fetch("/api/admin/landing-content")
+      .then((r) => r.json())
+      .then((data) => { if (data) setCms(data); })
+      .catch(() => {});
   }, []);
 
   /* ── Navbar becomes opaque on scroll ── */
@@ -392,7 +405,7 @@ export default function HomePage() {
     const id = setInterval(() => {
       setPhOpacity(0);
       setTimeout(() => {
-        setPhIdx((i) => (i + 1) % TYPEWRITER.length);
+        setPhIdx((i) => i + 1);
         setPhOpacity(1);
       }, 300);
     }, 3000);
@@ -406,11 +419,28 @@ export default function HomePage() {
     router.push(isAuthenticated ? `/generate?prompt=${encoded}` : `/try?prompt=${encoded}`);
   };
 
+  /* ── CMS-resolved values (fallback to defaults if not set) ── */
+  const cmsBannerText    = cms.banner?.text      ?? "🎁 Offre de lancement — 20% de réduction à vie avec votre code de bienvenue";
+  const cmsBannerBtn     = cms.banner?.buttonText ?? "En profiter";
+  const cmsBannerOn      = cms.banner?.visible    ?? true;
+  const cmsHeroTitle     = cms.hero?.title        ?? "Votre site en quelques mots.";
+  const cmsHeroSubtitle  = cms.hero?.subtitle     ?? "Décrivez ce que vous voulez, on s'occupe du reste.";
+  const cmsHeroBtn       = cms.hero?.buttonText   ?? "Créer →";
+  const cmsTypewriter    = cms.hero?.typewriter   ?? TYPEWRITER_DEFAULT;
+  const cmsSocialProof   = cms.hero?.socialProof  ?? "Plus de 2 800 sites créés ce mois";
+  const cmsHowTitle      = cms.howItWorks?.title  ?? "Simple comme bonjour";
+  const cmsSteps         = cms.howItWorks?.steps  ?? STEPS_DEFAULT;
+  const cmsTestimonials  = (cms.testimonials      ?? TESTIMONIALS_DEFAULT).map((t) => ({ ...t, stars: 5 }));
+  const cmsCtaTitle      = cms.cta?.title         ?? "Créez votre premier site maintenant.";
+  const cmsCtaSubtitle   = cms.cta?.subtitle      ?? "Gratuit, sans carte bancaire.";
+  const cmsCtaBtn        = cms.cta?.buttonText    ?? "Commencer gratuitement";
+
   /* ── Layout offsets ── */
   const bannerH   = 36;
   const navH      = 56;
-  const navTop    = bannerVisible ? bannerH : 0;
-  const heroPadT  = bannerVisible ? bannerH + navH + 56 : navH + 56;
+  const showBanner = bannerVisible && cmsBannerOn;
+  const navTop    = showBanner ? bannerH : 0;
+  const heroPadT  = showBanner ? bannerH + navH + 56 : navH + 56;
 
   /* ── Prompt bar border/shadow ── */
   const promptBorder = inputFocused
@@ -423,21 +453,19 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════
           PROMO BANNER
       ══════════════════════════════════════════════════════════ */}
-      {bannerVisible && (
+      {showBanner && (
         <div
           className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 px-4"
           style={{ height: bannerH, background: "#eff6ff", borderBottom: "1px solid #bfdbfe" }}
         >
           <p style={{ fontSize: 13, color: "#1d4ed8", fontFamily: F }}>
-            🎁 Offre de lancement —{" "}
-            <strong>20% de réduction à vie</strong>{" "}
-            avec votre code de bienvenue
+            {cmsBannerText}
           </p>
           <Link
             href="/pricing"
             style={{ fontSize: 13, color: "#2563eb", textDecoration: "underline", fontFamily: F, fontWeight: 500 }}
           >
-            En profiter
+            {cmsBannerBtn}
           </Link>
           <button
             onClick={() => {
@@ -576,7 +604,7 @@ export default function HomePage() {
             animation: "heroFadeIn 0.5s ease-out both",
           }}
         >
-          Votre site en quelques mots.
+          {cmsHeroTitle}
         </h1>
 
         {/* Subtitle */}
@@ -589,7 +617,7 @@ export default function HomePage() {
             animation: "heroFadeIn 0.5s ease-out 0.08s both",
           }}
         >
-          Décrivez ce que vous voulez, on s&apos;occupe du reste.
+          {cmsHeroSubtitle}
         </p>
 
         {/* Prompt bar */}
@@ -649,7 +677,7 @@ export default function HomePage() {
                     maxWidth: "calc(100% - 36px)",
                   }}
                 >
-                  {TYPEWRITER[phIdx]}
+                  {cmsTypewriter[phIdx % cmsTypewriter.length]}
                 </span>
               )}
             </div>
@@ -680,7 +708,7 @@ export default function HomePage() {
                 e.currentTarget.style.transform = "translateY(0)";
               }}
             >
-              Créer →
+              {cmsHeroBtn}
             </button>
           </div>
         </div>
@@ -722,7 +750,7 @@ export default function HomePage() {
             animation: "heroFadeIn 0.5s ease-out 0.3s both",
           }}
         >
-          Plus de 2 800 sites créés ce mois
+          {cmsSocialProof}
         </p>
       </section>
 
@@ -789,11 +817,11 @@ export default function HomePage() {
             className="text-center"
             style={{ fontSize: 28, fontWeight: 600, color: "#0f172a", letterSpacing: -0.3, marginBottom: 48 }}
           >
-            Simple comme bonjour
+            {cmsHowTitle}
           </h2>
 
           <div className="flex flex-col md:flex-row">
-            {STEPS.map((step, i) => (
+            {cmsSteps.map((step, i) => (
               <div
                 key={i}
                 className={`flex-1 ${i < 2 ? "md:border-r border-[#e2e8f0]" : ""} ${i > 0 ? "border-t md:border-t-0" : ""}`}
@@ -924,7 +952,7 @@ export default function HomePage() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
+            {cmsTestimonials.map((t, i) => (
               <div
                 key={i}
                 style={{
@@ -961,10 +989,10 @@ export default function HomePage() {
         style={{ background: "#0f172a", padding: "80px 24px", fontFamily: F }}
       >
         <h2 style={{ fontSize: 32, fontWeight: 600, color: "white", letterSpacing: -0.3, marginBottom: 12 }}>
-          Créez votre premier site maintenant.
+          {cmsCtaTitle}
         </h2>
         <p style={{ fontSize: 15, color: "#94a3b8", marginBottom: 32 }}>
-          Gratuit, sans carte bancaire.
+          {cmsCtaSubtitle}
         </p>
         <Link
           href="/auth/signup"
@@ -982,7 +1010,7 @@ export default function HomePage() {
           onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
         >
-          Commencer gratuitement
+          {cmsCtaBtn}
         </Link>
       </section>
 

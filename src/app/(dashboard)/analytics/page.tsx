@@ -5,6 +5,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 import PromoCodesManager from '@/components/admin/PromoCodesManager'
+import LandingContentEditor from '@/components/admin/LandingContentEditor'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 const VERCEL_ANALYTICS_URL = 'https://vercel.com/balsanmathis-projects/createit/analytics'
@@ -128,7 +129,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
   if (!user || user.email !== ADMIN_EMAIL) redirect('/dashboard')
 
   const { tab } = await searchParams
-  const activeTab = tab === 'promo' ? 'promo' : 'overview'
+  const activeTab = tab === 'promo' ? 'promo' : tab === 'landing' ? 'landing' : 'overview'
 
   const [stats, recentUsers, recentSites, revenue] = await Promise.all([
     getStats(),
@@ -189,6 +190,15 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                 : { color: 'rgba(255,255,255,0.4)', border: '1px solid transparent' }}
             >
               Codes promo
+            </Link>
+            <Link
+              href="/analytics?tab=landing"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={activeTab === 'landing'
+                ? { background: 'rgba(124,58,237,0.25)', color: '#c4b5fd', border: '1px solid rgba(124,58,237,0.3)' }
+                : { color: 'rgba(255,255,255,0.4)', border: '1px solid transparent' }}
+            >
+              Landing Page
             </Link>
           </div>
 
@@ -287,6 +297,10 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
           {activeTab === 'promo' && (
             <PromoCodesManager />
+          )}
+
+          {activeTab === 'landing' && (
+            <LandingContentEditor />
           )}
 
         </div>
