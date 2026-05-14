@@ -18,6 +18,12 @@ function GenerateForm() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'idle' | 'generating' | 'saving'>('idle')
   const [generatedChars, setGeneratedChars] = useState(0)
+
+  // ~45 000 chars pour un site 16k tokens
+  const EXPECTED_CHARS = 45_000
+  const progress = step === 'saving' ? 100
+    : generatedChars > 0 ? Math.min(Math.round((generatedChars / EXPECTED_CHARS) * 100), 99)
+    : 0
   const [tokens, setTokens] = useState<{ used: number; limit: number } | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
 
@@ -182,6 +188,30 @@ function GenerateForm() {
           autoFocus
         />
 
+        {/* Progress bar */}
+        {loading && (
+          <div className="mb-4">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="text-white/40">
+                {step === 'saving' ? 'Sauvegarde…' : 'Génération en cours…'}
+              </span>
+              <span className="font-semibold tabular-nums" style={{ color: '#a78bfa' }}>
+                {progress}%
+              </span>
+            </div>
+            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${progress}%`,
+                  background: 'linear-gradient(90deg, #7c3aed, #6366f1)',
+                  boxShadow: progress > 0 ? '0 0 8px rgba(124,58,237,0.6)' : 'none',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <Link
             href="/prompt-builder"
@@ -202,7 +232,7 @@ function GenerateForm() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
-                {step === 'saving' ? 'Sauvegarde…' : generatedChars > 0 ? `${generatedChars.toLocaleString('fr-FR')} car.` : 'Génération…'}
+                {step === 'saving' ? 'Sauvegarde…' : progress > 0 ? `${progress}%` : 'Génération…'}
               </>
             ) : (
               <>
@@ -218,9 +248,9 @@ function GenerateForm() {
       </div>
 
       <p className="text-center text-xs text-white/20 mt-4">
-        {loading && generatedChars > 0
+        {loading
           ? `${generatedChars.toLocaleString('fr-FR')} caractères générés…`
-          : 'Ctrl+Entrée pour générer · 1–3 min selon la complexité'}
+          : 'Ctrl+Entrée pour générer · 30–60 sec'}
       </p>
     </motion.div>
   )

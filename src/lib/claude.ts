@@ -145,21 +145,20 @@ export async function generateWebsiteStreaming(
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
   let rawFirst = ''
-  const stream0 = anthropic.messages.stream({
+  for await (const event of anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
     max_tokens: 16000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }],
-  })
-  for await (const event of stream0) {
+  })) {
     if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
       rawFirst += event.delta.text
       onChunk(rawFirst.length)
     }
   }
-  const stop0 = (await stream0.finalMessage()).stop_reason
+
   let html = stripFences(rawFirst)
-  console.log(`[claude] pass 0 | ${html.length} chars | stop=${stop0} | closed=${isClosed(html)}`)
+  console.log(`[claude] pass 0 | ${html.length} chars | closed=${isClosed(html)}`)
 
   for (let pass = 1; pass <= 3 && !isClosed(html); pass++) {
     const tail = html.slice(-500)
@@ -168,7 +167,7 @@ export async function generateWebsiteStreaming(
       `Génère UNIQUEMENT la suite du code HTML, sans rien répéter. ` +
       `Voici où tu t'es arrêté : ${tail}`
 
-    const streamN = anthropic.messages.stream({
+    for await (const event of anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 16000,
       system: SYSTEM_PROMPT,
@@ -177,15 +176,13 @@ export async function generateWebsiteStreaming(
         { role: 'assistant', content: html },
         { role: 'user', content: continueMsg },
       ],
-    })
-    for await (const event of streamN) {
+    })) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
         html += event.delta.text
         onChunk(html.length)
       }
     }
-    const stopN = (await streamN.finalMessage()).stop_reason
-    console.log(`[claude] pass ${pass} | ${html.length} chars | stop=${stopN} | closed=${isClosed(html)}`)
+    console.log(`[claude] pass ${pass} | ${html.length} chars | closed=${isClosed(html)}`)
   }
 
   if (!isClosed(html)) {
