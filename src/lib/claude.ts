@@ -147,7 +147,7 @@ export async function generateWebsiteStreaming(
   let rawFirst = ''
   const stream0 = anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
-    max_tokens: 32000,
+    max_tokens: 16000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }],
   })
@@ -170,7 +170,7 @@ export async function generateWebsiteStreaming(
 
     const streamN = anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
-      max_tokens: 32000,
+      max_tokens: 16000,
       system: SYSTEM_PROMPT,
       messages: [
         { role: 'user', content: prompt },
@@ -215,7 +215,7 @@ export async function modifyWebsite(currentHtml: string, instruction: string): P
 
   const { text, stopReason } = await streamCall(anthropic, {
     model: 'claude-sonnet-4-6',
-    max_tokens: 32000,
+    max_tokens: 16000,
     system: MODIFY_SYSTEM,
     messages: [{
       role: 'user',
