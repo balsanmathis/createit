@@ -17,6 +17,7 @@ function GenerateForm() {
   const [siteName, setSiteName] = useState('')
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'idle' | 'generating' | 'saving'>('idle')
+  const [generatedChars, setGeneratedChars] = useState(0)
   const [tokens, setTokens] = useState<{ used: number; limit: number } | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
 
@@ -47,6 +48,7 @@ function GenerateForm() {
     }
     setLoading(true)
     setStep('generating')
+    setGeneratedChars(0)
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -56,14 +58,44 @@ function GenerateForm() {
           name: siteName.trim() || `Site IA — ${new Date().toLocaleDateString('fr-FR')}`,
         }),
       })
-      const data = await res.json()
+
       if (!res.ok) {
+        const data = await res.json()
         toast.error(data.error || 'Erreur lors de la génération')
+        if (data.needsUpgrade) router.push('/pricing')
         return
       }
-      setStep('saving')
-      toast.success('Site généré !')
-      router.push(`/sites/${data.siteId}`)
+
+      const reader = res.body!.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const data = JSON.parse(line.slice(6))
+            if (data.type === 'progress') {
+              setGeneratedChars(data.chars)
+            } else if (data.type === 'done') {
+              setStep('saving')
+              toast.success('Site généré !')
+              router.push(`/sites/${data.siteId}`)
+              return
+            } else if (data.type === 'error') {
+              toast.error(data.message || 'Erreur lors de la génération')
+              return
+            }
+          } catch { /* ignore malformed SSE line */ }
+        }
+      }
     } catch {
       toast.error('Une erreur est survenue')
     } finally {
@@ -170,7 +202,7 @@ function GenerateForm() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
-                {step === 'generating' ? 'Génération…' : 'Sauvegarde…'}
+                {step === 'saving' ? 'Sauvegarde…' : generatedChars > 0 ? `${generatedChars.toLocaleString('fr-FR')} car.` : 'Génération…'}
               </>
             ) : (
               <>
@@ -186,7 +218,9 @@ function GenerateForm() {
       </div>
 
       <p className="text-center text-xs text-white/20 mt-4">
-        Ctrl+Entrée pour générer · 1–3 min selon la complexité
+        {loading && generatedChars > 0
+          ? `${generatedChars.toLocaleString('fr-FR')} caractères générés…`
+          : 'Ctrl+Entrée pour générer · 1–3 min selon la complexité'}
       </p>
     </motion.div>
   )

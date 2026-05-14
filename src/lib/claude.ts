@@ -135,16 +135,30 @@ async function streamCall(
 }
 
 export async function generateWebsite(prompt: string): Promise<string> {
+  return generateWebsiteStreaming(prompt, () => {})
+}
+
+export async function generateWebsiteStreaming(
+  prompt: string,
+  onChunk: (totalChars: number) => void,
+): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
-  const { text: first, stopReason: stop0 } = await streamCall(anthropic, {
+  let rawFirst = ''
+  const stream0 = anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
     max_tokens: 32000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }],
   })
-
-  let html = first
+  for await (const event of stream0) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      rawFirst += event.delta.text
+      onChunk(rawFirst.length)
+    }
+  }
+  const stop0 = (await stream0.finalMessage()).stop_reason
+  let html = stripFences(rawFirst)
   console.log(`[claude] pass 0 | ${html.length} chars | stop=${stop0} | closed=${isClosed(html)}`)
 
   for (let pass = 1; pass <= 3 && !isClosed(html); pass++) {
@@ -154,7 +168,7 @@ export async function generateWebsite(prompt: string): Promise<string> {
       `Génère UNIQUEMENT la suite du code HTML, sans rien répéter. ` +
       `Voici où tu t'es arrêté : ${tail}`
 
-    const { text: chunk, stopReason } = await streamCall(anthropic, {
+    const streamN = anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 32000,
       system: SYSTEM_PROMPT,
@@ -164,8 +178,14 @@ export async function generateWebsite(prompt: string): Promise<string> {
         { role: 'user', content: continueMsg },
       ],
     })
-    html += chunk
-    console.log(`[claude] pass ${pass} | +${chunk.length} chars | stop=${stopReason} | closed=${isClosed(html)}`)
+    for await (const event of streamN) {
+      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        html += event.delta.text
+        onChunk(html.length)
+      }
+    }
+    const stopN = (await streamN.finalMessage()).stop_reason
+    console.log(`[claude] pass ${pass} | ${html.length} chars | stop=${stopN} | closed=${isClosed(html)}`)
   }
 
   if (!isClosed(html)) {
