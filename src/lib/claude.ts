@@ -108,7 +108,8 @@ RÈGLE ABSOLUE FINALE :
 - Le site doit être COMPLET avec toutes les sections du brief
 - Chaque section doit avoir du vrai contenu, pas de lorem ipsum
 - Qualité agence digitale premium
-- Si contenu trop long : raccourcis le texte mais GARDE toutes les sections
+- BUDGET TOKEN STRICT : tu disposes de 8 000 tokens maximum. Sois concis dans le texte, mais inclus TOUTES les sections.
+- Si contenu trop long : raccourcis chaque section mais GARDE-LES TOUTES
 - Finit TOUJOURS par </body></html>`
 
 function stripFences(text: string): string {
@@ -138,38 +139,49 @@ export async function generateWebsite(prompt: string): Promise<string> {
   return generateWebsiteStreaming(prompt, () => {})
 }
 
+// VERCEL_TIMEOUT_MS: leave 8s for Supabase save before Vercel's 60s hard limit
+const VERCEL_TIMEOUT_MS = 50_000
+
 export async function generateWebsiteStreaming(
   prompt: string,
   onChunk: (totalChars: number) => void,
 ): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+  const deadline = Date.now() + VERCEL_TIMEOUT_MS
 
-  let rawFirst = ''
+  let raw = ''
+  let timedOut = false
+
   for await (const event of anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
-    max_tokens: 16000,
+    max_tokens: 8000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }],
   })) {
     if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-      rawFirst += event.delta.text
-      onChunk(rawFirst.length)
+      raw += event.delta.text
+      onChunk(raw.length)
+    }
+    if (Date.now() > deadline) {
+      timedOut = true
+      console.warn('[claude] deadline hit, stopping stream early')
+      break
     }
   }
 
-  let html = stripFences(rawFirst)
-  console.log(`[claude] pass 0 | ${html.length} chars | closed=${isClosed(html)}`)
+  let html = stripFences(raw)
+  console.log(`[claude] ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut}`)
 
-  for (let pass = 1; pass <= 3 && !isClosed(html); pass++) {
+  // Continuation pass only if time remains and HTML is incomplete
+  if (!isClosed(html) && !timedOut && Date.now() + 15_000 < deadline) {
     const tail = html.slice(-500)
     const continueMsg =
-      `Le HTML précédent est incomplet. Termine-le maintenant en fermant toutes les balises ouvertes et en terminant par </body></html>. ` +
-      `Génère UNIQUEMENT la suite du code HTML, sans rien répéter. ` +
-      `Voici où tu t'es arrêté : ${tail}`
+      `Le HTML est incomplet. Termine-le en fermant toutes les balises et en finissant par </body></html>. ` +
+      `UNIQUEMENT la suite, sans répéter. Reprise depuis : ${tail}`
 
     for await (const event of anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
-      max_tokens: 16000,
+      max_tokens: 4000,
       system: SYSTEM_PROMPT,
       messages: [
         { role: 'user', content: prompt },
@@ -181,14 +193,14 @@ export async function generateWebsiteStreaming(
         html += event.delta.text
         onChunk(html.length)
       }
+      if (Date.now() > deadline) break
     }
-    console.log(`[claude] pass ${pass} | ${html.length} chars | closed=${isClosed(html)}`)
   }
 
+  // Force-close if needed
   if (!isClosed(html)) {
     if (!/<\/body>/i.test(html)) html += '\n</body>'
     html += '\n</html>'
-    console.warn('[claude] HTML force-closed after all passes')
   }
 
   return html.trim()
