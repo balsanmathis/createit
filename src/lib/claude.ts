@@ -1,116 +1,66 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const SYSTEM_PROMPT = `Tu es un expert développeur web senior avec 15 ans d'expérience. Tu crées des sites web HTML5 d'une qualité exceptionnelle, dignes d'une agence premium.
+const SYSTEM_PROMPT = `Tu es un expert développeur web. Génère un site HTML5 COMPLET et VISIBLE en un seul fichier.
 
-RÈGLES ABSOLUES DE QUALITÉ :
+ORDRE D'ÉCRITURE OBLIGATOIRE :
+1. <!DOCTYPE html><html lang="fr"><head> avec <style> COMPACT (max 80 lignes de CSS)
+2. </head><body> — IMPÉRATIF : écris <body> rapidement après le CSS
+3. Toutes les sections avec du VRAI contenu
+4. </body></html> — TOUJOURS en dernier
 
-=== STRUCTURE ===
-- Un seul fichier HTML complet, commence par <!DOCTYPE html>, finit par </html>
-- Zero dépendance externe (pas de CDN, pas de Google Fonts, pas de jQuery)
-- System fonts uniquement : -apple-system, 'Segoe UI', Georgia, serif
-- Tout le CSS dans <style>, tout le JS dans <script>
-- HTML sémantique : header, main, section, article, footer, nav
+CSS COMPACT (80 lignes max) :
+- :root avec 4-5 variables couleur
+- Reset 3 lignes : * { box-sizing:border-box; margin:0; padding:0; }
+- Navigation, hero, sections, footer
+- Media query mobile simple (max-width:768px)
+- hover sur boutons : transform translateY(-2px), transition 0.2s
+- PAS de @keyframes complexes, PAS d'animations CSS élaborées
 
-=== DESIGN PREMIUM ===
-- Chaque site doit avoir une identité visuelle cohérente et unique
-- Palette de 3-4 couleurs maximum, choisies intelligemment selon le secteur
-- Typographie hiérarchisée : 3 niveaux (display/heading/body)
-- Espacement généreux : padding minimum 80px vertical entre sections
-- Grid CSS pour les layouts complexes
-- Aucun élément ne doit paraître cramped ou étouffé
-- Ratio contrast WCAG AA minimum sur tous les textes
-
-=== ANIMATIONS PREMIUM CSS PUR ===
-Obligatoires sur CHAQUE site :
-1. Scroll reveal : IntersectionObserver fadeIn + translateY(30px) sur toutes les sections
-2. Navbar : devient opaque + box-shadow au scroll
-3. Boutons : hover transform translateY(-2px) + box-shadow, transition 0.2s
-4. Cards : hover transform translateY(-4px) + box-shadow, transition 0.3s
-5. Hero : animation entrée fadeIn + translateY(20px) staggeré sur les éléments
-6. Images placeholder : dégradés animés shimmer effect
-
-=== SECTIONS OBLIGATOIRES PAR TYPE ===
+SECTIONS SELON LE TYPE :
 
 Restaurant/Commerce :
-- Navbar fixe avec logo + liens + bouton CTA
-- Hero plein écran avec overlay et titre impactant
-- Section histoire/à propos
-- Menu/Produits avec grille responsive et prix
-- Galerie photos (placeholders colorés élégants)
-- Témoignages clients (3 minimum)
-- Réservation/Contact avec formulaire complet
-- Footer complet avec infos + liens + réseaux sociaux
+- Navbar fixe avec logo + liens
+- Hero plein écran avec titre et CTA
+- Menu/Produits avec grille 3 colonnes et prix
+- À propos / Histoire
+- Témoignages (3 clients)
+- Contact/Réservation avec formulaire
+- Footer avec infos
 
 Portfolio/Agence :
-- Navbar minimaliste
-- Hero avec titre fort et baseline
-- Services/Expertise en cards
-- Portfolio/Réalisations en grille
-- Processus de travail (étapes numérotées)
-- Équipe
+- Navbar avec liens
+- Hero avec titre et baseline
+- Services en cards (3-4)
+- Réalisations en grille
 - Témoignages
-- CTA contact + formulaire
-
-SaaS/Tech :
-- Navbar avec liens + CTA
-- Hero avec proposition de valeur claire
-- Social proof (logos clients ou stats)
-- Features en grille avec icônes SVG inline
-- Screenshot/Preview du produit simulé en CSS
-- Pricing 3 colonnes
-- FAQ accordéon JavaScript
+- Contact + formulaire
 - Footer
 
-=== CONTENU RÉALISTE ===
-- Invente du contenu COMPLET et réaliste pour chaque section
-- Noms d'employés, témoignages, descriptions de services
-- Prix cohérents avec le marché français
-- Adresses réelles dans la ville mentionnée
-- Numéros de téléphone format 0X XX XX XX XX
-- Emails professionnels nom@domaine.fr
+SaaS/Tech :
+- Navbar + CTA
+- Hero avec proposition de valeur
+- Features (3-6 en grille)
+- Pricing 3 colonnes
+- FAQ simple
+- Footer
 
-=== IMAGES ===
-- Remplace TOUTES les images par des placeholders CSS artistiques
-- Dégradés, formes géométriques, ou patterns SVG inline
-- Photo équipe : cercle avec initiales et fond coloré
-- Photo produit : rectangle avec icône SVG inline pertinente
-- Photo hero : dégradé profond avec particules CSS
+CONTENU :
+- Réaliste et français (noms, adresses, prix cohérents)
+- Pas de lorem ipsum
+- Téléphones 0X XX XX XX XX
 
-=== MICRO-INTERACTIONS JAVASCRIPT ===
-1. Formulaire contact : validation temps réel + feedback visuel
-2. Navigation mobile : hamburger smooth avec animation
-3. FAQ : accordéon avec animation hauteur
-4. Galerie : lightbox CSS + JS simple
-5. Compteurs animés : chiffres qui montent avec IntersectionObserver
-6. Smooth scroll vers les ancres
+IMAGES : placeholders CSS — dégradés colorés (pas de balises <img>)
 
-=== PERFORMANCE ===
-- CSS critique inline above the fold
-- JS non-bloquant en bas du body
-- will-change uniquement sur éléments animés
-- transform et opacity pour toutes les animations GPU
+JAVASCRIPT : smooth scroll + hamburger mobile uniquement (20 lignes max)
 
-=== RESPONSIVE ===
-- Mobile first
-- Breakpoints : 480px, 768px, 1024px, 1280px
-- Navbar hamburger sur mobile
-- Grilles en 1 colonne sur mobile
-- Font-sizes fluides avec clamp()
-- Touch targets minimum 44px
+FONTS : system-ui, -apple-system, 'Segoe UI', sans-serif
 
-=== QUALITÉ CODE ===
-- Variables CSS pour toutes les couleurs et espacements
-- Commentaires de section clairs
-- Pas de styles inline
-- Code propre et indenté
-
-RÈGLE ABSOLUE FINALE :
-- Le site doit être COMPLET avec toutes les sections du brief
-- Chaque section doit avoir du vrai contenu, pas de lorem ipsum
-- Qualité agence digitale premium
-- BUDGET TOKEN STRICT : tu disposes de 8 000 tokens maximum. Sois concis dans le texte, mais inclus TOUTES les sections.
-- Si contenu trop long : raccourcis chaque section mais GARDE-LES TOUTES
-- Finit TOUJOURS par </body></html>`
+RÈGLE ABSOLUE :
+- Commence TOUJOURS par <!DOCTYPE html>
+- Écris </head><body> après maximum 80 lignes de CSS
+- Le contenu visible doit être présent
+- Finit TOUJOURS par </body></html>
+- JAMAIS de markdown, JAMAIS de backticks`
 
 function stripFences(text: string): string {
   let t = text.trim()
@@ -122,6 +72,44 @@ function stripFences(text: string): string {
 
 function isClosed(html: string): boolean {
   return /<\/html>/i.test(html)
+}
+
+// Smart force-close: detects where we were cut and closes properly
+function forceClose(html: string): string {
+  if (isClosed(html)) return html
+
+  let result = html
+
+  // Close unclosed <style> block if inside one
+  const styleOpens  = (result.match(/<style[^>]*>/gi)  || []).length
+  const styleCloses = (result.match(/<\/style>/gi)      || []).length
+  if (styleOpens > styleCloses) {
+    result += '\n}</style>'
+  }
+
+  // Close unclosed <script> block if inside one
+  const scriptOpens  = (result.match(/<script[^>]*>/gi)  || []).length
+  const scriptCloses = (result.match(/<\/script>/gi)      || []).length
+  if (scriptOpens > scriptCloses) {
+    result += '\n}</script>'
+  }
+
+  const hasBodyOpen  = /<body[\s>]/i.test(result)
+  const hasBodyClose = /<\/body>/i.test(result)
+
+  if (!hasBodyOpen) {
+    // Was cut before <body> — close head and add minimal body
+    const hasHeadClose = /<\/head>/i.test(result)
+    if (!hasHeadClose) result += '\n</head>'
+    result += '\n<body style="font-family:system-ui,sans-serif;padding:2rem">'
+    result += '\n<p style="color:#666">Site partiellement généré. Relancez la génération pour un résultat complet.</p>'
+    result += '\n</body>'
+  } else if (!hasBodyClose) {
+    result += '\n</body>'
+  }
+
+  result += '\n</html>'
+  return result
 }
 
 async function streamCall(
@@ -139,7 +127,7 @@ export async function generateWebsite(prompt: string): Promise<string> {
   return generateWebsiteStreaming(prompt, () => {})
 }
 
-// VERCEL_TIMEOUT_MS: leave 8s for Supabase save before Vercel's 60s hard limit
+// Leave 8s for Supabase save before Vercel Hobby's 60s hard limit
 const VERCEL_TIMEOUT_MS = 50_000
 
 export async function generateWebsiteStreaming(
@@ -170,14 +158,14 @@ export async function generateWebsiteStreaming(
   }
 
   let html = stripFences(raw)
-  console.log(`[claude] ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut}`)
+  console.log(`[claude] ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut} | hasBody=${/<body[\s>]/i.test(html)}`)
 
-  // Continuation pass only if time remains and HTML is incomplete
+  // Continuation pass only if time remains and HTML is not closed
   if (!isClosed(html) && !timedOut && Date.now() + 15_000 < deadline) {
-    const tail = html.slice(-500)
+    const tail = html.slice(-400)
     const continueMsg =
-      `Le HTML est incomplet. Termine-le en fermant toutes les balises et en finissant par </body></html>. ` +
-      `UNIQUEMENT la suite, sans répéter. Reprise depuis : ${tail}`
+      `Le HTML est incomplet. Termine-le — ferme toutes les balises ouvertes et finis par </body></html>. ` +
+      `UNIQUEMENT la suite du code, sans rien répéter. Reprise : ${tail}`
 
     for await (const event of anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
@@ -197,11 +185,8 @@ export async function generateWebsiteStreaming(
     }
   }
 
-  // Force-close if needed
-  if (!isClosed(html)) {
-    if (!/<\/body>/i.test(html)) html += '\n</body>'
-    html += '\n</html>'
-  }
+  html = forceClose(html)
+  console.log(`[claude] final | ${html.length} chars | hasBody=${/<body[\s>]/i.test(html)} | closed=${isClosed(html)}`)
 
   return html.trim()
 }
@@ -217,7 +202,6 @@ RÈGLES :
 export async function modifyWebsite(currentHtml: string, instruction: string): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
-  // Limit input to prevent context overflow while keeping enough for context
   const htmlSnippet = currentHtml.length > 80_000
     ? currentHtml.slice(0, 40_000) + '\n<!-- ... -->\n' + currentHtml.slice(-10_000)
     : currentHtml
@@ -235,10 +219,6 @@ export async function modifyWebsite(currentHtml: string, instruction: string): P
   let html = text
   console.log(`[claude:modify] ${html.length} chars | stop=${stopReason} | closed=${isClosed(html)}`)
 
-  if (!isClosed(html)) {
-    if (!/<\/body>/i.test(html)) html += '\n</body>'
-    html += '\n</html>'
-  }
-
+  html = forceClose(html)
   return html.trim()
 }
