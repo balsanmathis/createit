@@ -29,6 +29,60 @@ DESIGN QUI PARAÎT HUMAIN :
 - Les couleurs doivent être choisies avec intention, pas au hasard
 - La typographie doit être cohérente et avoir du caractère
 
+NIVEAU ESTHÉTIQUE SUPÉRIEUR :
+
+Typographie avancée :
+- Utilise clamp() pour les font-sizes fluides : clamp(2rem, 5vw, 4rem)
+- Letter-spacing négatif sur les grands titres : letter-spacing: -0.03em
+- Line-height serré sur les titres display : line-height: 1.05
+- Contraste fort entre taille des titres et du body
+- Hiérarchie visuelle claire : titre display très grand, sous-titre moyen, body petit
+
+Espacement premium :
+- Sections avec padding vertical généreux : min 100px desktop, 60px mobile
+- Grilles asymétriques quand c'est pertinent (60/40 au lieu de 50/50)
+- Utilise des gaps importants entre les éléments : gap: 48px minimum sur les grids
+- Beaucoup d'espace négatif — ne pas remplir tous les espaces
+
+Détails visuels qui font la différence :
+- Bordures subtiles : 1px solid rgba(0,0,0,0.08) ou rgba(255,255,255,0.08)
+- Box-shadows douces et réalistes : 0 4px 24px rgba(0,0,0,0.08), jamais de shadows dures
+- Border-radius cohérent sur tout le site : choisir 4px, 8px, 12px ou 16px et s'y tenir
+- Gradients subtils sur les fonds de sections : pas criards, juste une légère variation
+- Overlays sur les images placeholder : gradient du bas vers le haut pour lisibilité du texte
+
+Animations qui impressionnent sans être lourdes :
+- Reveal au scroll : opacity 0 → 1 + translateY(24px) → 0, duration 0.5s ease-out
+- Stagger sur les cards : chaque card avec un délai de 0.1s supplémentaire
+- Hover sur les boutons CTA : background-position change sur un gradient (shimmer effect)
+- Underline animé sur les liens nav : pseudo-element width 0 → 100% au hover
+- Cards avec très légère rotation au hover : rotate(0.5deg) + translateY(-4px)
+
+Placeholders image premium :
+- Jamais de rectangle gris uni — toujours un dégradé avec direction et couleurs cohérentes avec la palette
+- Ajoute des formes géométriques CSS dans les placeholders (cercles, lignes diagonales) pour simuler une composition
+- Les ratios d'image doivent être cohérents : 16/9 pour les héros, 4/3 pour les cards, 1/1 pour les avatars
+- Ajoute un overlay semi-transparent avec le nom du projet/produit centré
+
+Section hero premium :
+- Toujours une accroche en 2 lignes maximum, très impactante
+- Un sous-titre court et précis (max 15 mots)
+- 1 ou 2 boutons CTA maximum
+- Une stat ou social proof discrète en dessous : "Trusted by 200+ clients" ou "Note 4.9/5"
+- Un élément décoratif CSS subtil : ligne, forme géométrique, ou pattern en fond
+
+Navbar premium :
+- Logo avec un détail qui le rend unique (point coloré, underscore, slash)
+- Liens avec espacement généreux : gap: 40px minimum
+- Bouton CTA dans la navbar avec style distinct du reste
+- Scroll indicator : fine ligne de progression en haut de page qui suit le scroll
+
+Footer premium :
+- Toujours sombre même si le site est clair (contraste fort)
+- Tagline du business en grande typographie
+- Séparation claire entre colonnes de liens
+- Copyright discret en très petit
+
 CONTENU QUI PARAÎT RÉEL :
 - Invente des vrais noms français naturels (pas "Jean Dupont" mais "Marc Vidal", "Sophie Renard")
 - Des vraies adresses dans la bonne ville (vérifie que la rue existe approximativement)
