@@ -16,6 +16,11 @@ RÈGLES ABSOLUES :
 
 const CONTINUE_MSG = `Continue et termine le HTML précédent. Reprends exactement là où tu t'es arrêté et termine jusqu'à </body></html>. Ne répète rien du début.`
 
+export interface GenerateOptions {
+  maxTokens?: number
+  systemPrompt?: string
+}
+
 function stripFences(text: string): string {
   let t = text.trim()
   if (t.startsWith('```html')) t = t.slice(7)
@@ -28,32 +33,24 @@ function isClosed(html: string): boolean {
   return /<\/html>/i.test(html)
 }
 
-// Smart force-close: detects where we were cut and closes properly
 function forceClose(html: string): string {
   if (isClosed(html)) return html
 
   let result = html
 
-  // Close unclosed <style> block if inside one
   const styleOpens  = (result.match(/<style[^>]*>/gi)  || []).length
   const styleCloses = (result.match(/<\/style>/gi)      || []).length
-  if (styleOpens > styleCloses) {
-    result += '\n}</style>'
-  }
+  if (styleOpens > styleCloses) result += '\n}</style>'
 
-  // Close unclosed <script> block if inside one
   const scriptOpens  = (result.match(/<script[^>]*>/gi)  || []).length
   const scriptCloses = (result.match(/<\/script>/gi)      || []).length
-  if (scriptOpens > scriptCloses) {
-    result += '\n}</script>'
-  }
+  if (scriptOpens > scriptCloses) result += '\n}</script>'
 
   const hasBodyOpen  = /<body[\s>]/i.test(result)
   const hasBodyClose = /<\/body>/i.test(result)
 
   if (!hasBodyOpen) {
-    const hasHeadClose = /<\/head>/i.test(result)
-    if (!hasHeadClose) result += '\n</head>'
+    if (!/<\/head>/i.test(result)) result += '\n</head>'
     result += '\n<body style="font-family:system-ui,sans-serif;padding:2rem">'
     result += '\n<p style="color:#666">Site partiellement généré. Relancez la génération pour un résultat complet.</p>'
     result += '\n</body>'
@@ -75,9 +72,12 @@ export async function generateWebsite(prompt: string): Promise<string> {
 export async function generateWebsiteStreaming(
   prompt: string,
   onChunk: (totalChars: number) => void,
+  options: GenerateOptions = {},
 ): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
   const deadline = Date.now() + VERCEL_TIMEOUT_MS
+  const maxTokens = options.maxTokens ?? 8000
+  const systemToUse = options.systemPrompt ?? SYSTEM_PROMPT
 
   let html = ''
   let timedOut = false
@@ -85,8 +85,8 @@ export async function generateWebsiteStreaming(
   // First generation pass
   for await (const event of anthropic.messages.stream({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 8000,
-    system: SYSTEM_PROMPT,
+    max_tokens: maxTokens,
+    system: systemToUse,
     messages: [{ role: 'user', content: prompt }],
   })) {
     if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
@@ -108,7 +108,7 @@ export async function generateWebsiteStreaming(
     for await (const event of anthropic.messages.stream({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 4000,
-      system: SYSTEM_PROMPT,
+      system: systemToUse,
       messages: [
         { role: 'user', content: prompt },
         { role: 'assistant', content: html },

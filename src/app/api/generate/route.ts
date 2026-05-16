@@ -7,8 +7,23 @@ export const maxDuration = 300
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 
+const ULTRA_SYSTEM_PROMPT = `Tu es un expert développeur web. Génère un site web exceptionnel de qualité maximale. Design premium digne d'une agence haut de gamme. Animations CSS complexes, micro-interactions sur chaque élément, contenu ultra-détaillé et réaliste, sections très complètes. Chaque section doit être développée au maximum. C'est le niveau de qualité le plus élevé possible.
+RÈGLES ABSOLUES :
+- Commence TOUJOURS par <!DOCTYPE html><html lang="fr">
+- Termine TOUJOURS par </body></html> — OBLIGATOIRE
+- Tout le CSS dans <style>, tout le JS dans <script>
+- Zero dépendance externe — system fonts uniquement
+- NE T'ARRÊTE JAMAIS avant </html>`
+
+const QUALITY_CONFIG: Record<string, { maxTokens: number; tokenCost: number; systemPrompt?: string }> = {
+  rapide:   { maxTokens: 4_000,  tokenCost: 1 * TOKEN_COST_GENERATE },
+  standard: { maxTokens: 8_000,  tokenCost: 2 * TOKEN_COST_GENERATE },
+  premium:  { maxTokens: 16_000, tokenCost: 4 * TOKEN_COST_GENERATE },
+  ultra:    { maxTokens: 32_000, tokenCost: 8 * TOKEN_COST_GENERATE, systemPrompt: ULTRA_SYSTEM_PROMPT },
+}
+
 export async function POST(request: Request) {
-  // All auth + validation BEFORE opening the stream
+  // Auth check first
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -16,6 +31,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
 
+  // Parse body early (quality affects token cost check)
+  const body = await request.json()
+  const { prompt, name, quality = 'standard' } = body
+
+  if (!prompt?.trim()) {
+    return NextResponse.json({ error: 'Le prompt est requis' }, { status: 400 })
+  }
+
+  const qualityConfig = QUALITY_CONFIG[quality] ?? QUALITY_CONFIG['standard']
   const isAdmin = user.email === ADMIN_EMAIL
 
   if (!isAdmin) {
@@ -29,20 +53,13 @@ export async function POST(request: Request) {
     const tokensLimit = profile?.tokens_limit ?? PLAN_TOKEN_LIMITS.free
     const plan        = profile?.plan         ?? 'free'
 
-    if (tokensUsed + TOKEN_COST_GENERATE > tokensLimit) {
+    if (tokensUsed + qualityConfig.tokenCost > tokensLimit) {
       const isPaidPlan = plan !== 'free' && plan !== null
       const error = isPaidPlan
         ? `Tokens insuffisants. Vous avez utilisé ${tokensUsed.toLocaleString()}/${tokensLimit.toLocaleString()} tokens ce mois.`
         : 'Vous avez épuisé vos tokens gratuits. Choisissez un plan pour continuer.'
       return NextResponse.json({ error, needsUpgrade: true }, { status: 403 })
     }
-  }
-
-  const body = await request.json()
-  const { prompt, name } = body
-
-  if (!prompt?.trim()) {
-    return NextResponse.json({ error: 'Le prompt est requis' }, { status: 400 })
   }
 
   const userId   = user.id
@@ -59,12 +76,15 @@ export async function POST(request: Request) {
       }
 
       try {
-        // 1. Generate HTML (streams progress to client)
+        // 1. Generate HTML
         const htmlContent = await generateWebsiteStreaming(prompt.trim(), (chars) => {
           emit({ type: 'progress', chars })
+        }, {
+          maxTokens: qualityConfig.maxTokens,
+          systemPrompt: qualityConfig.systemPrompt,
         })
 
-        console.log(`[generate] HTML ready — ${htmlContent.length} chars, saving…`)
+        console.log(`[generate] HTML ready — ${htmlContent.length} chars, quality=${quality}, saving…`)
 
         // 2. Save to Supabase
         const { data: site, error: siteError } = await supabase
@@ -87,14 +107,13 @@ export async function POST(request: Request) {
 
         console.log(`[generate] Site saved — id=${site.id}`)
 
-        // 3. Deduct tokens (non-blocking, don't fail on error)
+        // 3. Deduct tokens
         if (!isAdmin) {
           const { error: rpcError } = await supabase.rpc('increment_tokens_used', {
             user_id: userId,
-            amount: TOKEN_COST_GENERATE,
+            amount: qualityConfig.tokenCost,
           })
           if (rpcError) {
-            // Fallback: manual update
             const { data: current } = await supabase
               .from('users')
               .select('tokens_used')
@@ -102,7 +121,7 @@ export async function POST(request: Request) {
               .single()
             await supabase
               .from('users')
-              .update({ tokens_used: (current?.tokens_used ?? 0) + TOKEN_COST_GENERATE })
+              .update({ tokens_used: (current?.tokens_used ?? 0) + qualityConfig.tokenCost })
               .eq('id', userId)
           }
         }
