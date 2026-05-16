@@ -1,66 +1,20 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const SYSTEM_PROMPT = `Tu es un expert développeur web. Génère un site HTML5 COMPLET et VISIBLE en un seul fichier.
+const SYSTEM_PROMPT = `Tu es un expert développeur web. Génère un site HTML5 COMPLET en un seul fichier.
+RÈGLES ABSOLUES :
+- Commence TOUJOURS par <!DOCTYPE html><html lang="fr">
+- Termine TOUJOURS par </body></html> — OBLIGATOIRE
+- Tout le CSS dans <style>, tout le JS dans <script>
+- Zero dépendance externe — system fonts uniquement
+- Le site doit être beau, professionnel, avec du vrai contenu
+- Animations CSS : fadeIn au scroll, hover sur les cards et boutons
+- Responsive mobile avec hamburger menu
+- TOUTES les sections demandées doivent être présentes
+- Si le contenu risque d'être trop long : raccourcis CHAQUE section mais garde-les TOUTES
+- Priorité absolue : finir le fichier HTML correctement plutôt que d'avoir du contenu long
+- NE T'ARRÊTE JAMAIS avant </html>`
 
-ORDRE D'ÉCRITURE OBLIGATOIRE :
-1. <!DOCTYPE html><html lang="fr"><head> avec <style> COMPACT (max 80 lignes de CSS)
-2. </head><body> — IMPÉRATIF : écris <body> rapidement après le CSS
-3. Toutes les sections avec du VRAI contenu
-4. </body></html> — TOUJOURS en dernier
-
-CSS COMPACT (80 lignes max) :
-- :root avec 4-5 variables couleur
-- Reset 3 lignes : * { box-sizing:border-box; margin:0; padding:0; }
-- Navigation, hero, sections, footer
-- Media query mobile simple (max-width:768px)
-- hover sur boutons : transform translateY(-2px), transition 0.2s
-- PAS de @keyframes complexes, PAS d'animations CSS élaborées
-
-SECTIONS SELON LE TYPE :
-
-Restaurant/Commerce :
-- Navbar fixe avec logo + liens
-- Hero plein écran avec titre et CTA
-- Menu/Produits avec grille 3 colonnes et prix
-- À propos / Histoire
-- Témoignages (3 clients)
-- Contact/Réservation avec formulaire
-- Footer avec infos
-
-Portfolio/Agence :
-- Navbar avec liens
-- Hero avec titre et baseline
-- Services en cards (3-4)
-- Réalisations en grille
-- Témoignages
-- Contact + formulaire
-- Footer
-
-SaaS/Tech :
-- Navbar + CTA
-- Hero avec proposition de valeur
-- Features (3-6 en grille)
-- Pricing 3 colonnes
-- FAQ simple
-- Footer
-
-CONTENU :
-- Réaliste et français (noms, adresses, prix cohérents)
-- Pas de lorem ipsum
-- Téléphones 0X XX XX XX XX
-
-IMAGES : placeholders CSS — dégradés colorés (pas de balises <img>)
-
-JAVASCRIPT : smooth scroll + hamburger mobile uniquement (20 lignes max)
-
-FONTS : system-ui, -apple-system, 'Segoe UI', sans-serif
-
-RÈGLE ABSOLUE :
-- Commence TOUJOURS par <!DOCTYPE html>
-- Écris </head><body> après maximum 80 lignes de CSS
-- Le contenu visible doit être présent
-- Finit TOUJOURS par </body></html>
-- JAMAIS de markdown, JAMAIS de backticks`
+const CONTINUE_MSG = `Continue et termine le HTML précédent. Reprends exactement là où tu t'es arrêté et termine jusqu'à </body></html>. Ne répète rien du début.`
 
 function stripFences(text: string): string {
   let t = text.trim()
@@ -98,7 +52,6 @@ function forceClose(html: string): string {
   const hasBodyClose = /<\/body>/i.test(result)
 
   if (!hasBodyOpen) {
-    // Was cut before <body> — close head and add minimal body
     const hasHeadClose = /<\/head>/i.test(result)
     if (!hasHeadClose) result += '\n</head>'
     result += '\n<body style="font-family:system-ui,sans-serif;padding:2rem">'
@@ -112,23 +65,12 @@ function forceClose(html: string): string {
   return result
 }
 
-async function streamCall(
-  anthropic: Anthropic,
-  params: Parameters<typeof anthropic.messages.stream>[0],
-): Promise<{ text: string; stopReason: string }> {
-  const stream = anthropic.messages.stream(params)
-  const msg = await stream.finalMessage()
-  const block = msg.content[0]
-  const raw = block.type === 'text' ? block.text : ''
-  return { text: stripFences(raw), stopReason: msg.stop_reason ?? 'end_turn' }
-}
+// Leave 8s for Supabase save before Vercel Hobby's 60s hard limit
+const VERCEL_TIMEOUT_MS = 50_000
 
 export async function generateWebsite(prompt: string): Promise<string> {
   return generateWebsiteStreaming(prompt, () => {})
 }
-
-// Leave 8s for Supabase save before Vercel Hobby's 60s hard limit
-const VERCEL_TIMEOUT_MS = 50_000
 
 export async function generateWebsiteStreaming(
   prompt: string,
@@ -137,18 +79,19 @@ export async function generateWebsiteStreaming(
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
   const deadline = Date.now() + VERCEL_TIMEOUT_MS
 
-  let raw = ''
+  let html = ''
   let timedOut = false
 
+  // First generation pass
   for await (const event of anthropic.messages.stream({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 8000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }],
   })) {
     if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-      raw += event.delta.text
-      onChunk(raw.length)
+      html += event.delta.text
+      onChunk(html.length)
     }
     if (Date.now() > deadline) {
       timedOut = true
@@ -157,32 +100,31 @@ export async function generateWebsiteStreaming(
     }
   }
 
-  let html = stripFences(raw)
-  console.log(`[claude] ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut} | hasBody=${/<body[\s>]/i.test(html)}`)
+  html = stripFences(html)
+  console.log(`[claude] pass 1 | ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut}`)
 
-  // Continuation pass only if time remains and HTML is not closed
-  if (!isClosed(html) && !timedOut && Date.now() + 15_000 < deadline) {
-    const tail = html.slice(-400)
-    const continueMsg =
-      `Le HTML est incomplet. Termine-le — ferme toutes les balises ouvertes et finis par </body></html>. ` +
-      `UNIQUEMENT la suite du code, sans rien répéter. Reprise : ${tail}`
-
+  // Up to 3 continuation passes if HTML not closed and time remains
+  for (let pass = 0; pass < 3 && !isClosed(html) && !timedOut && Date.now() + 10_000 < deadline; pass++) {
     for await (const event of anthropic.messages.stream({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 4000,
       system: SYSTEM_PROMPT,
       messages: [
         { role: 'user', content: prompt },
         { role: 'assistant', content: html },
-        { role: 'user', content: continueMsg },
+        { role: 'user', content: CONTINUE_MSG },
       ],
     })) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
         html += event.delta.text
         onChunk(html.length)
       }
-      if (Date.now() > deadline) break
+      if (Date.now() > deadline) {
+        timedOut = true
+        break
+      }
     }
+    console.log(`[claude] pass ${pass + 2} | ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut}`)
   }
 
   html = forceClose(html)
@@ -199,6 +141,17 @@ RÈGLES :
 - Garde les mêmes styles, animations et structure sauf si demandé autrement
 - Le HTML retourné doit être complet et valide`
 
+async function streamCall(
+  anthropic: Anthropic,
+  params: Parameters<typeof anthropic.messages.stream>[0],
+): Promise<{ text: string; stopReason: string }> {
+  const stream = anthropic.messages.stream(params)
+  const msg = await stream.finalMessage()
+  const block = msg.content[0]
+  const raw = block.type === 'text' ? block.text : ''
+  return { text: stripFences(raw), stopReason: msg.stop_reason ?? 'end_turn' }
+}
+
 export async function modifyWebsite(currentHtml: string, instruction: string): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
@@ -207,7 +160,7 @@ export async function modifyWebsite(currentHtml: string, instruction: string): P
     : currentHtml
 
   const { text, stopReason } = await streamCall(anthropic, {
-    model: 'claude-sonnet-4-6',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 16000,
     system: MODIFY_SYSTEM,
     messages: [{
