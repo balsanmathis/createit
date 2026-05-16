@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const SYSTEM_PROMPT = `Tu es un expert développeur web. Génère un site HTML5 COMPLET en un seul fichier.
+const SYSTEM_PROMPT = `RÈGLE NUMÉRO 1 ABSOLUE : Tu DOIS terminer par </body></html>. Si tu manques de place, raccourcis CHAQUE section mais termine TOUJOURS le fichier HTML. Un fichier incomplet est un ÉCHEC total.
+
+Tu es un expert développeur web. Génère un site HTML5 COMPLET en un seul fichier.
 RÈGLES ABSOLUES :
 - Commence TOUJOURS par <!DOCTYPE html><html lang="fr">
 - Termine TOUJOURS par </body></html> — OBLIGATOIRE
@@ -13,8 +15,6 @@ RÈGLES ABSOLUES :
 - Si le contenu risque d'être trop long : raccourcis CHAQUE section mais garde-les TOUTES
 - Priorité absolue : finir le fichier HTML correctement plutôt que d'avoir du contenu long
 - NE T'ARRÊTE JAMAIS avant </html>`
-
-const CONTINUE_MSG = `Continue et termine le HTML précédent. Reprends exactement là où tu t'es arrêté et termine jusqu'à </body></html>. Ne répète rien du début.`
 
 export interface GenerateOptions {
   maxTokens?: number
@@ -76,7 +76,7 @@ export async function generateWebsiteStreaming(
 ): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
   const deadline = Date.now() + VERCEL_TIMEOUT_MS
-  const maxTokens = options.maxTokens ?? 8000
+  const maxTokens   = options.maxTokens   ?? 8000
   const systemToUse = options.systemPrompt ?? SYSTEM_PROMPT
 
   let html = ''
@@ -103,8 +103,11 @@ export async function generateWebsiteStreaming(
   html = stripFences(html)
   console.log(`[claude] pass 1 | ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut}`)
 
-  // Up to 3 continuation passes if HTML not closed and time remains
-  for (let pass = 0; pass < 3 && !isClosed(html) && !timedOut && Date.now() + 10_000 < deadline; pass++) {
+  // Up to 5 continuation passes if HTML not closed and time remains
+  for (let pass = 0; pass < 5 && !isClosed(html) && !timedOut && Date.now() + 10_000 < deadline; pass++) {
+    const tail = html.slice(-300)
+    const continueMsg = `Tu générais un site HTML. Voici où tu t'es arrêté : ${tail}. Continue EXACTEMENT depuis cet endroit et termine jusqu'à </body></html>. Ne recommence pas depuis le début.`
+
     for await (const event of anthropic.messages.stream({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 4000,
@@ -112,7 +115,7 @@ export async function generateWebsiteStreaming(
       messages: [
         { role: 'user', content: prompt },
         { role: 'assistant', content: html },
-        { role: 'user', content: CONTINUE_MSG },
+        { role: 'user', content: continueMsg },
       ],
     })) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
@@ -127,6 +130,7 @@ export async function generateWebsiteStreaming(
     console.log(`[claude] pass ${pass + 2} | ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut}`)
   }
 
+  // Always ensure HTML is closed before returning — never save an incomplete file
   html = forceClose(html)
   console.log(`[claude] final | ${html.length} chars | hasBody=${/<body[\s>]/i.test(html)} | closed=${isClosed(html)}`)
 

@@ -41,6 +41,7 @@ h1,h2,h3,h4,h5,h6{font-family:Georgia,'Times New Roman',serif}
 function stripEditorMeta(html: string): string {
   return html
     .replace(/<script[^>]*id="__ve__"[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<script[^>]*id="__link_guard__"[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[^>]*id="__ve_style__"[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<style[^>]*id="__offline__"[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<style[^>]*id="__scroll_fix__"[^>]*>[\s\S]*?<\/style>/gi, '')
@@ -186,6 +187,37 @@ document.addEventListener('input',function(){
 // Expose toggle so parent can call without postMessage
 window.veSetMode=setMode;
 })()`
+
+const LINK_GUARD_SCRIPT = `(function(){
+document.addEventListener('click',function(e){
+  var link=e.target.closest('a');
+  if(!link)return;
+  var href=link.getAttribute('href');
+  if(!href){e.preventDefault();return;}
+  if(href.startsWith('#'))return;
+  if(href.startsWith('http')||href.startsWith('//')||href==='/'){e.preventDefault();return;}
+  e.preventDefault();
+  var t=document.querySelector(href);
+  if(t)t.scrollIntoView({behavior:'smooth'});
+});
+document.addEventListener('submit',function(e){
+  e.preventDefault();
+  var form=e.target;
+  var btn=form.querySelector('button[type="submit"],input[type="submit"],button:not([type])');
+  if(!btn)return;
+  var orig=btn.tagName==='INPUT'?btn.value:(btn.textContent||'');
+  if(btn.tagName==='INPUT')btn.value='✓ Message envoy\xe9 !';
+  else btn.textContent='✓ Message envoy\xe9 !';
+  setTimeout(function(){if(btn.tagName==='INPUT')btn.value=orig;else btn.textContent=orig;},3000);
+});
+})()`
+
+function injectLinkGuard(html: string): string {
+  const tag = `<script id="__link_guard__">${LINK_GUARD_SCRIPT}</` + `script>`
+  return /<\/body>/i.test(html)
+    ? html.replace(/(<\/body>)/i, tag + '\n$1')
+    : html + '\n' + tag
+}
 
 function injectVE(iframe: HTMLIFrameElement) {
   const doc = iframe.contentDocument
@@ -357,12 +389,12 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
     }
   }
 
-  // Write HTML into the iframe via srcdoc + scroll fix override
+  // Write HTML into the iframe — applies scroll fix + link guard on every write
   const writeToIframe = useCallback((content: string) => {
     const iframe = iframeRef.current
     if (!iframe) return
     iframe.onload = () => injectVE(iframe)
-    iframe.srcdoc = injectScrollFix(content)
+    iframe.srcdoc = injectScrollFix(injectLinkGuard(content))
   }, [])
 
   // Initial load
