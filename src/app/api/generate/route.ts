@@ -7,7 +7,9 @@ export const maxDuration = 300
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 
-const ULTRA_SYSTEM_PROMPT = `Tu es un expert développeur web. Génère un site web exceptionnel de qualité maximale. Design premium digne d'une agence haut de gamme. Animations CSS complexes, micro-interactions sur chaque élément, contenu ultra-détaillé et réaliste, sections très complètes. Chaque section doit être développée au maximum. C'est le niveau de qualité le plus élevé possible.
+const ULTRA_SYSTEM_PROMPT = `RÈGLE NUMÉRO 1 ABSOLUE : Tu DOIS terminer par </body></html>. Si tu manques de place, raccourcis CHAQUE section mais termine TOUJOURS le fichier HTML. Un fichier incomplet est un ÉCHEC total.
+
+Tu es un expert développeur web. Génère un site web exceptionnel de qualité maximale. Design premium digne d'une agence haut de gamme. Animations CSS complexes, micro-interactions sur chaque élément, contenu ultra-détaillé et réaliste, sections très complètes. Chaque section doit être développée au maximum. C'est le niveau de qualité le plus élevé possible.
 RÈGLES ABSOLUES :
 - Commence TOUJOURS par <!DOCTYPE html><html lang="fr">
 - Termine TOUJOURS par </body></html> — OBLIGATOIRE

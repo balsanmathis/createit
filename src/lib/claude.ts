@@ -62,8 +62,24 @@ function forceClose(html: string): string {
   return result
 }
 
-// Leave 8s for Supabase save before Vercel Hobby's 60s hard limit
+// Build a targeted continuation message based on current HTML state
+function getContinueMsg(html: string): string {
+  const tail = html.slice(-300)
+  const hasBody = /<body[\s>]/i.test(html)
+
+  if (!hasBody) {
+    // Model is stuck in <head>/<style> — force it past that
+    return `Tu générais un site HTML mais tu n'as pas encore écrit <body>. Contexte actuel : ...${tail}. MAINTENANT : ferme les balises CSS et head en cours si nécessaire (</style></head>), puis génère immédiatement <body> avec tout le contenu du site (navbar, hero, toutes les sections, footer) et termine par </body></html>. Ne répète pas le CSS déjà écrit.`
+  }
+
+  // Model is inside <body> — continue normally
+  return `Tu générais un site HTML. Voici où tu t'es arrêté : ${tail}. Continue EXACTEMENT depuis cet endroit et termine jusqu'à </body></html>. Ne répète rien du début.`
+}
+
+// Total budget for the whole generation (leaves 8s for Supabase save)
 const VERCEL_TIMEOUT_MS = 50_000
+// First pass is capped so continuations always have time to run
+const FIRST_PASS_MS = 20_000
 
 export async function generateWebsite(prompt: string): Promise<string> {
   return generateWebsiteStreaming(prompt, () => {})
@@ -75,14 +91,15 @@ export async function generateWebsiteStreaming(
   options: GenerateOptions = {},
 ): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-  const deadline = Date.now() + VERCEL_TIMEOUT_MS
+  const deadline        = Date.now() + VERCEL_TIMEOUT_MS
+  const firstPassLimit  = Date.now() + FIRST_PASS_MS
   const maxTokens   = options.maxTokens   ?? 8000
   const systemToUse = options.systemPrompt ?? SYSTEM_PROMPT
 
   let html = ''
   let timedOut = false
 
-  // First generation pass
+  // ── Pass 1: capped at FIRST_PASS_MS so continuations always have time ──
   for await (const event of anthropic.messages.stream({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: maxTokens,
@@ -93,20 +110,19 @@ export async function generateWebsiteStreaming(
       html += event.delta.text
       onChunk(html.length)
     }
-    if (Date.now() > deadline) {
-      timedOut = true
-      console.warn('[claude] deadline hit, stopping stream early')
+    if (Date.now() > deadline) { timedOut = true; break }
+    if (Date.now() > firstPassLimit) {
+      console.warn('[claude] pass 1 time cap hit — handing off to continuation')
       break
     }
   }
 
   html = stripFences(html)
-  console.log(`[claude] pass 1 | ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut}`)
+  console.log(`[claude] pass 1 | ${html.length} chars | closed=${isClosed(html)} | hasBody=${/<body[\s>]/i.test(html)} | timedOut=${timedOut}`)
 
-  // Up to 5 continuation passes if HTML not closed and time remains
-  for (let pass = 0; pass < 5 && !isClosed(html) && !timedOut && Date.now() + 10_000 < deadline; pass++) {
-    const tail = html.slice(-300)
-    const continueMsg = `Tu générais un site HTML. Voici où tu t'es arrêté : ${tail}. Continue EXACTEMENT depuis cet endroit et termine jusqu'à </body></html>. Ne recommence pas depuis le début.`
+  // ── Passes 2–6: up to 5 continuation attempts ──
+  for (let pass = 0; pass < 5 && !isClosed(html) && !timedOut && Date.now() + 8_000 < deadline; pass++) {
+    const continueMsg = getContinueMsg(html)
 
     for await (const event of anthropic.messages.stream({
       model: 'claude-haiku-4-5-20251001',
@@ -122,17 +138,15 @@ export async function generateWebsiteStreaming(
         html += event.delta.text
         onChunk(html.length)
       }
-      if (Date.now() > deadline) {
-        timedOut = true
-        break
-      }
+      if (Date.now() > deadline) { timedOut = true; break }
     }
-    console.log(`[claude] pass ${pass + 2} | ${html.length} chars | closed=${isClosed(html)} | timedOut=${timedOut}`)
+
+    console.log(`[claude] pass ${pass + 2} | ${html.length} chars | closed=${isClosed(html)} | hasBody=${/<body[\s>]/i.test(html)} | timedOut=${timedOut}`)
   }
 
-  // Always ensure HTML is closed before returning — never save an incomplete file
+  // Always guarantee valid HTML before returning
   html = forceClose(html)
-  console.log(`[claude] final | ${html.length} chars | hasBody=${/<body[\s>]/i.test(html)} | closed=${isClosed(html)}`)
+  console.log(`[claude] final | ${html.length} chars | closed=${isClosed(html)}`)
 
   return html.trim()
 }
