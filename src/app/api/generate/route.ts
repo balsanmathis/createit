@@ -83,6 +83,29 @@ Footer premium :
 - Séparation claire entre colonnes de liens
 - Copyright discret en très petit
 
+IMAGES ET PLACEHOLDERS OBLIGATOIRES :
+Tu n'as pas accès à de vraies images. Remplace CHAQUE image par un placeholder CSS magnifique :
+
+Pour les photos de hero/bannière :
+<div style="width:100%;height:500px;background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+  <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,0.03);top:-50px;right:-50px;"></div>
+  <span style="color:rgba(255,255,255,0.15);font-size:14px;letter-spacing:0.2em;text-transform:uppercase;">Photo</span>
+</div>
+
+Pour les photos de cards/services :
+<div style="width:100%;height:220px;background:linear-gradient(160deg, #0a0a0a, #1a1a2e);display:flex;align-items:flex-end;padding:16px;">
+  <span style="color:rgba(255,255,255,0.2);font-size:11px;letter-spacing:0.1em;">Image du projet</span>
+</div>
+
+Pour les avatars/photos de personnes :
+<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#4c1d95);display:flex;align-items:center;justify-content:center;">
+  <span style="color:white;font-size:24px;font-weight:700;">[Initiales]</span>
+</div>
+
+JAMAIS de balise <img> avec src vide ou src="placeholder"
+TOUJOURS utiliser des divs CSS comme placeholders
+Les placeholders doivent être visuellement beaux et cohérents avec la palette de couleurs du site
+
 CONTENU QUI PARAÎT RÉEL :
 - Invente des vrais noms français naturels (pas "Jean Dupont" mais "Marc Vidal", "Sophie Renard")
 - Des vraies adresses dans la bonne ville (vérifie que la rue existe approximativement)

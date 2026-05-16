@@ -206,17 +206,18 @@ document.addEventListener('submit',function(e){
   var btn=form.querySelector('button[type="submit"],input[type="submit"],button:not([type])');
   if(!btn)return;
   var orig=btn.tagName==='INPUT'?btn.value:(btn.textContent||'');
-  if(btn.tagName==='INPUT')btn.value='✓ Message envoy\xe9 !';
-  else btn.textContent='✓ Message envoy\xe9 !';
+  if(btn.tagName==='INPUT')btn.value='✓ Envoy\xe9 !';
+  else btn.textContent='✓ Envoy\xe9 !';
   setTimeout(function(){if(btn.tagName==='INPUT')btn.value=orig;else btn.textContent=orig;},3000);
 });
-})()`
+})();`
 
 function injectLinkGuard(html: string): string {
-  const tag = `<script id="__link_guard__">${LINK_GUARD_SCRIPT}</` + `script>`
-  return /<\/body>/i.test(html)
-    ? html.replace(/(<\/body>)/i, tag + '\n$1')
-    : html + '\n' + tag
+  const tag = '<script id="__link_guard__">' + LINK_GUARD_SCRIPT + '</' + 'script>'
+  // Use lastIndexOf to avoid matching </body> inside generated JS strings
+  const idx = html.toLowerCase().lastIndexOf('</body>')
+  if (idx !== -1) return html.slice(0, idx) + tag + '\n' + html.slice(idx)
+  return html + '\n' + tag
 }
 
 function injectVE(iframe: HTMLIFrameElement) {
