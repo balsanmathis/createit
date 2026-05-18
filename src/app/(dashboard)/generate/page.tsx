@@ -67,9 +67,9 @@ function GenerateForm() {
     : generatedChars > 0 ? Math.min(Math.round((generatedChars / selectedQ.expectedChars) * 100), 99)
     : 0
 
-  const tokenColor  = tokenPct > 50 ? '#4ade80' : tokenPct > 20 ? '#f97316' : '#ef4444'
-  const tokenBg     = tokenPct > 50 ? 'rgba(74,222,128,0.1)' : tokenPct > 20 ? 'rgba(249,115,22,0.1)' : 'rgba(239,68,68,0.1)'
-  const tokenBorder = tokenPct > 50 ? 'rgba(74,222,128,0.2)' : tokenPct > 20 ? 'rgba(249,115,22,0.2)' : 'rgba(239,68,68,0.2)'
+  const tokenColor  = tokenPct > 50 ? '#059669' : tokenPct > 20 ? '#d97706' : '#dc2626'
+  const tokenBg     = tokenPct > 50 ? '#ecfdf5' : tokenPct > 20 ? '#fffbeb' : '#fef2f2'
+  const tokenBorder = tokenPct > 50 ? '#a7f3d0' : tokenPct > 20 ? '#fde68a' : '#fecaca'
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -146,17 +146,17 @@ function GenerateForm() {
       className="w-full max-w-2xl"
     >
       <div className="text-center mb-8 md:mb-10">
-        <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-600/20 border border-violet-500/20 mb-4 md:mb-5">
-          <svg className="w-7 h-7 md:w-8 md:h-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-[#eff6ff] border border-[#bfdbfe] mb-4 md:mb-5">
+          <svg className="w-7 h-7 md:w-8 md:h-8 text-[#2563eb]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
           </svg>
         </div>
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-3">
+        <h1 className="text-3xl md:text-4xl font-black text-[#0f172a] mb-3">
           Génère ton site<br />
-          <span className="gradient-text">en quelques secondes</span>
+          <span className="text-[#2563eb]">en quelques secondes</span>
         </h1>
-        <p className="text-white/40 text-sm md:text-base">
+        <p className="text-[#64748b] text-sm md:text-base">
           Décris ton site en quelques mots — l&apos;IA s&apos;occupe du reste.
         </p>
       </div>
@@ -167,21 +167,21 @@ function GenerateForm() {
           className="flex items-center justify-between px-4 py-2.5 rounded-xl mb-4 text-sm"
           style={{ background: tokenBg, border: `1px solid ${tokenBorder}` }}
         >
-          <span className="text-white/50">Tokens disponibles</span>
+          <span className="text-[#64748b]">Tokens disponibles</span>
           <span className="font-semibold tabular-nums" style={{ color: tokenColor }}>
             {tokensRemaining!.toLocaleString('fr-FR')} / {tokens.limit.toLocaleString('fr-FR')}
           </span>
         </div>
       )}
 
-      <div className="glass rounded-2xl p-4 md:p-6 border border-white/5">
+      <div className="bg-white rounded-2xl p-4 md:p-6 border border-[#e2e8f0] shadow-sm">
         {/* Site name */}
         <input
           type="text"
           value={siteName}
           onChange={(e) => setSiteName(e.target.value)}
           placeholder="Nom du site (optionnel)"
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:border-violet-500/40 focus:outline-none transition-colors mb-3"
+          className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-sm text-[#0f172a] placeholder-[#94a3b8] focus:border-[#2563eb] focus:outline-none transition-colors mb-3"
         />
 
         {/* Prompt */}
@@ -191,13 +191,13 @@ function GenerateForm() {
           onKeyDown={handleKeyDown}
           placeholder="Ex : Un site restaurant gastronomique à Paris, thème sombre élégant, avec menu, réservations et galerie photo…"
           rows={5}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:border-violet-500/40 focus:outline-none transition-colors resize-none mb-4"
+          className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-sm text-[#0f172a] placeholder-[#94a3b8] focus:border-[#2563eb] focus:outline-none transition-colors resize-none mb-4"
           autoFocus
         />
 
         {/* Quality selector */}
         <div className="mb-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-white/30 mb-2">Qualité</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#94a3b8] mb-2">Qualité</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {QUALITY_OPTIONS.map((q) => {
               const isSelected = quality === q.key
@@ -208,25 +208,25 @@ function GenerateForm() {
                   disabled={loading}
                   className="relative flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all disabled:opacity-50"
                   style={{
-                    background:   isSelected ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.03)',
-                    borderColor:  isSelected ? 'rgba(124,58,237,0.5)'  : 'rgba(255,255,255,0.07)',
-                    boxShadow:    isSelected ? '0 0 0 1px rgba(124,58,237,0.3)' : 'none',
+                    background:  isSelected ? '#eff6ff' : '#f8fafc',
+                    borderColor: isSelected ? '#2563eb' : '#e2e8f0',
+                    boxShadow:   isSelected ? '0 0 0 1px rgba(37,99,235,0.2)' : 'none',
                   }}
                 >
                   {q.badge && (
                     <span
-                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
-                      style={{ background: 'linear-gradient(90deg,#7c3aed,#6366f1)', color: 'white' }}
+                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap text-white"
+                      style={{ background: '#2563eb' }}
                     >
                       {q.badge}
                     </span>
                   )}
                   <span className="text-base leading-none">{q.icon}</span>
-                  <span className={`text-xs font-bold ${isSelected ? 'text-violet-300' : 'text-white/70'}`}>
+                  <span className={`text-xs font-bold ${isSelected ? 'text-[#2563eb]' : 'text-[#64748b]'}`}>
                     {q.label}
                   </span>
-                  <span className="text-[10px] text-white/35 leading-tight">{q.desc}</span>
-                  <span className={`text-[10px] font-semibold mt-0.5 ${isSelected ? 'text-violet-400' : 'text-white/30'}`}>
+                  <span className="text-[10px] text-[#94a3b8] leading-tight">{q.desc}</span>
+                  <span className={`text-[10px] font-semibold mt-0.5 ${isSelected ? 'text-[#2563eb]' : 'text-[#94a3b8]'}`}>
                     {q.credits} crédit{q.credits > 1 ? 's' : ''}
                   </span>
                 </button>
@@ -239,7 +239,7 @@ function GenerateForm() {
         {quality === 'ultra' && !loading && (
           <div
             className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-4 text-xs"
-            style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)', color: 'rgba(253,230,138,0.8)' }}
+            style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e' }}
           >
             <span>⏱</span>
             <span>La génération Ultra peut prendre 30–60 secondes</span>
@@ -249,16 +249,16 @@ function GenerateForm() {
         {/* Credit preview */}
         {!isAdmin && tokens && !noTokens && (
           <div
-            className="flex flex-wrap items-center gap-1.5 px-3 py-2.5 rounded-xl mb-4 text-xs text-white/40"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+            className="flex flex-wrap items-center gap-1.5 px-3 py-2.5 rounded-xl mb-4 text-xs text-[#64748b]"
+            style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}
           >
             <span>Ce site consommera</span>
-            <span className="font-semibold text-violet-400">
+            <span className="font-semibold text-[#2563eb]">
               {selectedQ.credits} crédit{selectedQ.credits > 1 ? 's' : ''}
             </span>
             <span>—</span>
             <span>Il vous restera</span>
-            <span className="font-semibold" style={{ color: (creditsAfter ?? 0) >= 0 ? '#a78bfa' : '#ef4444' }}>
+            <span className="font-semibold" style={{ color: (creditsAfter ?? 0) >= 0 ? '#059669' : '#dc2626' }}>
               {Math.max(0, creditsAfter ?? 0)} crédit{Math.max(0, creditsAfter ?? 0) !== 1 ? 's' : ''}
             </span>
           </div>
@@ -268,19 +268,18 @@ function GenerateForm() {
         {noTokens && (
           <div
             className="rounded-xl p-4 mb-4 text-center"
-            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+            style={{ background: '#fef2f2', border: '1px solid #fecaca' }}
           >
-            <p className="text-sm text-red-300 mb-1">
+            <p className="text-sm text-red-600 mb-1">
               Pas assez de crédits pour ce niveau de qualité.
             </p>
-            <p className="text-xs text-red-300/60 mb-3">
+            <p className="text-xs text-red-400 mb-3">
               Il vous faut {selectedQ.credits} crédits ({tokensNeeded.toLocaleString('fr-FR')} tokens),
               vous en avez {tokensRemaining!.toLocaleString('fr-FR')}.
             </p>
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2 rounded-lg transition-all"
-              style={{ background: 'rgba(124,58,237,0.25)', color: '#c4b5fd', border: '1px solid rgba(124,58,237,0.4)' }}
+              className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2 rounded-lg transition-all bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe] hover:bg-[#dbeafe]"
             >
               Obtenir plus de tokens →
             </Link>
@@ -291,28 +290,23 @@ function GenerateForm() {
         {loading && (
           <div className="mb-4">
             <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="text-white/40">
+              <span className="text-[#64748b]">
                 {step === 'saving'
                   ? 'Sauvegarde…'
                   : quality === 'ultra'
                   ? '💎 Génération Ultra en cours…'
                   : 'Génération en cours…'}
               </span>
-              <span className="font-semibold tabular-nums" style={{ color: '#a78bfa' }}>
+              <span className="font-semibold tabular-nums text-[#2563eb]">
                 {progress}%
               </span>
             </div>
-            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="w-full h-1.5 rounded-full overflow-hidden bg-[#e2e8f0]">
               <div
                 className="h-full rounded-full transition-all duration-300"
                 style={{
                   width: `${progress}%`,
-                  background: quality === 'ultra'
-                    ? 'linear-gradient(90deg,#7c3aed,#ec4899,#f59e0b)'
-                    : quality === 'premium'
-                    ? 'linear-gradient(90deg,#7c3aed,#ec4899)'
-                    : 'linear-gradient(90deg,#7c3aed,#6366f1)',
-                  boxShadow: progress > 0 ? '0 0 8px rgba(124,58,237,0.6)' : 'none',
+                  background: '#2563eb',
                 }}
               />
             </div>
@@ -322,7 +316,7 @@ function GenerateForm() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <Link
             href="/prompt-builder"
-            className="flex items-center gap-2 text-sm text-white/40 hover:text-violet-400 transition-colors"
+            className="flex items-center gap-2 text-sm text-[#64748b] hover:text-[#2563eb] transition-colors"
           >
             <span>🪄</span>
             Construire mon prompt étape par étape
@@ -331,7 +325,7 @@ function GenerateForm() {
           <button
             onClick={handleGenerate}
             disabled={loading || !prompt.trim() || noTokens}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg hover:shadow-violet-500/30 text-sm"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-xl transition-colors shadow-sm text-sm"
           >
             {loading ? (
               <>
@@ -351,7 +345,7 @@ function GenerateForm() {
         </div>
       </div>
 
-      <p className="text-center text-xs text-white/20 mt-4">
+      <p className="text-center text-xs text-[#94a3b8] mt-4">
         {loading
           ? `${generatedChars.toLocaleString('fr-FR')} caractères générés…`
           : 'Ctrl+Entrée pour générer · 10–60 sec selon qualité'}
@@ -362,7 +356,7 @@ function GenerateForm() {
 
 export default function GeneratePage() {
   return (
-    <div className="min-h-screen bg-[#080810] text-white">
+    <div className="min-h-screen bg-[#f8fafc]">
       <DashboardSidebar activeHref="/generate" />
 
       <main className="md:ml-64 min-h-screen flex items-center justify-center p-4 md:p-8 pt-16 md:pt-8">

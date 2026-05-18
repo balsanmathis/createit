@@ -46,7 +46,6 @@ export default function DashboardSidebar({ activeHref, children }: Props) {
     })
   }, [])
 
-  // Insert Analytics before Paramètres when admin
   const navItems = isAdmin
     ? [
         ...NAV_ITEMS.slice(0, 3),
@@ -60,7 +59,7 @@ export default function DashboardSidebar({ activeHref, children }: Props) {
       {/* Burger button — mobile only */}
       <button
         onClick={() => setOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 glass rounded-xl border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-white rounded-xl border border-[#e2e8f0] shadow-sm flex items-center justify-center text-[#64748b] hover:text-[#0f172a] transition-colors"
         aria-label="Ouvrir le menu"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,20 +70,20 @@ export default function DashboardSidebar({ activeHref, children }: Props) {
       {/* Overlay */}
       {open && (
         <div
-          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full w-64 glass border-r border-white/5 flex flex-col p-6 z-50 transition-transform duration-300 ${
+        className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-[#e2e8f0] flex flex-col p-6 z-50 transition-transform duration-300 ${
           open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <button
           onClick={() => setOpen(false)}
-          className="md:hidden absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+          className="md:hidden absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#94a3b8] hover:text-[#0f172a] transition-colors"
           aria-label="Fermer"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,16 +91,13 @@ export default function DashboardSidebar({ activeHref, children }: Props) {
           </svg>
         </button>
 
-        <Link href="/" className="flex items-center gap-2.5 mb-10">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8L7 12L13 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="text-lg font-bold">Create<span className="gradient-text">It</span></span>
+        <Link href="/" className="flex items-center mb-10" style={{ textDecoration: 'none' }}>
+          <span className="text-lg font-bold" style={{ color: '#0f172a', letterSpacing: '-0.3px' }}>
+            Create<span style={{ color: '#2563eb' }}>It</span>
+          </span>
         </Link>
 
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-0.5">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -109,8 +105,8 @@ export default function DashboardSidebar({ activeHref, children }: Props) {
               onClick={() => setOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                 activeHref === item.href
-                  ? 'bg-violet-500/15 text-violet-300 border border-violet-500/20'
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
+                  ? 'bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe] font-medium'
+                  : 'text-[#64748b] hover:text-[#0f172a] hover:bg-[#f1f5f9] border border-transparent'
               }`}
             >
               <span className="text-base flex items-center justify-center w-4">
@@ -123,36 +119,33 @@ export default function DashboardSidebar({ activeHref, children }: Props) {
 
         {children}
 
-        {/* ── Token bar ── */}
+        {/* Token bar */}
         {tokens && !isAdmin && (() => {
           const remaining = Math.max(0, tokens.limit - tokens.used)
           const pct = tokens.limit > 0 ? (tokens.used / tokens.limit) * 100 : 100
-          const barColor = pct > 80 ? '#ef4444' : pct > 50 ? '#f97316' : '#7c3aed'
-          const textColor = pct > 80 ? '#fca5a5' : pct > 50 ? '#fdba74' : '#c4b5fd'
+          const barColor = pct > 80 ? '#ef4444' : pct > 50 ? '#f97316' : '#2563eb'
+          const textColor = pct > 80 ? '#dc2626' : pct > 50 ? '#ea580c' : '#2563eb'
           return (
-            <div className="mt-4 pt-4 border-t border-white/5">
+            <div className="mt-4 pt-4 border-t border-[#e2e8f0]">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-white/35">Tokens</span>
+                <span className="text-xs text-[#94a3b8]">Tokens</span>
                 <span className="text-xs font-semibold" style={{ color: textColor }}>
                   {remaining.toLocaleString('fr-FR')} restants
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden mb-1.5">
+              <div className="h-1.5 rounded-full bg-[#f1f5f9] overflow-hidden mb-1.5">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${Math.max(0, 100 - pct)}%`, background: barColor }}
                 />
               </div>
-              <p className="text-xs text-white/20">
+              <p className="text-xs text-[#94a3b8]">
                 {tokens.used.toLocaleString('fr-FR')} / {tokens.limit.toLocaleString('fr-FR')} utilisés
               </p>
               {remaining === 0 && (
                 <Link
                   href="/pricing"
-                  className="mt-2 flex items-center justify-center gap-1 text-xs font-semibold py-2 rounded-lg transition-all"
-                  style={{ background: 'rgba(124,58,237,0.2)', color: '#c4b5fd', border: '1px solid rgba(124,58,237,0.3)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.35)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.2)')}
+                  className="mt-2 flex items-center justify-center text-xs font-semibold py-2 rounded-lg bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe] hover:bg-[#dbeafe] transition-colors"
                 >
                   Obtenir plus de tokens →
                 </Link>

@@ -5,6 +5,16 @@ import { TOKEN_COST_GENERATE, PLAN_TOKEN_LIMITS } from '@/types'
 
 export const maxDuration = 300
 
+// In-process rate limiter — per-instance (use Redis for distributed production)
+const rlMap = new Map<string, number[]>()
+function isRateLimited(ip: string, limit = 10, windowMs = 60_000): boolean {
+  const now = Date.now()
+  const prev = (rlMap.get(ip) ?? []).filter(t => now - t < windowMs)
+  if (prev.length >= limit) return true
+  rlMap.set(ip, [...prev, now])
+  return false
+}
+
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 
 const ULTRA_SYSTEM_PROMPT = `RÈGLE NUMÉRO 1 ABSOLUE : Tu DOIS terminer par </body></html>. Si tu manques de place, raccourcis CHAQUE section mais termine TOUJOURS le fichier HTML. Un fichier incomplet est un ÉCHEC total.
@@ -139,6 +149,12 @@ const QUALITY_CONFIG: Record<string, { maxTokens: number; tokenCost: number; sys
 }
 
 export async function POST(request: Request) {
+  // Rate limiting
+  const ip = (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  if (isRateLimited(ip)) {
+    return NextResponse.json({ error: 'Trop de requêtes. Réessayez dans une minute.' }, { status: 429 })
+  }
+
   // Auth check first
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -147,13 +163,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
 
-  // Parse body early (quality affects token cost check)
+  // Parse + validate body
   const body = await request.json()
   const { prompt, name, quality = 'standard' } = body
 
   if (!prompt?.trim()) {
     return NextResponse.json({ error: 'Le prompt est requis' }, { status: 400 })
   }
+  if (typeof prompt !== 'string' || prompt.trim().length > 2000) {
+    return NextResponse.json({ error: 'Le prompt ne peut pas dépasser 2000 caractères' }, { status: 400 })
+  }
+  if (name && typeof name !== 'string') {
+    return NextResponse.json({ error: 'Nom invalide' }, { status: 400 })
+  }
+
+  const sanitizedPrompt = prompt.trim()
+  const sanitizedName = (name ?? '').trim().slice(0, 200)
 
   const qualityConfig = QUALITY_CONFIG[quality] ?? QUALITY_CONFIG['standard']
   const isAdmin = user.email === ADMIN_EMAIL
@@ -179,7 +204,7 @@ export async function POST(request: Request) {
   }
 
   const userId   = user.id
-  const siteName = name || `Site ${new Date().toLocaleDateString('fr-FR')}`
+  const siteName = sanitizedName || `Site ${new Date().toLocaleDateString('fr-FR')}`
 
   const encoder = new TextEncoder()
 
@@ -193,7 +218,7 @@ export async function POST(request: Request) {
 
       try {
         // 1. Generate HTML
-        const htmlContent = await generateWebsiteStreaming(prompt.trim(), (chars) => {
+        const htmlContent = await generateWebsiteStreaming(sanitizedPrompt, (chars) => {
           emit({ type: 'progress', chars })
         }, {
           maxTokens: qualityConfig.maxTokens,

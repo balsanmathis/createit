@@ -9,229 +9,6 @@ import { createBrowserClient } from "@supabase/ssr";
    CSS variable injected by next/font/google in layout.tsx          */
 const F = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
-/* ═══════════════════════════════════════════════════════════════
-   MINI-SITE PREVIEW CARDS (CSS only, no images)
-   Card dimensions: 280 × 200px, marginRight 16px
-   5 cards/row × 296px = 1480px = exactly 33.333% of tripled track
-═══════════════════════════════════════════════════════════════ */
-
-const CARD_W = 280, CARD_H = 200, CARD_MR = 16;
-const cardBase: React.CSSProperties = { width: CARD_W, height: CARD_H, flexShrink: 0, marginRight: CARD_MR, borderRadius: 10, overflow: "hidden" };
-
-function CardRestaurant() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#0c0b09", border: "1px solid #2a2318" }}>
-      <div style={{ padding: "9px 14px", borderBottom: "1px solid rgba(212,175,55,0.18)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#d4af37", fontSize: 8.5, fontWeight: 700, letterSpacing: 3.5, fontFamily: F }}>LE JARDIN</span>
-        <div style={{ display: "flex", gap: 10, fontSize: 7.5, color: "rgba(255,255,255,0.3)", fontFamily: F }}><span>Menu</span><span>Réserver</span></div>
-      </div>
-      <div style={{ padding: "22px 16px", textAlign: "center" }}>
-        <div style={{ fontSize: 7, color: "rgba(212,175,55,0.45)", letterSpacing: 4, marginBottom: 8, fontFamily: F }}>RESTAURANT · PARIS</div>
-        <div style={{ fontSize: 26, fontWeight: 700, color: "#f5f0e8", lineHeight: 1.15, fontFamily: "Georgia, serif", marginBottom: 16 }}>Cuisine<br />Française</div>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 8, padding: "5px 14px", border: "1px solid rgba(212,175,55,0.35)", color: "#d4af37", borderRadius: 20, fontFamily: F }}>
-          <span>Réserver une table</span>
-        </div>
-        <div style={{ marginTop: 16, display: "flex", justifyContent: "center", gap: 4 }}>
-          {["★","★","★","★","★"].map((s,i) => <span key={i} style={{ color: "#d4af37", fontSize: 8 }}>{s}</span>)}
-          <span style={{ fontSize: 7, color: "rgba(255,255,255,0.3)", marginLeft: 4, fontFamily: F }}>4.9 (312)</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CardPortfolio() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#fafafa", border: "1px solid #e2e8f0" }}>
-      <div style={{ padding: "9px 14px", background: "#0f172a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "white", fontSize: 7.5, fontWeight: 700 }}>JM</span>
-          </div>
-          <span style={{ color: "white", fontSize: 9, fontWeight: 700, fontFamily: F }}>Jean Moreau</span>
-        </div>
-        <div style={{ display: "flex", gap: 10, fontSize: 7.5, color: "rgba(255,255,255,0.45)", fontFamily: F }}><span>Work</span><span>About</span></div>
-      </div>
-      <div style={{ padding: "18px 16px" }}>
-        <div style={{ fontSize: 7, color: "#94a3b8", letterSpacing: 2.5, marginBottom: 8, fontFamily: F }}>DESIGNER & CRÉATIF</div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", lineHeight: 1.15, letterSpacing: -0.5, marginBottom: 14, fontFamily: F }}>Jean Moreau<br /><span style={{ color: "#6366f1" }}>—</span> Designer</div>
-        <div style={{ display: "flex", gap: 5 }}>
-          {["Branding", "Web", "Motion"].map((s) => (
-            <span key={s} style={{ fontSize: 7, padding: "3px 8px", background: "#f1f5f9", borderRadius: 5, color: "#64748b", fontFamily: F, border: "1px solid #e2e8f0" }}>{s}</span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CardAgence() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#090e1a", border: "1px solid #1e293b" }}>
-      <div style={{ padding: "9px 14px", borderBottom: "1px solid #1e293b", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#60a5fa", fontSize: 9, fontWeight: 800, fontFamily: F, letterSpacing: -0.3 }}>◈ PIXEL</span>
-        <div style={{ display: "flex", gap: 10, fontSize: 7.5, color: "rgba(255,255,255,0.25)", fontFamily: F }}><span>Work</span><span>Contact</span></div>
-      </div>
-      <div style={{ padding: "18px 14px" }}>
-        <div style={{ fontSize: 7, color: "#3b82f6", letterSpacing: 3, marginBottom: 10, fontFamily: F }}>DIGITAL AGENCY</div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: "white", lineHeight: 1.1, letterSpacing: -0.8, marginBottom: 14, fontFamily: F }}>On crée des<br />expériences<br /><span style={{ color: "#60a5fa" }}>mémorables.</span></div>
-        <div style={{ fontSize: 8, padding: "4px 12px", display: "inline-block", background: "linear-gradient(90deg,#2563eb,#4f46e5)", color: "white", borderRadius: 5, fontFamily: F, fontWeight: 600 }}>Voir nos projets →</div>
-      </div>
-    </div>
-  );
-}
-
-function CardBoutique() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#fdf8f4", border: "1px solid #ede0d4" }}>
-      <div style={{ padding: "9px 14px", borderBottom: "1px solid #ede0d4", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#7c3d27", fontSize: 8.5, fontWeight: 700, letterSpacing: 2.5, fontFamily: F }}>MAISON DORÉE</span>
-        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "#b8927a", fontFamily: F }}><span>Boutique</span><span>🛒</span></div>
-      </div>
-      <div style={{ padding: "14px 16px" }}>
-        <div style={{ fontSize: 7, color: "#b8927a", letterSpacing: 2, marginBottom: 8, fontFamily: F }}>ARTISANAT FRANÇAIS</div>
-        <div style={{ fontSize: 20, fontWeight: 600, color: "#3d1f14", fontFamily: "Georgia, serif", lineHeight: 1.2, marginBottom: 12 }}>Collections<br />Printemps 2025</div>
-        <div style={{ display: "flex", gap: 5, marginBottom: 12 }}>
-          {["Céramique", "Linge", "Décor"].map((s) => (
-            <span key={s} style={{ fontSize: 6.5, padding: "3px 7px", border: "1px solid #e8c9ba", borderRadius: 4, color: "#9c5738", fontFamily: F }}>{s}</span>
-          ))}
-        </div>
-        <div style={{ fontSize: 8, color: "#b8927a", fontFamily: F }}>À partir de <strong style={{ color: "#7c3d27" }}>29€</strong></div>
-      </div>
-    </div>
-  );
-}
-
-function CardBlog() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#fff", border: "1px solid #e2e8f0" }}>
-      <div style={{ padding: "9px 14px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#0f172a", fontSize: 9.5, fontWeight: 700, fontFamily: "Georgia, serif" }}>Le Carnet</span>
-        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "#94a3b8", fontFamily: F }}><span>Articles</span><span>À propos</span></div>
-      </div>
-      <div style={{ padding: "14px 16px" }}>
-        <div style={{ fontSize: 7, color: "#64748b", letterSpacing: 2, marginBottom: 8, fontFamily: F }}>VOYAGE · CULTURE · VIE</div>
-        <div style={{ fontSize: 17, fontWeight: 600, color: "#0f172a", fontFamily: "Georgia, serif", lineHeight: 1.3, marginBottom: 12 }}>Les Marchés de<br />Marrakech en Hiver</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg,#f59e0b,#ef4444)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7.5, color: "white", fontWeight: 700, fontFamily: F }}>ML</div>
-          <div>
-            <div style={{ fontSize: 8, fontWeight: 600, color: "#0f172a", fontFamily: F }}>Marie Laurent</div>
-            <div style={{ fontSize: 7, color: "#94a3b8", fontFamily: F }}>15 jan. · 5 min de lecture</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CardSaas() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#020817", border: "1px solid #0f1729" }}>
-      <div style={{ padding: "9px 14px", borderBottom: "1px solid #0f1729", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#06b6d4", fontSize: 9, fontWeight: 800, fontFamily: F, letterSpacing: -0.3 }}>◆ DataFlow</span>
-        <div style={{ fontSize: 7.5, padding: "2px 8px", background: "rgba(6,182,212,0.12)", borderRadius: 10, color: "#06b6d4", fontFamily: F }}>Dashboard</div>
-      </div>
-      <div style={{ padding: "12px 14px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
-          {[["Projets", "12", "#06b6d4"], ["Clients", "48", "#8b5cf6"], ["Rev.", "€4.2k", "#10b981"], ["Score", "98%", "#f59e0b"]].map(([label, val, color]) => (
-            <div key={label} style={{ background: "#0f172a", borderRadius: 6, padding: "7px 9px", border: "1px solid #1e293b" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: color as string, fontFamily: F }}>{val}</div>
-              <div style={{ fontSize: 7, color: "#475569", fontFamily: F, marginTop: 2 }}>{label}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ height: 4, background: "#0f172a", borderRadius: 2 }}>
-          <div style={{ height: "100%", width: "72%", background: "linear-gradient(90deg,#06b6d4,#8b5cf6)", borderRadius: 2 }} />
-        </div>
-        <div style={{ fontSize: 7, color: "#475569", fontFamily: F, marginTop: 4 }}>Objectif mensuel · 72%</div>
-      </div>
-    </div>
-  );
-}
-
-function CardAvocat() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#0e0c18", border: "1px solid #1e1a2e" }}>
-      <div style={{ padding: "9px 14px", borderBottom: "1px solid rgba(201,169,110,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#c9a96e", fontSize: 8.5, fontWeight: 700, letterSpacing: 2.5, fontFamily: F }}>CABINET MOREAU</span>
-        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "rgba(255,255,255,0.25)", fontFamily: F }}><span>Expertise</span><span>Contact</span></div>
-      </div>
-      <div style={{ padding: "18px 16px" }}>
-        <div style={{ fontSize: 7, color: "#7c1d1d", letterSpacing: 3, marginBottom: 10, fontFamily: F }}>DROIT DES AFFAIRES</div>
-        <div style={{ fontSize: 20, fontWeight: 600, color: "#f5f0e8", fontFamily: "Georgia, serif", lineHeight: 1.3, marginBottom: 14 }}>Votre intérêt,<br />notre priorité.</div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <div style={{ fontSize: 8, padding: "5px 12px", border: "1px solid rgba(201,169,110,0.4)", color: "#c9a96e", borderRadius: 4, fontFamily: F }}>Prendre RDV</div>
-          <div style={{ fontSize: 8, padding: "5px 12px", background: "rgba(201,169,110,0.08)", color: "rgba(255,255,255,0.4)", borderRadius: 4, fontFamily: F }}>Nos domaines</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CardMedecin() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#f0f9ff", border: "1px solid #bae6fd" }}>
-      <div style={{ padding: "9px 14px", borderBottom: "1px solid #e0f2fe", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "white", fontSize: 9, fontWeight: 700 }}>+</span>
-          </div>
-          <span style={{ color: "#0284c7", fontSize: 9, fontWeight: 700, fontFamily: F }}>Dr. Sarah Chen</span>
-        </div>
-        <span style={{ fontSize: 7.5, color: "#64748b", fontFamily: F }}>Généraliste</span>
-      </div>
-      <div style={{ padding: "14px 16px" }}>
-        <div style={{ fontSize: 7, color: "#0284c7", letterSpacing: 2, marginBottom: 8, fontFamily: F }}>CONSULTATION · PARIS 8e</div>
-        <div style={{ fontSize: 17, fontWeight: 600, color: "#0c4a6e", lineHeight: 1.3, marginBottom: 14, fontFamily: F }}>Une médecine<br />attentive et humaine.</div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <div style={{ fontSize: 8, padding: "5px 10px", background: "#0284c7", color: "white", borderRadius: 5, fontFamily: F }}>Prendre RDV</div>
-          <div style={{ fontSize: 8, padding: "5px 10px", background: "#e0f2fe", color: "#0284c7", borderRadius: 5, fontFamily: F, border: "1px solid #bae6fd" }}>Téléconsult.</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CardCoach() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#080808", border: "1px solid #1c1c1c" }}>
-      <div style={{ padding: "9px 14px", borderBottom: "1px solid rgba(251,146,60,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#fb923c", fontSize: 9, fontWeight: 800, fontFamily: F, letterSpacing: 0.5 }}>MOMENTUM</span>
-        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "rgba(255,255,255,0.25)", fontFamily: F }}><span>Méthode</span><span>Contact</span></div>
-      </div>
-      <div style={{ padding: "18px 16px", textAlign: "center" }}>
-        <div style={{ fontSize: 7, color: "#fb923c", letterSpacing: 3, marginBottom: 12, fontFamily: F }}>COACHING PROFESSIONNEL</div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: "white", letterSpacing: -0.3, lineHeight: 1.35, marginBottom: 16, fontFamily: F }}>Transform.<br />Agir. Réussir.</div>
-        <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-          <div style={{ fontSize: 8, padding: "5px 16px", display: "inline-block", background: "#fb923c", color: "black", borderRadius: 20, fontWeight: 700, fontFamily: F }}>Démarrer →</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CardArchitecte() {
-  return (
-    <div className="example-card" style={{ ...cardBase, background: "#f6f6f2", border: "1px solid #e2e2d8" }}>
-      <div style={{ padding: "9px 14px", borderBottom: "1px solid #e2e2d8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#0f172a", fontSize: 8.5, fontWeight: 700, letterSpacing: 2.5, fontFamily: F }}>STUDIO BLANC</span>
-        <div style={{ display: "flex", gap: 8, fontSize: 7.5, color: "#94a3b8", fontFamily: F }}><span>Projets</span><span>Contact</span></div>
-      </div>
-      <div style={{ padding: "18px 16px" }}>
-        <div style={{ fontSize: 7, color: "#94a3b8", letterSpacing: 3, marginBottom: 10, fontFamily: F }}>ARCHITECTURE · PARIS</div>
-        <div style={{ fontSize: 20, fontWeight: 600, color: "#0f172a", letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 14, fontFamily: F }}>Créer des espaces<br />qui inspirent.</div>
-        <div style={{ display: "flex", gap: 5 }}>
-          {["Résidentiel", "Commercial", "Interior"].map((s) => (
-            <span key={s} style={{ fontSize: 7, padding: "3px 7px", border: "1px solid #cbd5e1", borderRadius: 4, color: "#64748b", fontFamily: F }}>{s}</span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const ROW_A = [CardRestaurant, CardPortfolio, CardAgence, CardBoutique, CardBlog];
-const ROW_B = [CardSaas, CardAvocat, CardMedecin, CardCoach, CardArchitecte];
 
 const TYPEWRITER_DEFAULT = [
   "Un restaurant gastronomique à Paris...",
@@ -275,7 +52,6 @@ const PRICING = [
     label: "0€",
     period: true,
     tokens: "8 000 tokens",
-    sub: "1 site test",
     features: ["Génération de site", "Export ZIP", "Éditeur visuel"],
     cta: "Commencer gratuitement",
     primary: false,
@@ -287,36 +63,33 @@ const PRICING = [
     label: "20€",
     period: true,
     tokens: "800 000 tokens",
-    sub: "~100 sites/mois",
     features: ["Tout du gratuit", "Sites illimités en édition", "Support email"],
     cta: "Choisir Starter",
     primary: false,
     highlight: false,
-    href: "/pricing",
+    href: "/auth/signup?plan=starter",
   },
   {
     name: "Pro",
     label: "45€",
     period: true,
     tokens: "2 400 000 tokens",
-    sub: "~300 sites/mois",
     features: ["Tout du Starter", "Modification avancée", "Support prioritaire"],
     cta: "Choisir Pro",
     primary: true,
     highlight: true,
-    href: "/pricing",
+    href: "/auth/signup?plan=pro",
   },
   {
     name: "Agency",
     label: "250€",
     period: true,
     tokens: "16 000 000 tokens",
-    sub: "~2 000 sites/mois",
     features: ["Tout du Pro", "Volume illimité", "Account manager"],
     cta: "Choisir Agency",
     primary: false,
     highlight: false,
-    href: "/pricing",
+    href: "/auth/signup?plan=agency",
   },
 ];
 
@@ -462,7 +235,7 @@ export default function HomePage() {
             {cmsBannerText}
           </p>
           <Link
-            href="/pricing"
+            href="/auth/signup"
             style={{ fontSize: 13, color: "#2563eb", textDecoration: "underline", fontFamily: F, fontWeight: 500 }}
           >
             {cmsBannerBtn}
@@ -509,7 +282,7 @@ export default function HomePage() {
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-8">
             <a href="#exemples"      style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Exemples</a>
-            <Link href="/pricing"    style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Tarifs</Link>
+            <a href="#tarifs"        style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Tarifs</a>
             <Link href="/auth/login" style={{ fontSize: 14, color: "#64748b", textDecoration: "none" }} className="hover:text-[#0f172a] transition-colors">Se connecter</Link>
           </div>
 
@@ -554,12 +327,12 @@ export default function HomePage() {
               className="py-4 text-lg border-b"
               style={{ color: "#0f172a", textDecoration: "none", borderColor: "#f1f5f9" }}
             >Exemples</a>
-            <Link
-              href="/pricing"
+            <a
+              href="#tarifs"
               onClick={() => setMobileNavOpen(false)}
               className="py-4 text-lg border-b"
-              style={{ color: "#0f172a", textDecoration: "none", borderColor: "#f1f5f9" }}
-            >Tarifs</Link>
+              style={{ color: "#0f172a", textDecoration: "none", borderColor: "#f1f5f9", display: "block" }}
+            >Tarifs</a>
             <Link
               href="/auth/login"
               onClick={() => setMobileNavOpen(false)}
@@ -755,52 +528,127 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          EXAMPLES CAROUSEL
+          SECTION A — EXAMPLES IMAGE GRID
       ══════════════════════════════════════════════════════════ */}
       <section
         id="exemples"
         className="reveal"
-        style={{ background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", padding: "64px 0" }}
+        style={{ background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", padding: "80px 24px" }}
       >
-        <div className="text-center" style={{ marginBottom: 40, fontFamily: F }}>
-          <h2 style={{ fontSize: 22, fontWeight: 600, color: "#0f172a", letterSpacing: -0.3, marginBottom: 8 }}>
-            Ce que vous pouvez créer
-          </h2>
-          <p style={{ fontSize: 14, color: "#64748b" }}>
-            Des sites professionnels dans tous les styles
-          </p>
-        </div>
-
-        <div className="carousel-wrapper" style={{ overflow: "hidden" }}>
-          {/* Row 1 — left to right */}
-          <div
-            style={{
-              marginBottom: 14,
-              overflow: "hidden",
-              WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
-              maskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
-            }}
-          >
-            <div className="examples-track">
-              {[...ROW_A, ...ROW_A, ...ROW_A].map((Card, i) => (
-                <Card key={`a-${i}`} />
-              ))}
-            </div>
+        <div className="max-w-5xl mx-auto" style={{ fontFamily: F }}>
+          <div className="text-center" style={{ marginBottom: 48 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 600, color: "#0f172a", letterSpacing: -0.3, marginBottom: 8 }}>
+              Ce que vous pouvez créer
+            </h2>
+            <p style={{ fontSize: 14, color: "#64748b" }}>
+              Des sites professionnels dans tous les secteurs, prêts en quelques secondes
+            </p>
           </div>
 
-          {/* Row 2 — right to left */}
-          <div
-            style={{
-              overflow: "hidden",
-              WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
-              maskImage: "linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)",
-            }}
-          >
-            <div className="examples-track-reverse">
-              {[...ROW_B, ...ROW_B, ...ROW_B].map((Card, i) => (
-                <Card key={`b-${i}`} />
-              ))}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              { img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80", label: "Restaurant gastronomique", desc: "Site élégant avec menu et réservations en ligne" },
+              { img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80", label: "Cabinet d'architecte", desc: "Portfolio visuel avec galerie de réalisations" },
+              { img: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=80", label: "Startup tech", desc: "Landing page SaaS moderne qui convertit" },
+              { img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80", label: "Boutique artisanale", desc: "E-commerce avec catalogue et prise de commande" },
+              { img: "https://images.unsplash.com/photo-1551076805-e1869033e561?w=600&q=80", label: "Cabinet médical", desc: "Site professionnel avec prise de rendez-vous" },
+              { img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80", label: "Coach sportif", desc: "Site énergique avec programmes et tarifs" },
+            ].map((item, i) => (
+              <div
+                key={i}
+                style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #e2e8f0", background: "white", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+              >
+                <div style={{ height: 180, overflow: "hidden" }}>
+                  <img
+                    src={item.img}
+                    alt={item.label}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.3s ease" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.04)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                  />
+                </div>
+                <div style={{ padding: "16px 18px" }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 4, fontFamily: F }}>{item.label}</p>
+                  <p style={{ fontSize: 13, color: "#64748b", fontFamily: F }}>{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION B — FEATURES 2×2
+      ══════════════════════════════════════════════════════════ */}
+      <section
+        className="reveal"
+        style={{ background: "#ffffff", padding: "80px 24px", borderBottom: "1px solid #e2e8f0" }}
+      >
+        <div className="max-w-4xl mx-auto" style={{ fontFamily: F }}>
+          <div className="text-center" style={{ marginBottom: 48 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 600, color: "#0f172a", letterSpacing: -0.3, marginBottom: 8 }}>
+              Tout ce qu&apos;il vous faut
+            </h2>
+            <p style={{ fontSize: 14, color: "#64748b" }}>
+              Des outils puissants pour créer, personnaliser et livrer
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {[
+              {
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                ),
+                title: "Génération IA ultra-rapide",
+                desc: "Décrivez votre projet en quelques mots. Notre IA génère un site complet et professionnel en moins de 30 secondes.",
+              },
+              {
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                ),
+                title: "Éditeur visuel intégré",
+                desc: "Modifiez les textes, images et couleurs directement sur votre site. Aucune connaissance technique requise.",
+              },
+              {
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                ),
+                title: "Export ZIP en un clic",
+                desc: "Téléchargez votre site en HTML/CSS/JS prêt à l'emploi. Hébergez-le où vous voulez, sans abonnement supplémentaire.",
+              },
+              {
+                icon: (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                ),
+                title: "Designs sur-mesure",
+                desc: "Chaque site est unique — typographie, couleurs et mise en page adaptées à votre secteur et votre identité.",
+              },
+            ].map((feat, i) => (
+              <div
+                key={i}
+                style={{ padding: 28, background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0" }}
+              >
+                <div
+                  style={{ width: 44, height: 44, borderRadius: 10, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}
+                >
+                  {feat.icon}
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#0f172a", marginBottom: 8, fontFamily: F }}>{feat.title}</h3>
+                <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, fontFamily: F }}>{feat.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -894,8 +742,7 @@ export default function HomePage() {
                   {plan.period && <span style={{ fontSize: 13, color: "#94a3b8", fontFamily: F }}>/mois</span>}
                 </div>
 
-                <p style={{ fontSize: 12, color: "#2563eb", fontWeight: 500, marginBottom: 4, fontFamily: F }}>{plan.tokens}</p>
-                <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 20, fontFamily: F }}>{plan.sub}</p>
+                <p style={{ fontSize: 12, color: "#2563eb", fontWeight: 500, marginBottom: 20, fontFamily: F }}>{plan.tokens}</p>
 
                 <ul className="space-y-2.5" style={{ marginBottom: 24 }}>
                   {plan.features.map((f) => (

@@ -40,7 +40,6 @@ export default function SiteCard({ id, name, title, createdAt }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
   const displayTitle = title || name
 
-  // Lazy-load the iframe only when the card enters the viewport
   useEffect(() => {
     const el = cardRef.current
     if (!el) return
@@ -82,12 +81,12 @@ export default function SiteCard({ id, name, title, createdAt }: Props) {
   }
 
   return (
-    <div ref={cardRef} className="group glass rounded-2xl border border-white/5 hover:border-violet-500/30 transition-all duration-200 hover:-translate-y-1 overflow-hidden flex flex-col">
+    <div ref={cardRef} className="group bg-white rounded-xl border border-[#e2e8f0] hover:border-[#cbd5e1] hover:-translate-y-0.5 transition-all duration-200 shadow-sm overflow-hidden flex flex-col">
 
-      {/* ── Thumbnail — lazy iframe ── */}
+      {/* Thumbnail */}
       <Link
         href={`/sites/${id}`}
-        className="block relative overflow-hidden flex-shrink-0 bg-[#0d0d1a]"
+        className="block relative overflow-hidden flex-shrink-0 bg-[#f1f5f9]"
         style={{ height: 160 }}
       >
         {iframeVisible ? (
@@ -109,30 +108,28 @@ export default function SiteCard({ id, name, title, createdAt }: Props) {
             }}
           />
         ) : (
-          /* Skeleton while not yet in view */
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-              <svg className="w-4 h-4 text-violet-400/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-8 h-8 rounded-xl bg-[#eff6ff] flex items-center justify-center">
+              <svg className="w-4 h-4 text-[#93c5fd]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                   d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
               </svg>
             </div>
           </div>
         )}
-        {/* Gradient overlay */}
         <div
           className="absolute inset-x-0 bottom-0 h-8 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, transparent, rgba(8,8,16,0.7))' }}
+          style={{ background: 'linear-gradient(to bottom, transparent, rgba(241,245,249,0.8))' }}
         />
       </Link>
 
-      {/* ── Info ── */}
+      {/* Info */}
       <div className="p-4 flex flex-col gap-2 flex-1">
         <Link href={`/sites/${id}`} className="block">
-          <h3 className="font-bold text-sm text-white leading-tight truncate group-hover:text-violet-200 transition-colors">
+          <h3 className="font-semibold text-sm text-[#0f172a] leading-tight truncate group-hover:text-[#2563eb] transition-colors">
             {displayTitle}
           </h3>
-          <p className="text-xs text-white/25 mt-0.5">
+          <p className="text-xs text-[#94a3b8] mt-0.5">
             {new Date(createdAt).toLocaleDateString('fr-FR', {
               day: 'numeric',
               month: 'short',
@@ -141,23 +138,32 @@ export default function SiteCard({ id, name, title, createdAt }: Props) {
           </p>
         </Link>
 
-        {/* ── Actions ── */}
+        {/* Actions */}
         <div className="flex gap-2 mt-auto pt-1">
           <Link
             href={`/sites/${id}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/8 text-xs font-semibold text-white/55 hover:border-violet-500/40 hover:text-violet-300 hover:bg-violet-500/5 transition-all"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-[#e2e8f0] text-xs font-medium text-[#64748b] hover:border-[#2563eb] hover:text-[#2563eb] hover:bg-[#eff6ff] transition-all"
           >
-            ✏️ Modifier
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Modifier
           </Link>
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/8 text-xs font-semibold text-white/55 hover:border-violet-500/40 hover:text-violet-300 hover:bg-violet-500/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-[#e2e8f0] text-xs font-medium text-[#64748b] hover:border-[#2563eb] hover:text-[#2563eb] hover:bg-[#eff6ff] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {downloading
-              ? <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-              : '📥'
-            }
+            {downloading ? (
+              <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            ) : (
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+            )}
             {downloading ? 'Préparation…' : 'Télécharger'}
           </button>
         </div>

@@ -40,33 +40,33 @@ export default async function DashboardPage({ searchParams }: Props) {
     const canGenerate = isAdmin || !!subscription
 
     return (
-      <div className="min-h-screen bg-[#080810] text-white">
+      <div className="min-h-screen bg-[#f8fafc]">
         {params.success === '1' && <PaymentSuccessToast />}
 
         <DashboardSidebar activeHref="/dashboard">
           {/* Plan badge */}
-          <div className="glass rounded-xl p-4 border border-white/5">
+          <div className="bg-white rounded-xl p-4 border border-[#e2e8f0] shadow-sm mt-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-white/50">Plan actuel</span>
+              <span className="text-xs text-[#94a3b8]">Plan actuel</span>
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                 isAdmin
-                  ? 'bg-amber-500/20 text-amber-300'
+                  ? 'bg-amber-100 text-amber-700'
                   : subscription
-                  ? 'bg-violet-500/20 text-violet-300'
-                  : 'bg-white/10 text-white/40'
+                  ? 'bg-violet-100 text-violet-700'
+                  : 'bg-[#f1f5f9] text-[#64748b]'
               }`}>
                 {isAdmin ? 'Admin' : subscription ? profile?.plan || 'Pro' : 'Gratuit'}
               </span>
             </div>
             {isAdmin && (
-              <p className="text-xs text-amber-300/60">Mode test actif</p>
+              <p className="text-xs text-amber-600">Mode test actif</p>
             )}
             {!isAdmin && subscription && (
               <div>
-                <div className="text-xs text-white/40 mb-1">
+                <div className="text-xs text-[#94a3b8] mb-1">
                   {profile?.sites_used_this_month || 0} sites ce mois
                 </div>
-                <Link href="/pricing" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                <Link href="/pricing" className="text-xs text-[#2563eb] hover:text-[#1d4ed8] transition-colors">
                   Gérer l&apos;abonnement →
                 </Link>
               </div>
@@ -74,7 +74,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             {!isAdmin && !subscription && (
               <Link
                 href="/pricing"
-                className="block mt-1 text-xs text-center bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-1.5 rounded-lg font-medium hover:opacity-90 transition-opacity"
+                className="block mt-1 text-xs text-center bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-1.5 rounded-lg font-medium transition-colors"
               >
                 Choisir un plan
               </Link>
@@ -87,14 +87,14 @@ export default async function DashboardPage({ searchParams }: Props) {
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-8 md:mb-10">
               <div>
-                <h1 className="text-2xl md:text-3xl font-black text-white mb-1">Mes sites</h1>
-                <p className="text-white/40 text-sm">
+                <h1 className="text-2xl md:text-3xl font-black text-[#0f172a] mb-1">Mes sites</h1>
+                <p className="text-[#64748b] text-sm">
                   {sites?.length || 0} site{(sites?.length || 0) !== 1 ? 's' : ''} créé{(sites?.length || 0) !== 1 ? 's' : ''}
                 </p>
               </div>
               <Link
                 href="/generate"
-                className={`flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold px-4 md:px-5 py-2.5 rounded-xl transition-all shadow-lg hover:shadow-violet-500/25 text-sm ${!canGenerate ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                className={`flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-4 md:px-5 py-2.5 rounded-xl transition-colors shadow-sm text-sm ${!canGenerate ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -105,23 +105,23 @@ export default async function DashboardPage({ searchParams }: Props) {
             </div>
 
             {isAdmin && (
-              <div className="glass rounded-2xl p-4 border border-amber-500/20 mb-8 flex items-center gap-3">
-                <span className="text-amber-400 text-lg">⚡</span>
-                <p className="text-sm text-amber-300/80">
+              <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200 mb-8 flex items-center gap-3">
+                <span className="text-amber-500 text-lg">⚡</span>
+                <p className="text-sm text-amber-700">
                   Mode admin actif — génération illimitée sans abonnement.
                 </p>
               </div>
             )}
 
             {!isAdmin && !subscription && (
-              <div className="glass-strong rounded-2xl p-6 border border-violet-500/20 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="bg-white rounded-2xl p-6 border border-[#bfdbfe] shadow-sm mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                  <p className="text-white font-semibold mb-1">Aucun plan actif</p>
-                  <p className="text-white/50 text-sm">Choisissez un plan pour commencer à générer des sites.</p>
+                  <p className="text-[#0f172a] font-semibold mb-1">Aucun plan actif</p>
+                  <p className="text-[#64748b] text-sm">Choisissez un plan pour commencer à générer des sites.</p>
                 </div>
                 <Link
                   href="/pricing"
-                  className="shrink-0 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                  className="shrink-0 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-5 py-2.5 rounded-xl transition-colors"
                 >
                   Voir les plans
                 </Link>
@@ -142,17 +142,17 @@ export default async function DashboardPage({ searchParams }: Props) {
               </div>
             ) : (
               <div className="text-center py-16 md:py-24">
-                <div className="w-16 h-16 rounded-2xl bg-violet-500/10 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-16 h-16 rounded-2xl bg-[#eff6ff] flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-[#2563eb]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Aucun site créé</h3>
-                <p className="text-white/40 mb-6 text-sm px-4">Créez votre premier site web en quelques secondes avec l&apos;IA</p>
+                <h3 className="text-xl font-bold text-[#0f172a] mb-2">Aucun site créé</h3>
+                <p className="text-[#64748b] mb-6 text-sm px-4">Créez votre premier site web en quelques secondes avec l&apos;IA</p>
                 {canGenerate && (
                   <Link
                     href="/generate"
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-opacity"
+                    className="inline-flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-6 py-3 rounded-xl transition-colors"
                   >
                     Générer mon premier site
                   </Link>
