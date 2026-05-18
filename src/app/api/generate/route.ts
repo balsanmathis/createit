@@ -58,12 +58,6 @@ Animations qui impressionnent sans être lourdes :
 - Underline animé sur les liens nav : pseudo-element width 0 → 100% au hover
 - Cards avec très légère rotation au hover : rotate(0.5deg) + translateY(-4px)
 
-Placeholders image premium :
-- Jamais de rectangle gris uni — toujours un dégradé avec direction et couleurs cohérentes avec la palette
-- Ajoute des formes géométriques CSS dans les placeholders (cercles, lignes diagonales) pour simuler une composition
-- Les ratios d'image doivent être cohérents : 16/9 pour les héros, 4/3 pour les cards, 1/1 pour les avatars
-- Ajoute un overlay semi-transparent avec le nom du projet/produit centré
-
 Section hero premium :
 - Toujours une accroche en 2 lignes maximum, très impactante
 - Un sous-titre court et précis (max 15 mots)
@@ -83,28 +77,34 @@ Footer premium :
 - Séparation claire entre colonnes de liens
 - Copyright discret en très petit
 
-IMAGES ET PLACEHOLDERS OBLIGATOIRES :
-Tu n'as pas accès à de vraies images. Remplace CHAQUE image par un placeholder CSS magnifique :
+IMAGES RÉELLES OBLIGATOIRES :
+Utilise TOUJOURS de vraies balises <img> avec des URLs Unsplash pertinentes selon le contexte.
+Format : <img src='URL_UNSPLASH' alt='Description' style='width:100%;height:100%;object-fit:cover;'>
 
-Pour les photos de hero/bannière :
-<div style="width:100%;height:500px;background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
-  <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,0.03);top:-50px;right:-50px;"></div>
-  <span style="color:rgba(255,255,255,0.15);font-size:14px;letter-spacing:0.2em;text-transform:uppercase;">Photo</span>
-</div>
+URLs Unsplash par secteur — choisis la plus pertinente :
+- Restaurant/café haut de gamme : https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80
+- Sushi/japonais : https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1200&q=80
+- Nourriture générale : https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80
+- Intérieur restaurant : https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80
+- Bureau/agence/co-working : https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80
+- Architecture/immobilier : https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=80
+- Fitness/sport/salle de sport : https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80
+- Médecin/santé/clinique : https://images.unsplash.com/photo-1551076805-e1869033e561?w=1200&q=80
+- Avocat/droit/cabinet : https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1200&q=80
+- Coiffeur/salon de beauté : https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=80
+- Tatouage/piercing : https://images.unsplash.com/photo-1542382257-80dedb9a0d0d?w=1200&q=80
+- Équipe/personnes au travail : https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80
+- Tech/startup/code : https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80
+- Café/barista : https://images.unsplash.com/photo-1511920170033-f8396924c348?w=1200&q=80
+- Boutique/retail : https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80
+- Voyage/hôtel : https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&q=80
+- Nature/paysage : https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80
 
-Pour les photos de cards/services :
-<div style="width:100%;height:220px;background:linear-gradient(160deg, #0a0a0a, #1a1a2e);display:flex;align-items:flex-end;padding:16px;">
-  <span style="color:rgba(255,255,255,0.2);font-size:11px;letter-spacing:0.1em;">Image du projet</span>
-</div>
+Pour les avatars/photos de profil : utilise https://i.pravatar.cc/150?img=[1-70] (numéro différent pour chaque personne)
 
-Pour les avatars/photos de personnes :
-<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#4c1d95);display:flex;align-items:center;justify-content:center;">
-  <span style="color:white;font-size:24px;font-weight:700;">[Initiales]</span>
-</div>
-
-JAMAIS de balise <img> avec src vide ou src="placeholder"
-TOUJOURS utiliser des divs CSS comme placeholders
-Les placeholders doivent être visuellement beaux et cohérents avec la palette de couleurs du site
+JAMAIS de div CSS comme placeholder image
+TOUJOURS utiliser de vraies balises <img> avec ces URLs Unsplash pertinentes
+Choisis l'image la plus cohérente avec le secteur et la section (hero, card, galerie, équipe, etc.)
 
 CONTENU QUI PARAÎT RÉEL :
 - Invente des vrais noms français naturels (pas "Jean Dupont" mais "Marc Vidal", "Sophie Renard")

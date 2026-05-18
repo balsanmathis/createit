@@ -67,6 +67,8 @@ if(window.__ve)return;window.__ve=true;
 var editMode=false;
 var activeEl=null;
 var pendingImg=null;
+var pendingPlaceholder=null;
+var overlayEl=null;
 
 // Assign stable IDs to all elements for postMessage targeting
 var idCounter=0;
@@ -91,6 +93,18 @@ function deactivate(){
   }
 }
 
+// Detect divs used as CSS image placeholders (no <img> child, has background style, tall enough)
+function detectPlaceholders(){
+  document.querySelectorAll('div,section,figure').forEach(function(el){
+    if(el.dataset.vePlaceholder) return;
+    if(el.querySelector('img')) return;
+    var s=el.getAttribute('style')||'';
+    if(!/background/.test(s)) return;
+    if(el.offsetHeight<80) return;
+    el.dataset.vePlaceholder='true';
+  });
+}
+
 // Hover highlight style
 var style=document.createElement('style');
 style.id='__ve_style__';
@@ -100,20 +114,37 @@ function setMode(on){
   editMode=on;
   window.parent.postMessage({type:'ve-mode',on:on},'*');
   if(on){
-    style.textContent='[data-ve-id]:hover{outline:2px solid rgba(124,111,250,0.6)!important;outline-offset:2px!important;cursor:pointer!important}';
+    style.textContent='[data-ve-id]:hover{outline:2px solid rgba(124,111,250,0.6)!important;outline-offset:2px!important;cursor:pointer!important}[data-ve-placeholder="true"]{position:relative!important;cursor:pointer!important}';
+    detectPlaceholders();
   } else {
     style.textContent='';
     deactivate();
+    if(overlayEl&&overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
+    overlayEl=null;
   }
 }
 
 // Listen for toggle from parent
 window.addEventListener('message',function(e){
   if(e.data&&e.data.type==='ve-toggle') setMode(e.data.on);
-  if(e.data&&e.data.type==='ve-img-confirm' && pendingImg){
-    pendingImg.src=e.data.url;
-    pendingImg=null;
-    notify();
+  if(e.data&&e.data.type==='ve-img-confirm'){
+    if(pendingPlaceholder){
+      var img=document.createElement('img');
+      img.src=e.data.url;
+      img.alt='Image';
+      img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+      if(overlayEl&&overlayEl.parentNode===pendingPlaceholder) pendingPlaceholder.removeChild(overlayEl);
+      overlayEl=null;
+      pendingPlaceholder.innerHTML='';
+      pendingPlaceholder.appendChild(img);
+      delete pendingPlaceholder.dataset.vePlaceholder;
+      pendingPlaceholder=null;
+      notify();
+    } else if(pendingImg){
+      pendingImg.src=e.data.url;
+      pendingImg=null;
+      notify();
+    }
   }
 });
 
@@ -140,7 +171,7 @@ document.addEventListener('dblclick',function(e){
   if(el.tagName==='IMG'){
     e.preventDefault();e.stopPropagation();
     pendingImg=el;
-    window.parent.postMessage({type:'ve-img-click',src:el.getAttribute('src')||''},'*');
+    window.parent.postMessage({type:'ve-img-click',src:el.getAttribute('src')||'',isPlaceholder:false},'*');
     return;
   }
 
@@ -165,17 +196,53 @@ document.addEventListener('dblclick',function(e){
   }
 },true);
 
-// Blur: deactivate when clicking outside
+// Click: open image picker for placeholder divs; deactivate text edit otherwise
 document.addEventListener('click',function(e){
-  if(!editMode||!activeEl) return;
-  if(!activeEl.contains(e.target)){
-    deactivate();
+  if(!editMode) return;
+  var el=e.target;
+  while(el && el!==document.body){
+    if(el.dataset&&el.dataset.vePlaceholder==='true'){
+      e.preventDefault();e.stopPropagation();
+      pendingPlaceholder=el;
+      window.parent.postMessage({type:'ve-img-click',src:'',isPlaceholder:true},'*');
+      return;
+    }
+    el=el.parentElement;
+  }
+  if(activeEl && !activeEl.contains(e.target)) deactivate();
+});
+
+// Hover overlay on placeholder divs
+document.addEventListener('mouseover',function(e){
+  if(!editMode) return;
+  var el=e.target;
+  while(el && el!==document.body){
+    if(el.dataset&&el.dataset.vePlaceholder==='true') break;
+    el=el.parentElement;
+  }
+  if(!el||el===document.body) return;
+  if(overlayEl&&overlayEl.parentNode===el) return;
+  if(overlayEl&&overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
+  var pos=window.getComputedStyle(el).position;
+  if(pos==='static') el.style.position='relative';
+  overlayEl=document.createElement('div');
+  overlayEl.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;pointer-events:none;z-index:99999;';
+  overlayEl.innerHTML='<span style="font-size:32px;line-height:1">📷</span><span style="color:white;font-size:13px;font-family:-apple-system,sans-serif;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,0.8);text-align:center">Cliquer pour ajouter une image</span>';
+  el.appendChild(overlayEl);
+});
+
+document.addEventListener('mouseout',function(e){
+  if(!editMode||!overlayEl) return;
+  var parent=overlayEl.parentNode;
+  if(!parent) return;
+  if(!parent.contains(e.relatedTarget)){
+    parent.removeChild(overlayEl);
+    overlayEl=null;
   }
 });
 
 document.addEventListener('blur',function(e){
   if(activeEl && e.target===activeEl){
-    // Don't deactivate on blur — user may click inside again
     notify();
   }
 },true);
@@ -233,60 +300,165 @@ function injectVE(iframe: HTMLIFrameElement) {
 // ─── Image popup ─────────────────────────────────────────────────────────────
 
 interface ImagePopupProps {
+  siteId: string
   currentSrc: string
   onConfirm: (url: string) => void
   onClose: () => void
 }
 
-function ImagePopup({ currentSrc, onConfirm, onClose }: ImagePopupProps) {
-  const [tab, setTab] = useState<'url' | 'upload'>('url')
+interface UnsplashResult {
+  preview: string
+  full: string
+  alt: string
+}
+
+function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps) {
+  const [tab, setTab] = useState<'upload' | 'url' | 'unsplash'>('upload')
   const [url, setUrl] = useState(currentSrc)
   const [preview, setPreview] = useState(currentSrc)
+  const [uploading, setUploading] = useState(false)
+  const [unsplashQuery, setUnsplashQuery] = useState('')
+  const [unsplashResults, setUnsplashResults] = useState<UnsplashResult[]>([])
+  const [unsplashLoading, setUnsplashLoading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string
-      setPreview(dataUrl)
-      setUrl(dataUrl)
+  const handleFile = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (max 5MB)')
+      return
     }
-    reader.readAsDataURL(file)
+    setUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('siteId', siteId)
+    try {
+      const res = await fetch('/api/upload-image', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur upload')
+      setUrl(data.url)
+      setPreview(data.url)
+    } catch (err) {
+      toast.error((err as Error).message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleFile(file)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    if (file && file.type.startsWith('image/')) handleFile(file)
+  }
+
+  const handleUnsplashSearch = async () => {
+    if (!unsplashQuery.trim()) return
+    setUnsplashLoading(true)
+    setUnsplashResults([])
+    try {
+      const key = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
+      if (key) {
+        const res = await fetch(
+          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(unsplashQuery)}&per_page=9&client_id=${key}`
+        )
+        const data = await res.json()
+        setUnsplashResults(
+          (data.results as Array<{ urls: { small: string; regular: string }; alt_description: string }>).map(p => ({
+            preview: p.urls.small,
+            full: `${p.urls.regular}&w=1200&q=80`,
+            alt: p.alt_description || unsplashQuery,
+          }))
+        )
+      } else {
+        const kw = encodeURIComponent(unsplashQuery)
+        setUnsplashResults(
+          Array.from({ length: 9 }, (_, i) => ({
+            preview: `https://source.unsplash.com/300x200/?${kw}&sig=${i + 1}`,
+            full: `https://source.unsplash.com/1200x800/?${kw}&sig=${i + 1}`,
+            alt: unsplashQuery,
+          }))
+        )
+      }
+    } catch {
+      toast.error('Erreur lors de la recherche Unsplash')
+    } finally {
+      setUnsplashLoading(false)
+    }
   }
 
   const handleConfirm = () => {
     if (url) onConfirm(url)
   }
 
+  const TABS = [
+    { id: 'upload' as const, label: '📁 Uploader' },
+    { id: 'url' as const, label: '🔗 URL' },
+    { id: 'unsplash' as const, label: '🌄 Unsplash' },
+  ]
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative glass rounded-2xl border border-white/10 p-6 w-full max-w-md shadow-2xl">
+      <div className="relative glass rounded-2xl border border-white/10 p-6 w-full max-w-lg shadow-2xl">
         <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
 
-        <h3 className="text-base font-bold text-white mb-4">Remplacer l&apos;image</h3>
+        <h3 className="text-base font-bold text-white mb-4">Ajouter une image</h3>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-4 bg-white/5 rounded-lg p-1">
-          {(['url', 'upload'] as const).map((t) => (
+          {TABS.map((t) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={t.id}
+              onClick={() => setTab(t.id)}
               className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                tab === t ? 'bg-violet-500/30 text-violet-300' : 'text-white/40 hover:text-white/60'
+                tab === t.id ? 'bg-violet-500/30 text-violet-300' : 'text-white/40 hover:text-white/60'
               }`}
             >
-              {t === 'url' ? '🔗 URL d\'image' : '📁 Uploader depuis PC'}
+              {t.label}
             </button>
           ))}
         </div>
 
+        {/* Upload tab */}
+        {tab === 'upload' && (
+          <div className="mb-4">
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleFileChange} className="hidden" />
+            <div
+              onClick={() => !uploading && fileRef.current?.click()}
+              onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()}
+              className="w-full border-2 border-dashed border-white/15 rounded-xl py-8 text-sm text-white/40 hover:border-violet-500/40 hover:text-white/60 transition-all flex flex-col items-center gap-2 cursor-pointer"
+            >
+              {uploading ? (
+                <>
+                  <svg className="animate-spin w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  <span className="text-violet-300">Upload en cours…</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                  </svg>
+                  <span>Glisser-déposer ou cliquer pour choisir</span>
+                  <span className="text-xs text-white/25">JPG, PNG, WebP, GIF · max 5MB</span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* URL tab */}
         {tab === 'url' && (
           <input
             type="text"
@@ -298,23 +470,56 @@ function ImagePopup({ currentSrc, onConfirm, onClose }: ImagePopupProps) {
           />
         )}
 
-        {tab === 'upload' && (
+        {/* Unsplash tab */}
+        {tab === 'unsplash' && (
           <div className="mb-4">
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="w-full border-2 border-dashed border-white/15 rounded-xl py-6 text-sm text-white/40 hover:border-violet-500/40 hover:text-white/60 transition-all flex flex-col items-center gap-2"
-            >
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-              </svg>
-              Cliquer pour choisir un fichier
-            </button>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={unsplashQuery}
+                onChange={(e) => setUnsplashQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleUnsplashSearch()}
+                placeholder="restaurant, bureau, nature…"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 focus:border-violet-500/40 focus:outline-none transition-colors"
+                autoFocus
+              />
+              <button
+                onClick={handleUnsplashSearch}
+                disabled={unsplashLoading || !unsplashQuery.trim()}
+                className="px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-sm font-semibold rounded-xl transition-all"
+              >
+                {unsplashLoading ? '…' : 'Chercher'}
+              </button>
+            </div>
+
+            {unsplashResults.length > 0 && (
+              <div className="grid grid-cols-3 gap-1.5 max-h-52 overflow-y-auto rounded-xl">
+                {unsplashResults.map((r, i) => (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    key={i}
+                    src={r.preview}
+                    alt={r.alt}
+                    className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-violet-400 transition-all"
+                    onClick={() => { setUrl(r.full); setPreview(r.full); setTab('url') }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {unsplashLoading && (
+              <div className="flex justify-center py-4">
+                <svg className="animate-spin w-6 h-6 text-violet-400" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+              </div>
+            )}
           </div>
         )}
 
         {/* Preview */}
-        {preview && (
+        {preview && tab !== 'unsplash' && (
           <div className="mb-4 rounded-xl overflow-hidden border border-white/10 bg-white/5 flex items-center justify-center" style={{ minHeight: 120 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview} alt="Aperçu" className="max-h-40 max-w-full object-contain" onError={() => setPreview('')} />
@@ -327,7 +532,7 @@ function ImagePopup({ currentSrc, onConfirm, onClose }: ImagePopupProps) {
           </button>
           <button
             onClick={handleConfirm}
-            disabled={!url}
+            disabled={!url || uploading}
             className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 text-white text-sm font-bold transition-all"
           >
             Confirmer
@@ -748,6 +953,7 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
       {/* ── Image popup ── */}
       {imgPopup && (
         <ImagePopup
+          siteId={site.id}
           currentSrc={imgPopup.src}
           onConfirm={handleImgConfirm}
           onClose={() => setImgPopup(null)}
