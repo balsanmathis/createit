@@ -402,25 +402,36 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative glass rounded-2xl border border-white/10 p-6 w-full max-w-lg shadow-2xl">
-        <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="relative rounded-xl p-6 w-full max-w-lg"
+        style={{ background: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 transition-colors"
+          style={{ color: '#94a3b8' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
+        >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
 
-        <h3 className="text-base font-bold text-white mb-4">Ajouter une image</h3>
+        <h3 className="text-base font-semibold mb-4" style={{ color: '#0f172a' }}>Ajouter une image</h3>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-4 bg-white/5 rounded-lg p-1">
+        <div className="flex gap-1 mb-4 rounded-lg p-1" style={{ background: '#f1f5f9' }}>
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                tab === t.id ? 'bg-violet-500/30 text-violet-300' : 'text-white/40 hover:text-white/60'
-              }`}
+              className="flex-1 py-1.5 text-xs font-medium rounded-md transition-all"
+              style={tab === t.id
+                ? { background: '#ffffff', color: '#2563eb', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }
+                : { color: '#64748b' }
+              }
             >
               {t.label}
             </button>
@@ -435,15 +446,18 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
               onClick={() => !uploading && fileRef.current?.click()}
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
-              className="w-full border-2 border-dashed border-white/15 rounded-xl py-8 text-sm text-white/40 hover:border-violet-500/40 hover:text-white/60 transition-all flex flex-col items-center gap-2 cursor-pointer"
+              className="w-full rounded-xl py-8 text-sm flex flex-col items-center gap-2 cursor-pointer transition-all"
+              style={{ border: '2px dashed #e2e8f0', color: '#94a3b8' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#2563eb'; (e.currentTarget as HTMLDivElement).style.color = '#2563eb'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLDivElement).style.color = '#94a3b8'; }}
             >
               {uploading ? (
                 <>
-                  <svg className="animate-spin w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin w-8 h-8 text-[#2563eb]" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  <span className="text-violet-300">Upload en cours…</span>
+                  <span style={{ color: '#2563eb' }}>Upload en cours…</span>
                 </>
               ) : (
                 <>
@@ -451,7 +465,7 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                   </svg>
                   <span>Glisser-déposer ou cliquer pour choisir</span>
-                  <span className="text-xs text-white/25">JPG, PNG, WebP, GIF · max 5MB</span>
+                  <span className="text-xs" style={{ color: '#cbd5e1' }}>JPG, PNG, WebP, GIF · max 5MB</span>
                 </>
               )}
             </div>
@@ -465,7 +479,10 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
             value={url}
             onChange={(e) => { setUrl(e.target.value); setPreview(e.target.value) }}
             placeholder="https://exemple.com/image.jpg"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:border-violet-500/40 focus:outline-none transition-colors mb-4"
+            className="w-full rounded-lg px-4 py-2.5 text-sm outline-none transition-colors mb-4"
+            style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#0f172a' }}
+            onFocus={(e) => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; }}
+            onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
             autoFocus
           />
         )}
@@ -480,13 +497,19 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
                 onChange={(e) => setUnsplashQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleUnsplashSearch()}
                 placeholder="restaurant, bureau, nature…"
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 focus:border-violet-500/40 focus:outline-none transition-colors"
+                className="flex-1 rounded-lg px-3 py-2 text-sm outline-none transition-colors"
+                style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#0f172a' }}
+                onFocus={(e) => { e.target.style.borderColor = '#2563eb'; }}
+                onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; }}
                 autoFocus
               />
               <button
                 onClick={handleUnsplashSearch}
                 disabled={unsplashLoading || !unsplashQuery.trim()}
-                className="px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-sm font-semibold rounded-xl transition-all"
+                className="px-4 py-2 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-40"
+                style={{ background: '#2563eb' }}
+                onMouseEnter={(e) => { if (!unsplashLoading) (e.currentTarget as HTMLButtonElement).style.background = '#1d4ed8'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#2563eb'; }}
               >
                 {unsplashLoading ? '…' : 'Chercher'}
               </button>
@@ -500,7 +523,10 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
                     key={i}
                     src={r.preview}
                     alt={r.alt}
-                    className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-violet-400 transition-all"
+                    className="w-full h-20 object-cover rounded-lg cursor-pointer transition-all"
+                    style={{ outline: 'none' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.outline = '2px solid #2563eb'; (e.currentTarget as HTMLImageElement).style.opacity = '0.85'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.outline = 'none'; (e.currentTarget as HTMLImageElement).style.opacity = '1'; }}
                     onClick={() => { setUrl(r.full); setPreview(r.full); setTab('url') }}
                   />
                 ))}
@@ -509,7 +535,7 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
 
             {unsplashLoading && (
               <div className="flex justify-center py-4">
-                <svg className="animate-spin w-6 h-6 text-violet-400" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin w-6 h-6 text-[#2563eb]" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
@@ -520,20 +546,32 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
 
         {/* Preview */}
         {preview && tab !== 'unsplash' && (
-          <div className="mb-4 rounded-xl overflow-hidden border border-white/10 bg-white/5 flex items-center justify-center" style={{ minHeight: 120 }}>
+          <div
+            className="mb-4 rounded-xl overflow-hidden flex items-center justify-center"
+            style={{ minHeight: 120, background: '#f8fafc', border: '1px solid #e2e8f0' }}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview} alt="Aperçu" className="max-h-40 max-w-full object-contain" onError={() => setPreview('')} />
           </div>
         )}
 
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-white/10 text-sm text-white/60 hover:text-white hover:border-white/20 transition-all">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all"
+            style={{ background: '#ffffff', border: '1px solid #e2e8f0', color: '#64748b' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#cbd5e1'; (e.currentTarget as HTMLButtonElement).style.background = '#f8fafc'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'; }}
+          >
             Annuler
           </button>
           <button
             onClick={handleConfirm}
             disabled={!url || uploading}
-            className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 text-white text-sm font-bold transition-all"
+            className="flex-1 py-2.5 rounded-lg text-white text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: '#2563eb' }}
+            onMouseEnter={(e) => { if (url && !uploading) (e.currentTarget as HTMLButtonElement).style.background = '#1d4ed8'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#2563eb'; }}
           >
             Confirmer
           </button>
@@ -694,24 +732,24 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
   }, [html])
 
   return (
-    <div className="h-screen bg-[#080810] text-white flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#f8fafc] flex flex-col overflow-hidden">
 
       {/* ── Top bar ── */}
-      <div className="h-14 glass border-b border-white/5 flex items-center justify-between px-3 md:px-4 flex-shrink-0 z-30 gap-2">
+      <div className="h-14 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-3 md:px-4 flex-shrink-0 z-30 gap-2 shadow-sm">
         <div className="flex items-center gap-2 md:gap-4 min-w-0">
-          <Link href="/dashboard" className="text-white/50 hover:text-white transition-colors flex-shrink-0">
+          <Link href="/dashboard" className="text-[#64748b] hover:text-[#0f172a] transition-colors flex-shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
             </svg>
           </Link>
-          <div className="hidden md:block h-5 w-px bg-white/10" />
-          <h1 className="text-sm font-semibold text-white truncate max-w-[120px] md:max-w-xs">{site.name}</h1>
+          <div className="hidden md:block h-5 w-px bg-[#e2e8f0]" />
+          <h1 className="text-sm font-semibold text-[#0f172a] truncate max-w-[120px] md:max-w-xs">{site.name}</h1>
           {/* Token pill */}
           {!isAdmin && (() => {
             const pct = currentTokensLimit > 0 ? (tokensRemaining / currentTokensLimit) * 100 : 0
-            const color = pct > 50 ? '#4ade80' : pct > 20 ? '#f97316' : '#ef4444'
-            const bg = pct > 50 ? 'rgba(74,222,128,0.1)' : pct > 20 ? 'rgba(249,115,22,0.1)' : 'rgba(239,68,68,0.1)'
-            const border = pct > 50 ? 'rgba(74,222,128,0.2)' : pct > 20 ? 'rgba(249,115,22,0.2)' : 'rgba(239,68,68,0.2)'
+            const color = pct > 50 ? '#059669' : pct > 20 ? '#d97706' : '#dc2626'
+            const bg    = pct > 50 ? '#ecfdf5'  : pct > 20 ? '#fffbeb'  : '#fef2f2'
+            const border = pct > 50 ? '#a7f3d0' : pct > 20 ? '#fde68a'  : '#fecaca'
             return (
               <span
                 className="hidden md:inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
@@ -727,24 +765,24 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
           {/* AI Modify */}
           <button
             onClick={() => setAiPanelOpen(o => !o)}
-            className={`flex items-center gap-1.5 text-sm px-2 md:px-3 py-1.5 rounded-lg border transition-all ${
-              aiPanelOpen
-                ? 'bg-violet-600/30 border-violet-500/50 text-violet-200'
-                : 'glass border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white'
-            }`}
+            className="flex items-center gap-1.5 text-sm px-2 md:px-3 py-1.5 rounded-lg border transition-all"
+            style={aiPanelOpen
+              ? { background: '#eff6ff', borderColor: '#bfdbfe', color: '#2563eb' }
+              : { background: 'white', borderColor: '#e2e8f0', color: '#64748b' }
+            }
           >
             <span className="text-sm">✨</span>
-            <span className="hidden sm:inline">Modifier avec l&apos;IA</span>
+            <span className="hidden sm:inline">Modifier</span>
           </button>
 
           {/* Edit mode toggle */}
           <button
             onClick={toggleEditMode}
-            className={`flex items-center gap-1.5 text-sm px-2 md:px-3 py-1.5 rounded-lg border transition-all ${
-              editMode
-                ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
-                : 'glass border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white'
-            }`}
+            className="flex items-center gap-1.5 text-sm px-2 md:px-3 py-1.5 rounded-lg border transition-all"
+            style={editMode
+              ? { background: '#eff6ff', borderColor: '#bfdbfe', color: '#2563eb' }
+              : { background: 'white', borderColor: '#e2e8f0', color: '#64748b' }
+            }
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -757,7 +795,7 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
           <button
             onClick={handleFullscreen}
             title="Ouvrir en plein écran"
-            className="flex items-center gap-1.5 text-sm glass px-2 md:px-3 py-1.5 rounded-lg border border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white transition-all"
+            className="flex items-center gap-1.5 text-sm bg-white px-2 md:px-3 py-1.5 rounded-lg border border-[#e2e8f0] text-[#64748b] hover:text-[#0f172a] hover:border-[#cbd5e1] transition-all"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -770,7 +808,7 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="hidden sm:flex items-center gap-1.5 text-sm glass px-2 md:px-3 py-1.5 rounded-lg border border-white/10 hover:border-violet-500/30 text-white/70 hover:text-white transition-all disabled:opacity-50"
+            className="hidden sm:flex items-center gap-1.5 text-sm bg-white px-2 md:px-3 py-1.5 rounded-lg border border-[#e2e8f0] text-[#64748b] hover:text-[#0f172a] hover:border-[#cbd5e1] transition-all disabled:opacity-50"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -783,7 +821,7 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 text-sm bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-3 md:px-4 py-1.5 rounded-lg text-white font-medium transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 text-sm bg-[#2563eb] hover:bg-[#1d4ed8] px-3 md:px-4 py-1.5 rounded-lg text-white font-medium transition-colors disabled:opacity-50"
           >
             {saving ? (
               <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -802,8 +840,8 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
 
       {/* ── Edit mode hint bar ── */}
       {editMode && (
-        <div className="h-8 bg-violet-500/10 border-b border-violet-500/20 flex items-center justify-center flex-shrink-0">
-          <p className="text-xs text-violet-300/80">
+        <div className="h-8 bg-[#eff6ff] border-b border-[#bfdbfe] flex items-center justify-center flex-shrink-0">
+          <p className="text-xs text-[#2563eb]">
             ✏️ Mode édition actif — double-cliquez sur un texte ou une image pour le modifier
           </p>
         </div>
@@ -811,13 +849,13 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
 
       {/* ── AI Modify panel ── */}
       {aiPanelOpen && (
-        <div className="absolute right-0 top-14 bottom-0 w-80 glass border-l border-white/10 flex flex-col z-20 shadow-2xl" style={{ background: 'rgba(8,8,20,0.97)' }}>
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div className="absolute right-0 top-14 bottom-0 w-80 bg-white border-l border-[#e2e8f0] flex flex-col z-20 shadow-xl">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#e2e8f0]">
             <div className="flex items-center gap-2">
               <span>✨</span>
-              <span className="text-sm font-bold text-white">Modifier avec l&apos;IA</span>
+              <span className="text-sm font-bold text-[#0f172a]">Modifier le site</span>
             </div>
-            <button onClick={() => setAiPanelOpen(false)} className="text-white/40 hover:text-white transition-colors">
+            <button onClick={() => setAiPanelOpen(false)} className="text-[#94a3b8] hover:text-[#0f172a] transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -827,40 +865,38 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {/* Token balance */}
             {!isAdmin && (
-              <div className="glass rounded-xl p-3 border border-white/5">
-                <p className="text-xs text-white/40 mb-1.5">Tokens restants</p>
+              <div className="bg-[#f8fafc] rounded-xl p-3 border border-[#e2e8f0]">
+                <p className="text-xs text-[#94a3b8] mb-1.5">Tokens restants</p>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-bold text-white">
+                  <span className="text-sm font-bold text-[#0f172a]">
                     {tokensRemaining.toLocaleString('fr-FR')}
                   </span>
-                  <span className="text-xs text-white/30">/ {currentTokensLimit.toLocaleString('fr-FR')}</span>
+                  <span className="text-xs text-[#94a3b8]">/ {currentTokensLimit.toLocaleString('fr-FR')}</span>
                 </div>
-                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-[#e2e8f0] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
                       width: `${Math.max(0, 100 - (currentTokensUsed / currentTokensLimit) * 100)}%`,
-                      background: tokensRemaining < TOKEN_COST_MODIFY * 2
-                        ? 'linear-gradient(90deg, #ef4444, #f97316)'
-                        : 'linear-gradient(90deg, #7c6dfa, #4f46e5)',
+                      background: tokensRemaining < TOKEN_COST_MODIFY * 2 ? '#ef4444' : '#2563eb',
                     }}
                   />
                 </div>
-                <p className="text-xs text-white/25 mt-1.5">
+                <p className="text-xs text-[#94a3b8] mt-1.5">
                   Coût : {TOKEN_COST_MODIFY.toLocaleString('fr-FR')} tokens par modification
                 </p>
               </div>
             )}
 
             {isAdmin && (
-              <div className="glass rounded-xl p-3 border border-amber-500/20">
-                <p className="text-xs text-amber-300">⚡ Mode admin — modifications illimitées</p>
+              <div className="bg-amber-50 rounded-xl p-3 border border-amber-200">
+                <p className="text-xs text-amber-700">⚡ Mode admin — modifications illimitées</p>
               </div>
             )}
 
             {/* Instruction input */}
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-2">
+              <label className="block text-xs font-medium text-[#64748b] mb-2">
                 Décrivez les modifications souhaitées
               </label>
               <textarea
@@ -868,14 +904,14 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
                 onChange={e => setAiInstruction(e.target.value)}
                 placeholder={"Change la couleur principale en bleu\nAjoute une section témoignages\nRends le design plus moderne\nAjoute un formulaire de contact"}
                 rows={6}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/20 focus:border-violet-500/40 focus:outline-none transition-colors resize-none"
+                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm text-[#0f172a] placeholder-[#94a3b8] focus:border-[#2563eb] focus:outline-none transition-colors resize-none"
                 disabled={aiLoading}
               />
             </div>
 
             {/* Examples */}
             <div className="space-y-1.5">
-              <p className="text-xs text-white/30 font-medium">Exemples rapides</p>
+              <p className="text-xs text-[#94a3b8] font-medium">Exemples rapides</p>
               {[
                 'Change la couleur principale en bleu nuit',
                 'Ajoute une section témoignages avec 3 avis',
@@ -885,7 +921,7 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
                 <button
                   key={ex}
                   onClick={() => setAiInstruction(ex)}
-                  className="block w-full text-left text-xs px-3 py-2 rounded-lg border border-white/5 text-white/40 hover:text-white/70 hover:border-violet-500/20 transition-all"
+                  className="block w-full text-left text-xs px-3 py-2 rounded-lg border border-[#e2e8f0] text-[#64748b] hover:text-[#0f172a] hover:border-[#cbd5e1] hover:bg-[#f8fafc] transition-all"
                 >
                   {ex}
                 </button>
@@ -893,20 +929,20 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
             </div>
 
             {!canModify && !isAdmin && (
-              <div className="glass rounded-xl p-3 border border-red-500/20">
-                <p className="text-xs text-red-400 mb-2">Tokens insuffisants pour une modification.</p>
-                <a href="/pricing" className="block text-center text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 py-2 rounded-lg">
+              <div className="bg-[#fef2f2] rounded-xl p-3 border border-[#fecaca]">
+                <p className="text-xs text-red-600 mb-2">Tokens insuffisants pour une modification.</p>
+                <a href="/pricing" className="block text-center text-xs font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] py-2 rounded-lg transition-colors">
                   Choisir un plan →
                 </a>
               </div>
             )}
           </div>
 
-          <div className="p-4 border-t border-white/10">
+          <div className="p-4 border-t border-[#e2e8f0]">
             <button
               onClick={handleAiModify}
               disabled={!aiInstruction.trim() || aiLoading || (!isAdmin && !canModify)}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all text-sm"
+              className="w-full flex items-center justify-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors text-sm"
             >
               {aiLoading ? (
                 <>
@@ -921,7 +957,7 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
               )}
             </button>
             {!isAdmin && (
-              <p className="text-center text-xs text-white/20 mt-2">
+              <p className="text-center text-xs text-[#94a3b8] mt-2">
                 Coûte {TOKEN_COST_MODIFY.toLocaleString('fr-FR')} tokens
               </p>
             )}
@@ -941,11 +977,11 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
       </div>
 
       {/* ── Info bar ── */}
-      <div className="h-7 glass border-t border-white/5 flex items-center px-4 gap-4 flex-shrink-0">
-        <span className="text-xs text-white/30 font-mono truncate">
+      <div className="h-7 bg-white border-t border-[#e2e8f0] flex items-center px-4 gap-4 flex-shrink-0">
+        <span className="text-xs text-[#94a3b8] font-mono truncate">
           {site.prompt.slice(0, 120)}{site.prompt.length > 120 ? '…' : ''}
         </span>
-        <span className="text-xs text-white/20 ml-auto flex-shrink-0">
+        <span className="text-xs text-[#94a3b8] ml-auto flex-shrink-0">
           Créé le {new Date(site.created_at).toLocaleDateString('fr-FR')}
         </span>
       </div>

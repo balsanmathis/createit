@@ -13,9 +13,9 @@ export default async function PricingPage({ searchParams }: Props) {
   const { promo } = await searchParams
 
   return (
-    <main className="min-h-screen bg-[#080810] text-white">
+    <main className="min-h-screen" style={{ background: '#f8fafc' }}>
       <Navbar locale={locale} />
-      <div className="pt-20">
+      <div style={{ paddingTop: 56 }}>
         <PricingSection locale={locale} initialPromoCode={promo} />
       </div>
       <Footer locale={locale} />

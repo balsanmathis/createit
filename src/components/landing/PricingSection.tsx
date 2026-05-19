@@ -1,17 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 
 const PLANS = [
   {
     key: 'starter',
     price: 20,
-    sites: 10,
     popular: false,
+    tokens: '800 000 tokens',
     features_fr: [
-      '~100 sites générés par mois',
       '800 000 tokens inclus',
       'Éditeur visuel inclus',
       'Export ZIP',
@@ -19,7 +17,6 @@ const PLANS = [
       'Historique 30 jours',
     ],
     features_en: [
-      '~100 sites generated per month',
       '800,000 tokens included',
       'Visual editor included',
       'ZIP export',
@@ -30,23 +27,19 @@ const PLANS = [
   {
     key: 'pro',
     price: 45,
-    sites: 25,
     popular: true,
+    tokens: '2 400 000 tokens',
     features_fr: [
-      '~300 sites générés par mois',
       '2 400 000 tokens inclus',
       'Éditeur visuel inclus',
       'Export ZIP',
-      'Templates 21st.dev',
       'Support prioritaire',
       'Historique illimité',
     ],
     features_en: [
-      '~300 sites generated per month',
       '2,400,000 tokens included',
       'Visual editor included',
       'ZIP export',
-      '21st.dev templates',
       'Priority support',
       'Unlimited history',
     ],
@@ -54,25 +47,21 @@ const PLANS = [
   {
     key: 'agency',
     price: 250,
-    sites: 160,
     popular: false,
+    tokens: '16 000 000 tokens',
     features_fr: [
-      '~2 000 sites générés par mois',
       '16 000 000 tokens inclus',
       'Éditeur visuel inclus',
       'Export ZIP',
-      'Templates 21st.dev',
       'Support dédié 24/7',
       'Historique illimité',
       'API access',
       'White label',
     ],
     features_en: [
-      '~2,000 sites generated per month',
       '16,000,000 tokens included',
       'Visual editor included',
       'ZIP export',
-      '21st.dev templates',
       'Dedicated 24/7 support',
       'Unlimited history',
       'API access',
@@ -81,17 +70,19 @@ const PLANS = [
   },
 ]
 
-const NAMES = {
+const NAMES: Record<string, { fr: string; en: string }> = {
   starter: { fr: 'Starter', en: 'Starter' },
-  pro: { fr: 'Pro', en: 'Pro' },
-  agency: { fr: 'Agency', en: 'Agency' },
+  pro:     { fr: 'Pro',     en: 'Pro'     },
+  agency:  { fr: 'Agency',  en: 'Agency'  },
 }
 
-const DESC = {
-  starter: { fr: 'Parfait pour débuter', en: 'Perfect for getting started' },
-  pro: { fr: 'Pour les professionnels', en: 'For professionals' },
-  agency: { fr: 'Pour les agences', en: 'For agencies' },
+const DESC: Record<string, { fr: string; en: string }> = {
+  starter: { fr: 'Parfait pour débuter',         en: 'Perfect for getting started' },
+  pro:     { fr: 'Pour les professionnels',       en: 'For professionals'           },
+  agency:  { fr: 'Pour les agences',              en: 'For agencies'                },
 }
+
+const F = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
 interface PricingSectionProps {
   locale?: 'fr' | 'en'
@@ -129,36 +120,27 @@ export default function PricingSection({ locale = 'fr', initialPromoCode }: Pric
   }
 
   return (
-    <section id="pricing" className="py-32 px-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(124,109,250,0.07)_0%,transparent_60%)]" />
-
-      <div className="max-w-7xl mx-auto relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-20"
-        >
-          <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6 border border-violet-500/20">
-            <span className="text-sm text-violet-300 font-medium">
-              {locale === 'fr' ? 'Tarifs' : 'Pricing'}
-            </span>
-          </div>
-          <h2 className="text-5xl sm:text-6xl font-black tracking-tight text-white mb-6">
-            {locale === 'fr' ? 'Tarifs simples' : 'Simple pricing'}<br />
-            <span className="gradient-text">{locale === 'fr' ? 'et transparents' : 'and transparent'}</span>
+    <section id="tarifs" style={{ padding: '80px 24px', fontFamily: F }}>
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="text-center" style={{ marginBottom: 56 }}>
+          <h2 style={{ fontSize: 36, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 12 }}>
+            {locale === 'fr' ? 'Tarifs simples et transparents' : 'Simple and transparent pricing'}
           </h2>
-          <p className="text-xl text-white/50 max-w-xl mx-auto">
+          <p style={{ fontSize: 16, color: '#64748b', maxWidth: 480, margin: '0 auto' }}>
             {locale === 'fr'
-              ? 'Choisissez le plan qui correspond à vos besoins. Sans engagement, résiliable à tout moment.'
-              : 'Choose the plan that fits your needs. No commitment, cancel anytime.'}
+              ? 'Commencez gratuitement, évoluez selon vos besoins. Sans engagement.'
+              : 'Start free, scale as you grow. No commitment.'}
           </p>
-        </motion.div>
+        </div>
 
-        {/* Promo code input */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3 rounded-2xl px-5 py-3.5 max-w-sm w-full" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <svg className="w-4 h-4 shrink-0" style={{ color: 'rgba(124,58,237,0.7)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {/* Promo code */}
+        <div className="flex justify-center" style={{ marginBottom: 40 }}>
+          <div
+            className="flex items-center gap-3 max-w-xs w-full rounded-lg px-4 py-2.5"
+            style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}
+          >
+            <svg className="w-4 h-4 shrink-0" style={{ color: '#94a3b8' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
             <input
@@ -167,55 +149,70 @@ export default function PricingSection({ locale = 'fr', initialPromoCode }: Pric
               onChange={e => setPromoCode(e.target.value.toUpperCase())}
               placeholder={locale === 'fr' ? 'Code promo (optionnel)' : 'Promo code (optional)'}
               className="flex-1 bg-transparent outline-none text-sm"
-              style={{ color: '#e2e8f0' }}
+              style={{ color: '#0f172a' }}
             />
             {promoCode && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.2)', color: '#c4b5fd' }}>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#eff6ff', color: '#2563eb' }}>
                 ✓
               </span>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {PLANS.map((plan, i) => (
-            <motion.div
+        {/* Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {PLANS.map((plan) => (
+            <div
               key={plan.key}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className={`relative rounded-2xl p-8 flex flex-col ${
-                plan.popular
-                  ? 'glass-strong border-violet-500/40 glow'
-                  : 'glass border-white/5'
-              } border transition-all duration-300 hover:-translate-y-1`}
+              className="relative flex flex-col"
+              style={{
+                background: '#ffffff',
+                border: plan.popular ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                borderRadius: 12,
+                padding: 28,
+                transition: 'box-shadow 0.2s',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 24px rgba(0,0,0,0.08)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}
             >
               {plan.popular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                  <span className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg">
-                    {locale === 'fr' ? '⭐ Populaire' : '⭐ Popular'}
+                  <span className="text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: '#2563eb' }}>
+                    {locale === 'fr' ? 'Populaire' : 'Popular'}
                   </span>
                 </div>
               )}
 
-              <div className="mb-6">
-                <div className="text-sm font-semibold text-violet-400 mb-1 uppercase tracking-wider">
-                  {NAMES[plan.key as keyof typeof NAMES][locale]}
-                </div>
-                <div className="text-white/50 text-sm mb-4">
-                  {DESC[plan.key as keyof typeof DESC][locale]}
-                </div>
-                <div className="flex items-end gap-1">
-                  <span className="text-5xl font-black text-white">{plan.price}€</span>
-                  <span className="text-white/40 mb-2">{locale === 'fr' ? '/ mois' : '/ month'}</span>
-                </div>
+              {/* Plan name + desc */}
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 4 }}>
+                {NAMES[plan.key][locale]}
+              </p>
+              <p style={{ fontSize: 13, color: '#64748b', marginBottom: 20 }}>
+                {DESC[plan.key][locale]}
+              </p>
+
+              {/* Price */}
+              <div className="flex items-baseline gap-1" style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: 42, fontWeight: 700, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>
+                  {plan.price}€
+                </span>
+                <span style={{ fontSize: 13, color: '#94a3b8' }}>
+                  {locale === 'fr' ? '/mois' : '/month'}
+                </span>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
+              {/* Tokens badge */}
+              <div
+                style={{ background: '#f1f5f9', borderRadius: 6, padding: '8px 12px', fontSize: 13, fontWeight: 600, color: '#2563eb', marginBottom: 24 }}
+              >
+                {plan.tokens}
+              </div>
+
+              {/* Features */}
+              <ul className="space-y-2.5 flex-1" style={{ marginBottom: 24 }}>
                 {(locale === 'fr' ? plan.features_fr : plan.features_en).map((feature) => (
-                  <li key={feature} className="flex items-center gap-3 text-sm text-white/70">
-                    <svg className="w-4 h-4 text-violet-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <li key={feature} className="flex items-start gap-2.5" style={{ fontSize: 13, color: '#64748b' }}>
+                    <svg className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#2563eb' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     {feature}
@@ -223,14 +220,24 @@ export default function PricingSection({ locale = 'fr', initialPromoCode }: Pric
                 ))}
               </ul>
 
+              {/* CTA */}
               <button
                 onClick={() => handleCheckout(plan.key)}
                 disabled={loading === plan.key}
-                className={`w-full text-center py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed ${
-                  plan.popular
-                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg hover:shadow-violet-500/25'
-                    : 'glass border border-white/10 hover:border-violet-500/30 text-white hover:text-violet-200'
-                }`}
+                className="w-full text-center py-2.5 rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed text-sm"
+                style={{
+                  background: plan.popular ? '#2563eb' : 'transparent',
+                  color: plan.popular ? 'white' : '#0f172a',
+                  border: plan.popular ? 'none' : '1px solid #e2e8f0',
+                }}
+                onMouseEnter={(e) => {
+                  if (plan.popular) e.currentTarget.style.background = '#1d4ed8';
+                  else e.currentTarget.style.borderColor = '#cbd5e1';
+                }}
+                onMouseLeave={(e) => {
+                  if (plan.popular) e.currentTarget.style.background = '#2563eb';
+                  else e.currentTarget.style.borderColor = '#e2e8f0';
+                }}
               >
                 {loading === plan.key && (
                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -239,11 +246,20 @@ export default function PricingSection({ locale = 'fr', initialPromoCode }: Pric
                   </svg>
                 )}
                 {loading === plan.key
-                  ? (locale === 'fr' ? 'Chargement...' : 'Loading...')
+                  ? (locale === 'fr' ? 'Chargement…' : 'Loading…')
                   : (locale === 'fr' ? 'Commencer' : 'Get started')}
               </button>
-            </motion.div>
+            </div>
           ))}
+        </div>
+
+        {/* Free tier note */}
+        <div className="text-center mt-10">
+          <p style={{ fontSize: 14, color: '#64748b' }}>
+            {locale === 'fr'
+              ? 'Commencez gratuitement avec 8 000 tokens — aucune carte bancaire requise.'
+              : 'Start free with 8,000 tokens — no credit card required.'}
+          </p>
         </div>
       </div>
     </section>

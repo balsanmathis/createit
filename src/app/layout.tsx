@@ -58,13 +58,13 @@ export default function RootLayout({
           {children}
         </ErrorBoundary>
         <Toaster
-          theme="dark"
+          theme="light"
           toastOptions={{
             style: {
-              background: 'rgba(13,13,26,0.9)',
-              border: '1px solid rgba(124,109,250,0.25)',
-              backdropFilter: 'blur(12px)',
-              color: 'white',
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              color: '#0f172a',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
             },
           }}
         />

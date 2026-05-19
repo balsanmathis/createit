@@ -52,7 +52,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                 isAdmin
                   ? 'bg-amber-100 text-amber-700'
                   : subscription
-                  ? 'bg-violet-100 text-violet-700'
+                  ? 'bg-[#eff6ff] text-[#2563eb]'
                   : 'bg-[#f1f5f9] text-[#64748b]'
               }`}>
                 {isAdmin ? 'Admin' : subscription ? profile?.plan || 'Pro' : 'Gratuit'}
