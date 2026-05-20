@@ -14,7 +14,6 @@ import GlassCard from '@/components/ui/GlassCard'
 import PromptInput from '@/components/ui/PromptInput'
 import PricingCard, { type PricingPlan } from '@/components/ui/PricingCard'
 import ThemeToggle from '@/components/ui/ThemeToggle'
-import SiteMockup from '@/components/examples/SiteMockup'
 import { cn } from '@/lib/utils'
 
 /* ─── Data ───────────────────────────────────────────────────── */
@@ -604,16 +603,29 @@ export default function HomePage() {
               <GlassCard key={ex.slug} hover className="overflow-hidden group">
                 <Link href={`/exemples/${ex.slug}`} style={{ textDecoration: 'none' }}>
                   <div className="relative overflow-hidden" style={{ height: 180 }}>
-                    <SiteMockup sector={ex.sector} slug={ex.slug} scale={180 / 576} />
-                    {/* Browser chrome overlay */}
+                    {/* Chrome bar */}
                     <div
-                      className="absolute inset-x-0 top-0 flex items-center gap-1.5 px-3 py-2"
-                      style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+                      className="flex items-center gap-1.5 px-3"
+                      style={{ height: 24, background: '#1A1A1A', flexShrink: 0 }}
                     >
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FC6358' }} />
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FEBC2E' }} />
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28C840' }} />
+                      <span className="w-2 h-2 rounded-full" style={{ background: '#FC6358' }} />
+                      <span className="w-2 h-2 rounded-full" style={{ background: '#FEBC2E' }} />
+                      <span className="w-2 h-2 rounded-full" style={{ background: '#28C840' }} />
                     </div>
+                    {/* Screenshot */}
+                    <div className="relative" style={{ height: 156, overflow: 'hidden' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={ex.img}
+                        alt={ex.label}
+                        className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div
+                        className="absolute inset-x-0 bottom-0"
+                        style={{ height: 40, background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.32))' }}
+                      />
+                    </div>
+                    {/* Hover overlay */}
                     <div
                       className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                       style={{ background: 'rgba(124,58,237,0.7)' }}

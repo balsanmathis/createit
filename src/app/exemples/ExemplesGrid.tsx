@@ -7,7 +7,6 @@ import { ArrowRight } from 'lucide-react'
 import GlassCard from '@/components/ui/GlassCard'
 import { EXAMPLES, SECTORS } from '@/data/examples'
 import { cn } from '@/lib/utils'
-import SiteMockup from '@/components/examples/SiteMockup'
 
 interface Props {
   initialSector: string
@@ -52,23 +51,35 @@ export default function ExemplesGrid({ initialSector }: Props) {
         {filtered.map(ex => (
           <GlassCard key={ex.slug} hover className="overflow-hidden group">
             <Link href={`/exemples/${ex.slug}`} style={{ textDecoration: 'none' }}>
-              {/* Image + chrome */}
+              {/* Browser frame + screenshot */}
               <div className="relative overflow-hidden" style={{ height: 200 }}>
-                <SiteMockup sector={ex.sector} slug={ex.slug} />
-                {/* Browser chrome bar */}
+                {/* Chrome bar */}
                 <div
-                  className="absolute inset-x-0 top-0 flex items-center gap-1.5 px-3 py-2.5"
-                  style={{ background: 'rgba(0,0,0,0.50)', backdropFilter: 'blur(4px)' }}
+                  className="flex items-center gap-1.5 px-3"
+                  style={{ height: 26, background: '#1A1A1A', flexShrink: 0 }}
                 >
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FC6358' }} />
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FEBC2E' }} />
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28C840' }} />
+                  <span className="w-2 h-2 rounded-full" style={{ background: '#FC6358' }} />
+                  <span className="w-2 h-2 rounded-full" style={{ background: '#FEBC2E' }} />
+                  <span className="w-2 h-2 rounded-full" style={{ background: '#28C840' }} />
                   <span
-                    className="flex-1 mx-2 h-4 rounded-sm text-[10px] flex items-center px-2 truncate"
-                    style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)' }}
+                    className="flex-1 mx-2 h-3.5 rounded-sm text-[9px] flex items-center px-2 truncate"
+                    style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.35)' }}
                   >
                     createit.app/sites/{ex.slug}
                   </span>
+                </div>
+                {/* Screenshot */}
+                <div className="relative" style={{ height: 174, overflow: 'hidden' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={ex.img}
+                    alt={ex.label}
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div
+                    className="absolute inset-x-0 bottom-0"
+                    style={{ height: 48, background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.32))' }}
+                  />
                 </div>
                 {/* Hover overlay */}
                 <div
