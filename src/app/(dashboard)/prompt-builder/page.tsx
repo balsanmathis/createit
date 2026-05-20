@@ -162,11 +162,11 @@ export default function PromptBuilderPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleUse = () => router.push(`/generate?prompt=${encodeURIComponent(prompt)}`)
+  const handleUse = () => router.push(`/dashboard/nouveau?prompt=${encodeURIComponent(prompt)}`)
 
   return (
-    <div className="min-h-screen bg-[#080810] text-white">
-      <DashboardSidebar activeHref="/prompt-builder" />
+    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--fg)' }}>
+      <DashboardSidebar />
 
       <main className="md:ml-64 p-4 md:p-8 pb-24 pt-16 md:pt-8">
         <div className="max-w-2xl mx-auto">

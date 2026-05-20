@@ -1,36 +1,48 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
-import { Suspense } from "react";
+import { useState, Suspense } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
+import AuthCard from '@/components/auth/AuthCard'
+
+const PLAN_INFO: Record<string, { label: string; price: string }> = {
+  starter: { label: 'Starter', price: '20 €/mois' },
+  pro: { label: 'Pro', price: '45 €/mois' },
+  agency: { label: 'Agency', price: '250 €/mois' },
+}
 
 function SignupForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const plan = searchParams.get("plan") || "";
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const plan = searchParams.get('plan') || ''
+  const prompt = searchParams.get('prompt') || ''
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const planInfo = PLAN_INFO[plan.toLowerCase()]
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    )
 
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
 
     if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      return;
+      setError(signUpError.message === 'User already registered'
+        ? 'Un compte existe déjà avec cet email. Connectez-vous.'
+        : signUpError.message)
+      setLoading(false)
+      return
     }
 
     if (data?.user) {
@@ -38,75 +50,123 @@ function SignupForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
-      }).catch(() => {});
+      }).catch(() => {})
     }
 
     if (plan) {
-      router.push(`/pricing?plan=${plan}`);
+      try {
+        const res = await fetch('/api/stripe/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan }),
+        })
+        const json = await res.json()
+        if (json?.url) {
+          window.location.href = json.url
+          return
+        }
+      } catch {
+        // fall through to tarifs
+      }
+      router.push(`/tarifs?plan=${plan}`)
+    } else if (prompt) {
+      router.push(`/dashboard/nouveau?prompt=${encodeURIComponent(prompt)}`)
     } else {
-      router.push("/dashboard");
+      router.push('/dashboard')
     }
+  }
+
+  const inputStyle = {
+    background: 'var(--surface)',
+    border: '1px solid var(--border)',
+    color: 'var(--fg)',
+    borderRadius: 8,
+    width: '100%',
+    padding: '10px 14px',
+    fontSize: 14,
+    outline: 'none',
+    transition: 'border-color 0.15s, box-shadow 0.15s',
   }
 
   return (
     <>
+      {planInfo && (
+        <div className="mb-5 rounded-lg px-4 py-3 text-sm flex items-center gap-2"
+          style={{ background: 'var(--accent-light)', border: '1px solid rgba(124,58,237,0.2)', color: 'var(--fg)' }}>
+          <span style={{ color: 'var(--accent)' }}>✦</span>
+          <span>Plan <strong style={{ color: 'var(--accent)' }}>{planInfo.label}</strong> sélectionné — {planInfo.price}</span>
+        </div>
+      )}
+
+      {prompt && (
+        <div className="mb-5 rounded-lg px-4 py-3 text-sm"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
+          <p className="text-xs font-medium mb-1" style={{ color: 'var(--fg)' }}>Votre prompt sera utilisé :</p>
+          <p className="italic truncate">"{prompt}"</p>
+        </div>
+      )}
+
       {error && (
-        <div className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626" }}>
+        <div className="mb-5 rounded-lg px-4 py-3 text-sm"
+          style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.25)', color: '#ef4444' }}>
           {error}
+          {error.includes('Connectez-vous') && (
+            <Link href="/auth/login" className="ml-1 underline" style={{ color: '#ef4444' }}>Se connecter</Link>
+          )}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Email</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--fg-muted)' }}>Email</label>
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             required
             placeholder="vous@exemple.com"
-            className="w-full rounded-md px-3.5 py-2.5 text-sm outline-none transition-all"
-            style={{ background: "#ffffff", border: "1px solid #e2e8f0", color: "#0f172a" }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "#2563eb";
-              e.target.style.boxShadow = "0 0 0 3px rgba(37,99,235,0.1)";
+            style={inputStyle}
+            onFocus={e => {
+              e.target.style.borderColor = 'var(--accent)'
+              e.target.style.boxShadow = '0 0 0 3px var(--accent-light)'
             }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "#e2e8f0";
-              e.target.style.boxShadow = "none";
+            onBlur={e => {
+              e.target.style.borderColor = 'var(--border)'
+              e.target.style.boxShadow = 'none'
             }}
           />
         </div>
+
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
-            Mot de passe <span style={{ color: "#94a3b8" }}>(min. 8 caractères)</span>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--fg-muted)' }}>
+            Mot de passe <span style={{ color: 'var(--fg-subtle)' }}>(min. 8 caractères)</span>
           </label>
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             required
             minLength={8}
             placeholder="••••••••"
-            className="w-full rounded-md px-3.5 py-2.5 text-sm outline-none transition-all"
-            style={{ background: "#ffffff", border: "1px solid #e2e8f0", color: "#0f172a" }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "#2563eb";
-              e.target.style.boxShadow = "0 0 0 3px rgba(37,99,235,0.1)";
+            style={inputStyle}
+            onFocus={e => {
+              e.target.style.borderColor = 'var(--accent)'
+              e.target.style.boxShadow = '0 0 0 3px var(--accent-light)'
             }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "#e2e8f0";
-              e.target.style.boxShadow = "none";
+            onBlur={e => {
+              e.target.style.borderColor = 'var(--border)'
+              e.target.style.boxShadow = 'none'
             }}
           />
         </div>
+
         <button
           type="submit"
           disabled={loading}
-          className="w-full text-white font-medium py-2.5 rounded-md transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed mt-1"
-          style={{ background: "#0f172a", height: 42 }}
-          onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#1e293b"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "#0f172a"; }}
+          className="w-full text-white font-medium rounded-lg text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: 'var(--accent)', height: 42, marginTop: 4 }}
+          onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'var(--accent-hover)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent)' }}
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -116,57 +176,35 @@ function SignupForm() {
               </svg>
               Création…
             </span>
-          ) : "Créer mon compte"}
+          ) : 'Créer mon compte'}
         </button>
       </form>
+
+      <p className="mt-5 text-center text-xs" style={{ color: 'var(--fg-muted)' }}>
+        En créant un compte vous acceptez nos{' '}
+        <Link href="/legal/cgv" style={{ color: 'var(--accent)', textDecoration: 'none' }}>CGV</Link>
+        {' '}et notre{' '}
+        <Link href="/legal/confidentialite" style={{ color: 'var(--accent)', textDecoration: 'none' }}>politique de confidentialité</Link>.
+      </p>
+
+      <p className="mt-4 text-center text-sm" style={{ color: 'var(--fg-muted)' }}>
+        Déjà un compte ?{' '}
+        <Link href="/auth/login" className="font-medium" style={{ color: 'var(--accent)', textDecoration: 'none' }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+          Se connecter
+        </Link>
+      </p>
     </>
-  );
+  )
 }
 
 export default function SignupPage() {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-6"
-      style={{
-        background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%)",
-        backgroundImage: "linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%), radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0)",
-        backgroundSize: "100% 100%, 32px 32px",
-      }}
-    >
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
-            <span className="text-2xl font-bold" style={{ color: "#0f172a", letterSpacing: "-0.3px" }}>
-              Create<span style={{ color: "#2563eb" }}>It</span>
-            </span>
-          </Link>
-          <h1 className="text-xl font-semibold mb-1" style={{ color: "#0f172a" }}>Créer un compte</h1>
-          <p className="text-sm" style={{ color: "#64748b" }}>Commencez à créer des sites en quelques secondes</p>
-        </div>
-
-        {/* Card */}
-        <div
-          className="rounded-xl p-8"
-          style={{ background: "#ffffff", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)" }}
-        >
-          <Suspense fallback={<div className="h-48 rounded-lg animate-pulse" style={{ background: "#f1f5f9" }} />}>
-            <SignupForm />
-          </Suspense>
-
-          <div className="mt-5 text-center">
-            <p className="text-sm" style={{ color: "#64748b" }}>
-              Déjà un compte ?{" "}
-              <Link href="/auth/login" className="font-medium transition-colors" style={{ color: "#2563eb" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#1d4ed8")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#2563eb")}
-              >
-                Se connecter
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    <AuthCard title="Créer un compte" subtitle="Commencez à créer des sites en quelques secondes">
+      <Suspense fallback={<div className="h-48 rounded-lg animate-pulse" style={{ background: 'var(--surface)' }} />}>
+        <SignupForm />
+      </Suspense>
+    </AuthCard>
+  )
 }

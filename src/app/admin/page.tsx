@@ -170,21 +170,7 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#080810] text-white">
-      <DashboardSidebar activeHref="/dashboard">
-        <div className="glass rounded-xl p-4 border border-amber-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-amber-400 text-sm">⚡</span>
-            <span className="text-xs font-semibold text-amber-300">Admin</span>
-          </div>
-          <p className="text-xs text-white/30 truncate">{user.email}</p>
-          <a
-            href="/admin"
-            className="block mt-2 text-xs text-center bg-amber-500/15 text-amber-300 border border-amber-500/20 py-1.5 rounded-lg font-medium hover:bg-amber-500/25 transition-colors"
-          >
-            Dashboard admin →
-          </a>
-        </div>
-      </DashboardSidebar>
+      <DashboardSidebar />
 
       <main className="md:ml-64 p-4 md:p-8 pt-16 md:pt-8">
         <div className="max-w-5xl mx-auto">

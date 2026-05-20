@@ -1,30 +1,32 @@
 'use client'
 
-import { useState, Suspense } from 'react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import AuthCard from '@/components/auth/AuthCard'
 
-function LoginForm() {
+export default function ResetPasswordPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/dashboard'
-  const errorParam = searchParams.get('error')
-
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(
-    errorParam === 'missing_code' ? 'Lien invalide ou expiré.'
-    : errorParam === 'exchange_failed' ? 'Erreur de connexion. Veuillez réessayer.'
-    : errorParam ? 'Une erreur est survenue.'
-    : ''
-  )
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
+
+    if (password !== confirm) {
+      setError('Les mots de passe ne correspondent pas.')
+      return
+    }
+
+    if (password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères.')
+      return
+    }
+
     setLoading(true)
 
     const supabase = createBrowserClient(
@@ -32,18 +34,34 @@ function LoginForm() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    const { error: updateError } = await supabase.auth.updateUser({ password })
 
-    if (signInError) {
-      setError(signInError.message === 'Invalid login credentials'
-        ? 'Email ou mot de passe incorrect.'
-        : signInError.message)
+    if (updateError) {
+      setError(updateError.message)
       setLoading(false)
       return
     }
 
-    router.push(redirectTo)
-    router.refresh()
+    setSuccess(true)
+    setTimeout(() => router.push('/dashboard'), 2000)
+  }
+
+  if (success) {
+    return (
+      <AuthCard
+        title="Mot de passe mis à jour"
+        subtitle="Redirection en cours…"
+        backHref="/dashboard"
+        backLabel="Aller au dashboard"
+      >
+        <div className="text-center py-4">
+          <div className="text-4xl mb-4">✓</div>
+          <p className="text-sm" style={{ color: 'var(--fg-muted)' }}>
+            Votre mot de passe a été réinitialisé avec succès. Vous allez être redirigé.
+          </p>
+        </div>
+      </AuthCard>
+    )
   }
 
   const inputStyle = {
@@ -59,7 +77,12 @@ function LoginForm() {
   }
 
   return (
-    <>
+    <AuthCard
+      title="Nouveau mot de passe"
+      subtitle="Choisissez un mot de passe sécurisé"
+      backHref="/auth/login"
+      backLabel="Retour à la connexion"
+    >
       {error && (
         <div className="mb-5 rounded-lg px-4 py-3 text-sm"
           style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.25)', color: '#ef4444' }}>
@@ -69,13 +92,16 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--fg-muted)' }}>Email</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--fg-muted)' }}>
+            Nouveau mot de passe <span style={{ color: 'var(--fg-subtle)' }}>(min. 8 caractères)</span>
+          </label>
           <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
             required
-            placeholder="vous@exemple.com"
+            minLength={8}
+            placeholder="••••••••"
             style={inputStyle}
             onFocus={e => {
               e.target.style.borderColor = 'var(--accent)'
@@ -89,20 +115,13 @@ function LoginForm() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-medium" style={{ color: 'var(--fg-muted)' }}>Mot de passe</label>
-            <Link href="/auth/forgot-password" className="text-xs transition-colors"
-              style={{ color: 'var(--fg-muted)', textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-muted)')}>
-              Mot de passe oublié ?
-            </Link>
-          </div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--fg-muted)' }}>Confirmer le mot de passe</label>
           <input
             type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
+            value={confirm}
+            onChange={e => setConfirm(e.target.value)}
             required
+            minLength={8}
             placeholder="••••••••"
             style={inputStyle}
             onFocus={e => {
@@ -130,30 +149,11 @@ function LoginForm() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Connexion…
+              Mise à jour…
             </span>
-          ) : 'Se connecter'}
+          ) : 'Mettre à jour le mot de passe'}
         </button>
       </form>
-
-      <p className="mt-5 text-center text-sm" style={{ color: 'var(--fg-muted)' }}>
-        Pas encore de compte ?{' '}
-        <Link href="/auth/signup" className="font-medium transition-colors" style={{ color: 'var(--accent)', textDecoration: 'none' }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-          Créer un compte
-        </Link>
-      </p>
-    </>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <AuthCard title="Connexion" subtitle="Bon retour sur CreateIt">
-      <Suspense fallback={<div className="h-48 rounded-lg animate-pulse" style={{ background: 'var(--surface)' }} />}>
-        <LoginForm />
-      </Suspense>
     </AuthCard>
   )
 }

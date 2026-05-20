@@ -29,6 +29,17 @@
   --shadow-lg:  0 4px 6px rgba(0,0,0,0.04), 0 20px 48px rgba(0,0,0,0.10);
   --shadow-xl:  0 8px 10px rgba(0,0,0,0.04), 0 32px 64px rgba(0,0,0,0.14);
 
+  /* Status */
+  --error:         #DC2626;
+  --error-light:   rgba(220, 38, 38, 0.08);
+  --error-border:  rgba(220, 38, 38, 0.25);
+  --warning:       #D97706;
+  --warning-light: rgba(217, 119, 6, 0.08);
+  --warning-border: rgba(217, 119, 6, 0.25);
+  --success:       #059669;
+  --success-light: rgba(5, 150, 105, 0.08);
+  --success-border: rgba(5, 150, 105, 0.25);
+
   /* Aurora */
   --aurora-opacity: 0.55;
 
@@ -104,6 +115,15 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: 20px;
   box-shadow: var(--shadow-xl);
+}
+
+/* ─── Accent button ──────────────────────────────────────────── */
+.btn-accent {
+  background: var(--accent);
+  transition: background 0.15s ease;
+}
+.btn-accent:hover {
+  background: var(--accent-hover);
 }
 
 /* ─── Gradient text ───────────────────────────────────────────── */

@@ -7,28 +7,33 @@ interface Props {
 
 export default function GenerateError({ error, reset }: Props) {
   return (
-    <div className="min-h-screen bg-[#080810] flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: 'var(--bg)' }}>
       <div className="text-center max-w-md">
-        <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{ background: 'var(--error-light)', border: '1px solid var(--error-border)' }}
+        >
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--error)' }}>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">Une erreur est survenue</h2>
-        <p className="text-white/50 text-sm mb-6">
-          {error.message || "La génération a échoué. Réessayez."}
+        <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--fg)' }}>Une erreur est survenue</h2>
+        <p className="text-sm mb-6" style={{ color: 'var(--fg-muted)' }}>
+          {error.message || 'La génération a échoué. Réessayez.'}
         </p>
         <div className="flex gap-3 justify-center">
           <button
             onClick={reset}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-opacity"
+            className="text-white font-semibold px-6 py-3 rounded-xl transition-opacity hover:opacity-90"
+            style={{ background: 'var(--accent)' }}
           >
             Réessayer
           </button>
           <a
             href="/dashboard"
-            className="glass border border-white/10 text-white/70 hover:text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+            className="font-semibold px-6 py-3 rounded-xl transition-colors"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}
           >
             Dashboard
           </a>

@@ -25,7 +25,7 @@ function TryPageContent() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         router.replace(
-          prompt ? `/generate?prompt=${encodeURIComponent(prompt)}` : "/dashboard"
+          prompt ? `/dashboard/nouveau?prompt=${encodeURIComponent(prompt)}` : "/dashboard"
         );
       }
     });
@@ -58,7 +58,7 @@ function TryPageContent() {
     }
 
     router.push(
-      prompt ? `/generate?prompt=${encodeURIComponent(prompt)}` : "/dashboard"
+      prompt ? `/dashboard/nouveau?prompt=${encodeURIComponent(prompt)}` : "/dashboard"
     );
   }
 
@@ -96,7 +96,7 @@ function TryPageContent() {
           <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg"
-              style={{ background: "linear-gradient(135deg, #5b21b6, #1d4ed8)" }}
+              style={{ background: "var(--accent)" }}
             >
               <span className="text-white font-bold">✦</span>
             </div>
@@ -169,7 +169,7 @@ function TryPageContent() {
                   border: "1px solid #1e1b4b",
                   color: "#e2e8f0",
                 }}
-                onFocus={(e) => (e.target.style.borderColor = "#5b21b6")}
+                onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
                 onBlur={(e) => (e.target.style.borderColor = "#1e1b4b")}
               />
             </div>
@@ -194,7 +194,7 @@ function TryPageContent() {
                   border: "1px solid #1e1b4b",
                   color: "#e2e8f0",
                 }}
-                onFocus={(e) => (e.target.style.borderColor = "#5b21b6")}
+                onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
                 onBlur={(e) => (e.target.style.borderColor = "#1e1b4b")}
               />
             </div>
@@ -202,12 +202,12 @@ function TryPageContent() {
               type="submit"
               disabled={loading}
               className="w-full text-white font-semibold py-3.5 rounded-xl transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: "#5b21b6" }}
+              style={{ background: "var(--accent)" }}
               onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.background = "#6d28d9";
+                if (!loading) e.currentTarget.style.background = "var(--accent-hover)";
               }}
               onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "#5b21b6")
+                (e.currentTarget.style.background = "var(--accent)")
               }
             >
               {loading ? (
@@ -245,7 +245,7 @@ function TryPageContent() {
               <Link
                 href={
                   prompt
-                    ? `/auth/login?redirect=${encodeURIComponent(`/generate?prompt=${encodeURIComponent(prompt)}`)}`
+                    ? `/auth/login?redirect=${encodeURIComponent(`/dashboard/nouveau?prompt=${encodeURIComponent(prompt)}`)}`
                     : "/auth/login"
                 }
                 className="font-medium transition-colors hover:opacity-80"

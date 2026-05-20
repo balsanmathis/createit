@@ -7,6 +7,7 @@ import GlassCard from '@/components/ui/GlassCard'
 import PublicNav from '@/components/public/PublicNav'
 import PublicFooter from '@/components/public/PublicFooter'
 import { EXAMPLES } from '@/data/examples'
+import ExempleCtaButton from './ExempleCtaButton'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -44,7 +45,6 @@ export default async function ExempleDetailPage({ params }: Props) {
             href="/exemples"
             className="inline-flex items-center gap-1.5 text-sm mb-8 transition-colors"
             style={{ color: 'var(--fg-muted)', textDecoration: 'none' }}
-            onMouseEnter={undefined}
           >
             <ArrowLeft size={14} /> Retour aux exemples
           </Link>
@@ -71,15 +71,7 @@ export default async function ExempleDetailPage({ params }: Props) {
                 </p>
               </GlassCard>
 
-              <Link
-                href={`/auth/signup?prompt=${encodeURIComponent(ex.prompt)}`}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold text-sm transition-all"
-                style={{ background: 'var(--accent)', textDecoration: 'none', boxShadow: '0 0 24px rgba(124,58,237,0.3)' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--accent-hover)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'var(--accent)')}
-              >
-                Créer un site similaire <ArrowRight size={14} />
-              </Link>
+              <ExempleCtaButton prompt={ex.prompt} />
             </div>
 
             {/* Preview — browser frame */}

@@ -101,11 +101,11 @@ function fmt(iso: string) {
 
 function PlanBadge({ plan }: { plan: string }) {
   const styles: Record<string, { bg: string; color: string }> = {
-    starter: { bg: '#eff6ff', color: '#2563eb' },
-    pro:     { bg: '#f5f3ff', color: '#7c3aed' },
-    agency:  { bg: '#ecfdf5', color: '#059669' },
+    starter: { bg: 'var(--accent-light)', color: 'var(--accent)' },
+    pro:     { bg: 'rgba(124,58,237,0.15)', color: 'var(--accent)' },
+    agency:  { bg: 'var(--success-light)', color: 'var(--success)' },
   }
-  const s = styles[plan] ?? { bg: '#f1f5f9', color: '#64748b' }
+  const s = styles[plan] ?? { bg: 'var(--surface)', color: 'var(--fg-muted)' }
   return (
     <span className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0" style={{ background: s.bg, color: s.color }}>
       {plan || 'gratuit'}
@@ -136,8 +136,8 @@ export default async function AnalyticsPage({ searchParams }: Props) {
   const monthLabel = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
-      <DashboardSidebar activeHref="/analytics" />
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      <DashboardSidebar />
 
       <main className="md:ml-64 p-4 md:p-8 pt-16 md:pt-8">
         <div className="max-w-5xl mx-auto">
@@ -145,21 +145,22 @@ export default async function AnalyticsPage({ searchParams }: Props) {
           {/* Header */}
           <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-black text-[#0f172a]">Analytics</h1>
-              <p className="text-[#94a3b8] text-sm mt-0.5">create-it.app — {monthLabel}</p>
+              <h1 className="text-2xl md:text-3xl font-black" style={{ color: 'var(--fg)' }}>Analytics</h1>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--fg-muted)' }}>create-it.app — {monthLabel}</p>
             </div>
             <a
               href={VERCEL_ANALYTICS_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-white border border-[#e2e8f0] text-[#64748b] hover:text-[#0f172a] hover:border-[#cbd5e1] px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
               Voir le trafic complet
-              <svg className="w-3 h-3 text-[#94a3b8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--fg-subtle)' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
@@ -167,7 +168,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit bg-white border border-[#e2e8f0] shadow-sm">
+          <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             {[
               { key: 'overview', label: 'Vue d\'ensemble', href: '/analytics' },
               { key: 'promo',    label: 'Codes promo',    href: '/analytics?tab=promo' },
@@ -178,8 +179,8 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                 href={t.href}
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
                 style={activeTab === t.key
-                  ? { background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }
-                  : { color: '#64748b', border: '1px solid transparent' }}
+                  ? { background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid rgba(124,58,237,0.2)' }
+                  : { color: 'var(--fg-muted)', border: '1px solid transparent' }}
               >
                 {t.label}
               </Link>
@@ -196,10 +197,10 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                   { value: stats.sitesThisMonth.toLocaleString('fr-FR'), label: 'Sites générés ce mois',      sub: `${stats.totalSites} au total` },
                   { value: `${revenue.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €`, label: `Revenus ${monthLabel}`, sub: null },
                 ].map((card, i) => (
-                  <div key={i} className="bg-white rounded-xl p-5 border border-[#e2e8f0] shadow-sm">
-                    <p className="text-3xl font-black text-[#2563eb]">{card.value}</p>
-                    <p className="text-xs text-[#64748b] mt-1">{card.label}</p>
-                    {card.sub && <p className="text-xs text-[#94a3b8] mt-0.5">{card.sub}</p>}
+                  <div key={i} className="rounded-xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <p className="text-3xl font-black" style={{ color: 'var(--accent)' }}>{card.value}</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--fg-muted)' }}>{card.label}</p>
+                    {card.sub && <p className="text-xs mt-0.5" style={{ color: 'var(--fg-subtle)' }}>{card.sub}</p>}
                   </div>
                 ))}
               </div>
@@ -208,23 +209,24 @@ export default async function AnalyticsPage({ searchParams }: Props) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Last 5 registrations */}
-                <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-sm overflow-hidden">
-                  <div className="px-5 py-4 border-b border-[#f1f5f9] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#2563eb] shrink-0"></span>
-                    <h2 className="text-sm font-semibold text-[#0f172a]">Dernières inscriptions</h2>
+                <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                  <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }}></span>
+                    <h2 className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>Dernières inscriptions</h2>
                   </div>
                   {recentUsers.length === 0 ? (
-                    <p className="px-5 py-5 text-[#94a3b8] text-sm">Aucun utilisateur</p>
+                    <p className="px-5 py-5 text-sm" style={{ color: 'var(--fg-muted)' }}>Aucun utilisateur</p>
                   ) : (
-                    <div className="divide-y divide-[#f1f5f9]">
-                      {recentUsers.map(u => (
-                        <div key={u.id} className="flex items-center gap-3 px-5 py-3.5">
-                          <div className="w-8 h-8 rounded-full bg-[#eff6ff] border border-[#bfdbfe] flex items-center justify-center text-xs text-[#2563eb] font-semibold shrink-0">
+                    <div>
+                      {recentUsers.map((u, i) => (
+                        <div key={u.id} className="flex items-center gap-3 px-5 py-3.5" style={i > 0 ? { borderTop: '1px solid var(--border)' } : {}}>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0"
+                            style={{ background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid rgba(124,58,237,0.2)' }}>
                             {u.email?.[0]?.toUpperCase() ?? '?'}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-[#0f172a] truncate">{u.email}</p>
-                            <p className="text-xs text-[#94a3b8]">{fmt(u.created_at)}</p>
+                            <p className="text-sm truncate" style={{ color: 'var(--fg)' }}>{u.email}</p>
+                            <p className="text-xs" style={{ color: 'var(--fg-subtle)' }}>{fmt(u.created_at)}</p>
                           </div>
                           <PlanBadge plan={u.plan} />
                         </div>
@@ -234,30 +236,31 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                 </div>
 
                 {/* Last 5 generated sites */}
-                <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-sm overflow-hidden">
-                  <div className="px-5 py-4 border-b border-[#f1f5f9] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#2563eb] shrink-0"></span>
-                    <h2 className="text-sm font-semibold text-[#0f172a]">Derniers sites générés</h2>
+                <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                  <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }}></span>
+                    <h2 className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>Derniers sites générés</h2>
                   </div>
                   {recentSites.length === 0 ? (
-                    <p className="px-5 py-5 text-[#94a3b8] text-sm">Aucun site généré</p>
+                    <p className="px-5 py-5 text-sm" style={{ color: 'var(--fg-muted)' }}>Aucun site généré</p>
                   ) : (
-                    <div className="divide-y divide-[#f1f5f9]">
-                      {recentSites.map(s => (
-                        <div key={s.id} className="flex items-center gap-3 px-5 py-3.5">
-                          <div className="w-8 h-8 rounded-lg bg-[#eff6ff] border border-[#bfdbfe] flex items-center justify-center shrink-0">
-                            <svg className="w-4 h-4 text-[#2563eb]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div>
+                      {recentSites.map((s, i) => (
+                        <div key={s.id} className="flex items-center gap-3 px-5 py-3.5" style={i > 0 ? { borderTop: '1px solid var(--border)' } : {}}>
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ background: 'var(--accent-light)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--accent)' }}>
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                                 d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
                             </svg>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-[#0f172a] truncate">{s.name || 'Sans titre'}</p>
-                            <p className="text-xs text-[#94a3b8] truncate">
+                            <p className="text-sm truncate" style={{ color: 'var(--fg)' }}>{s.name || 'Sans titre'}</p>
+                            <p className="text-xs truncate" style={{ color: 'var(--fg-subtle)' }}>
                               {s.userEmail ?? `${s.user_id.slice(0, 8)}…`}
                             </p>
                           </div>
-                          <p className="text-xs text-[#94a3b8] shrink-0">{fmt(s.created_at)}</p>
+                          <p className="text-xs shrink-0" style={{ color: 'var(--fg-subtle)' }}>{fmt(s.created_at)}</p>
                         </div>
                       ))}
                     </div>
