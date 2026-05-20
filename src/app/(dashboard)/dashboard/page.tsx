@@ -133,10 +133,12 @@ export default async function DashboardPage({ searchParams }: Props) {
                 {(sites as Site[]).map((site) => (
                   <SiteCard
                     key={site.id}
-                    id={site.id}
-                    name={site.name}
-                    title={extractTitle(site.html_content)}
-                    createdAt={site.created_at}
+                    site={{
+                      id: site.id,
+                      name: site.name,
+                      title: extractTitle(site.html_content),
+                      created_at: site.created_at,
+                    }}
                   />
                 ))}
               </div>
