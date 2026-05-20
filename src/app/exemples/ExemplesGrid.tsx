@@ -76,10 +76,11 @@ export default function ExemplesGrid({ initialSector }: Props) {
                     alt={ex.label}
                     className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div
-                    className="absolute inset-x-0 bottom-0"
-                    style={{ height: 48, background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.32))' }}
-                  />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)' }} />
+                  <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+                    <p className="text-xs font-semibold text-white truncate" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{ex.label}</p>
+                    <p className="text-[10px] text-white/60 truncate mt-0.5">{ex.desc}</p>
+                  </div>
                 </div>
                 {/* Hover overlay */}
                 <div
