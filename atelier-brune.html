@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atelier Brune — Architecture & Design d'intérieur — Bordeaux</title>
+  <style>
+    /* variables */
+    :root {
+      --bg:          #f8f4ef;
+      --noir:        #0a0a0a;
+      --or:          #b8960c;
+      --or-hover:    #d4a80f;
+      --gris:        #6b6660;
+      --gris-clair:  #e2dbd1;
+      --blanc:       #ffffff;
+      --serif:       Georgia, 'Times New Roman', serif;
+      --sans:        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--noir);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Typographie ── */
+    h1, h2, h3, h4 {
+      font-family: var(--serif);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--or);
+      margin-bottom: 14px;
+    }
+
+    .titre {
+      font-size: clamp(28px, 4vw, 46px);
+      color: var(--noir);
+      margin-bottom: 24px;
+    }
+
+    /* ── Layout ── */
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+
+    /* ══════════════════ NAVBAR ══════════════════ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 30px 0;
+      transition: background .3s, padding .3s, box-shadow .3s;
+    }
+
+    nav.scrolled {
+      background: rgba(248,244,239,.97);
+      backdrop-filter: blur(4px);
+      padding: 18px 0;
+      box-shadow: 0 1px 0 var(--gris-clair);
+    }
+
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: var(--serif);
+      font-size: 21px;
+      letter-spacing: .05em;
+      color: var(--noir);
+    }
+
+    .logo em { color: var(--or); font-style: normal; }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 38px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      color: var(--gris);
+      letter-spacing: .02em;
+      transition: color .2s;
+    }
+
+    .nav-links a:hover { color: var(--noir); }
+
+    .nav-rdv {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .04em;
+      padding: 10px 26px;
+      border: 1px solid var(--noir);
+      color: var(--noir);
+      transition: all .25s;
+    }
+
+    .nav-rdv:hover { background: var(--noir); color: var(--bg); }
+
+    /* burger */
+    .burger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .burger span {
+      display: block;
+      width: 24px;
+      height: 1.5px;
+      background: var(--noir);
+      transition: .25s;
+    }
+
+    /* Mobile overlay */
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 99;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+    }
+
+    .mobile-overlay.open { display: flex; }
+
+    .mobile-overlay a {
+      font-family: var(--serif);
+      font-size: 30px;
+      color: var(--noir);
+      transition: color .2s;
+    }
+
+    .mobile-overlay a:hover { color: var(--or); }
+
+    .close-btn {
+      position: absolute;
+      top: 26px; right: 22px;
+      background: none;
+      border: none;
+      font-size: 30px;
+      cursor: pointer;
+      color: var(--gris);
+      line-height: 1;
+    }
+
+    /* ══════════════════ HERO ══════════════════ */
+    .hero {
+      height: 100vh;
+      min-height: 600px;
+      background: var(--noir);
+      position: relative;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* fond architectural — dégradé chaud avec légère texture */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(148deg, #0f0d09 0%, #1c1810 45%, #0a0a0a 100%);
+    }
+
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(184,150,12,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(184,150,12,.035) 1px, transparent 1px);
+      background-size: 64px 64px;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 740px;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--or);
+      margin-bottom: 26px;
+      opacity: 0;
+      animation: fadeUp .8s ease .15s forwards;
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 5.5vw, 70px);
+      color: #f8f4ef;
+      line-height: 1.08;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp .8s ease .35s forwards;
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      color: rgba(248,244,239,.52);
+      max-width: 440px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+      opacity: 0;
+      animation: fadeUp .8s ease .55s forwards;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp .8s ease .75s forwards;
+    }
+
+    .btn-or {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px 38px;
+      background: var(--or);
+      color: #0a0a0a;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      transition: all .25s;
+    }
+
+    .btn-or:hover { background: var(--or-hover); transform: translateY(-1px); }
+
+    .btn-contour {
+      display: inline-flex;
+      align-items: center;
+      padding: 15px 38px;
+      border: 1px solid rgba(248,244,239,.28);
+      color: #f8f4ef;
+      font-size: 13px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      transition: border-color .25s;
+    }
+
+    .btn-contour:hover { border-color: rgba(248,244,239,.65); }
+
+    /* scroll cue */
+    .hero-scroll {
+      position: absolute;
+      bottom: 38px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: rgba(248,244,239,.35);
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .scroll-trait {
+      width: 1px;
+      height: 48px;
+      background: linear-gradient(to bottom, transparent, rgba(248,244,239,.35));
+      animation: trait 2s ease-in-out infinite;
+    }
+
+    /* ══════════════════ SECTIONS ══════════════════ */
+    .section { padding: 112px 0; }
+    .section-blanc { background: var(--blanc); }
+
+    /* ── À propos ── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 88px;
+      align-items: center;
+    }
+
+    .about-body p {
+      color: var(--gris);
+      font-size: 16px;
+      line-height: 1.82;
+      margin-bottom: 20px;
+    }
+
+    .chiffres {
+      display: flex;
+      gap: 44px;
+      margin-top: 48px;
+      padding-top: 44px;
+      border-top: 1px solid var(--gris-clair);
+    }
+
+    .chiffre-val {
+      font-family: var(--serif);
+      font-size: 46px;
+      line-height: 1;
+      margin-bottom: 5px;
+      color: var(--noir);
+    }
+
+    .chiffre-val sup { font-size: 24px; color: var(--or); }
+
+    .chiffre-lab {
+      font-size: 13px;
+      color: var(--gris);
+      letter-spacing: .02em;
+    }
+
+    /* photo placeholder avec bordure décalée */
+    .about-photo {
+      aspect-ratio: 4/5;
+      background: linear-gradient(152deg, #d4c5ae 0%, #b8a27e 45%, #8a7252 100%);
+      position: relative;
+    }
+
+    .about-photo::before {
+      content: 'Sophie Brune — architecte DPLG';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 22px;
+      background: linear-gradient(to top, rgba(10,10,10,.72) 0%, transparent 100%);
+      color: rgba(248,244,239,.8);
+      font-size: 12px;
+      letter-spacing: .06em;
+    }
+
+    .about-photo::after {
+      content: '';
+      position: absolute;
+      top: -18px; right: -18px;
+      width: 110px; height: 110px;
+      border: 2px solid var(--or);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* ── Services ── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 2px;
+      margin-top: 68px;
+    }
+
+    .service {
+      background: var(--blanc);
+      padding: 52px 46px;
+      transition: background .3s, color .3s;
+      cursor: default;
+    }
+
+    .service:hover { background: var(--noir); }
+
+    .service:hover .s-num,
+    .service:hover .s-titre,
+    .service:hover .s-desc { color: rgba(248,244,239,.85); }
+
+    .service:hover .s-prix { color: var(--or); }
+
+    .s-num {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--or);
+      margin-bottom: 22px;
+      transition: color .3s;
+    }
+
+    .s-titre {
+      font-family: var(--serif);
+      font-size: 23px;
+      color: var(--noir);
+      margin-bottom: 14px;
+      transition: color .3s;
+    }
+
+    .s-desc {
+      font-size: 15px;
+      color: var(--gris);
+      line-height: 1.78;
+      margin-bottom: 28px;
+      transition: color .3s;
+    }
+
+    .s-prix {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      color: var(--noir);
+      transition: color .3s;
+    }
+
+    /* ── Réalisations ── */
+    .projets-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 60px;
+    }
+
+    .lien-or {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--or);
+      padding-bottom: 2px;
+      border-bottom: 1px solid var(--or);
+      transition: opacity .2s;
+    }
+
+    .lien-or:hover { opacity: .7; }
+
+    .projets-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 26px;
+    }
+
+    .projet { cursor: pointer; }
+
+    .projet-img {
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .projet-img-inner {
+      width: 100%;
+      height: 100%;
+      transition: transform .5s ease;
+    }
+
+    .projet:hover .projet-img-inner { transform: scale(1.04); }
+
+    /* couleurs par projet — chacun son ambiance */
+    .p1 .projet-img-inner { background: linear-gradient(142deg, #c4b49a 0%, #9a7d55 55%, #6b5535 100%); }
+    .p2 .projet-img-inner { background: linear-gradient(142deg, #b4bec8 0%, #7d8e9a 55%, #4a5868 100%); }
+    .p3 .projet-img-inner { background: linear-gradient(142deg, #c0d0b4 0%, #88a87a 55%, #506848 100%); }
+    .p4 .projet-img-inner { background: linear-gradient(142deg, #d8ccc0 0%, #aa906c 55%, #705040 100%); }
+    .p5 .projet-img-inner { background: linear-gradient(142deg, #e8d8c4 0%, #c4a478 55%, #8a6430 100%); }
+    .p6 .projet-img-inner { background: linear-gradient(142deg, #c8b898 0%, #a0825a 55%, #704830 100%); }
+
+    .projet-cat {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--or);
+      margin-bottom: 5px;
+    }
+
+    .projet-nom {
+      font-family: var(--serif);
+      font-size: 19px;
+      color: var(--noir);
+      margin-bottom: 6px;
+    }
+
+    .projet-txt {
+      font-size: 14px;
+      color: var(--gris);
+      line-height: 1.65;
+    }
+
+    /* ── Processus ── */
+    .processus-grid {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 0;
+      margin-top: 72px;
+      position: relative;
+    }
+
+    /* trait de connexion */
+    .processus-grid::before {
+      content: '';
+      position: absolute;
+      top: 27px;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      background: var(--gris-clair);
+    }
+
+    .etape { padding: 0 20px; text-align: center; }
+
+    .etape-dot {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 1px solid var(--gris-clair);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-family: var(--serif);
+      font-size: 17px;
+      color: var(--or);
+      position: relative;
+      z-index: 1;
+      transition: all .25s;
+    }
+
+    .etape:hover .etape-dot {
+      background: var(--or);
+      border-color: var(--or);
+      color: var(--blanc);
+    }
+
+    .etape-titre {
+      font-family: var(--serif);
+      font-size: 20px;
+      color: var(--noir);
+      margin-bottom: 12px;
+    }
+
+    .etape-desc {
+      font-size: 14px;
+      color: var(--gris);
+      line-height: 1.72;
+    }
+
+    /* ── Équipe ── */
+    .equipe-grid {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 30px;
+      margin-top: 64px;
+    }
+
+    .membre-photo {
+      aspect-ratio: 3/4;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .m1 .membre-photo { background: linear-gradient(160deg, #cdc0a8 0%, #9c8464 100%); }
+    .m2 .membre-photo { background: linear-gradient(160deg, #b4c0c8 0%, #7c94a0 100%); }
+    .m3 .membre-photo { background: linear-gradient(160deg, #c8beb0 0%, #9c8e7c 100%); }
+    .m4 .membre-photo { background: linear-gradient(160deg, #b8c4b0 0%, #86a07a 100%); }
+
+    .membre-nom {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--noir);
+      margin-bottom: 4px;
+    }
+
+    .membre-role {
+      font-size: 13px;
+      color: var(--or);
+      font-weight: 500;
+      letter-spacing: .03em;
+    }
+
+    /* ── Témoignages ── */
+    .temoignages-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 28px;
+      margin-top: 64px;
+    }
+
+    .temoignage {
+      padding: 38px 36px;
+      background: var(--bg);
+      border: 1px solid var(--gris-clair);
+      position: relative;
+    }
+
+    .temoignage::before {
+      content: '\201C';
+      font-family: var(--serif);
+      font-size: 72px;
+      color: var(--or);
+      line-height: 1;
+      opacity: .25;
+      position: absolute;
+      top: 18px; left: 28px;
+    }
+
+    .temoignage-txt {
+      font-size: 15px;
+      font-style: italic;
+      color: var(--gris);
+      line-height: 1.82;
+      padding-top: 18px;
+      margin-bottom: 28px;
+    }
+
+    .temoignage-auteur strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 16px;
+      font-style: normal;
+      color: var(--noir);
+      margin-bottom: 3px;
+    }
+
+    .temoignage-auteur span {
+      font-size: 13px;
+      color: var(--or);
+    }
+
+    /* ── Contact ── */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 88px;
+      align-items: start;
+    }
+
+    .form-contact { display: flex; flex-direction: column; gap: 14px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .champ { display: flex; flex-direction: column; gap: 6px; }
+
+    .champ label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gris);
+    }
+
+    .champ input,
+    .champ select,
+    .champ textarea {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--gris-clair);
+      padding: 11px 0;
+      font-size: 15px;
+      color: var(--noir);
+      font-family: var(--sans);
+      outline: none;
+      transition: border-color .2s;
+      appearance: none;
+    }
+
+    .champ input:focus,
+    .champ select:focus,
+    .champ textarea:focus { border-color: var(--or); }
+
+    .champ textarea { resize: none; min-height: 96px; }
+
+    .btn-envoyer {
+      align-self: flex-start;
+      margin-top: 10px;
+      padding: 14px 48px;
+      background: var(--noir);
+      color: var(--bg);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: background .25s;
+    }
+
+    .btn-envoyer:hover { background: #1e1e1e; }
+
+    .contact-infos h3 {
+      font-family: var(--serif);
+      font-size: 30px;
+      color: var(--noir);
+      margin-bottom: 36px;
+    }
+
+    .info-ligne {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+
+    .info-icone {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--gris-clair);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 16px;
+    }
+
+    .info-corps strong {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gris);
+      margin-bottom: 4px;
+    }
+
+    .info-corps span {
+      font-size: 15px;
+      color: var(--noir);
+      line-height: 1.55;
+    }
+
+    .carte {
+      margin-top: 34px;
+      height: 210px;
+      background: linear-gradient(142deg, #ece0cc 0%, #d4c4aa 50%, #b8a078 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--gris);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      position: relative;
+    }
+
+    .carte::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--or);
+      box-shadow: 0 0 0 6px rgba(184,150,12,.2);
+    }
+
+    /* ══════════════════ FOOTER ══════════════════ */
+    footer {
+      background: var(--noir);
+      padding: 64px 0 36px;
+    }
+
+    .footer-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 40px;
+      margin-bottom: 36px;
+      border-bottom: 1px solid rgba(248,244,239,.1);
+    }
+
+    .footer-logo {
+      font-family: var(--serif);
+      font-size: 21px;
+      color: var(--bg);
+      letter-spacing: .05em;
+    }
+
+    .footer-logo em { color: var(--or); font-style: normal; }
+
+    .footer-nav {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .footer-nav a {
+      font-size: 13px;
+      color: rgba(248,244,239,.45);
+      transition: color .2s;
+    }
+
+    .footer-nav a:hover { color: var(--bg); }
+
+    .footer-bas {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(248,244,239,.35);
+    }
+
+    /* ══════════════════ ANIMATIONS ══════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+
+    .reveal.shown { opacity: 1; transform: none; }
+
+    .stagger > * {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+
+    .stagger.shown > *:nth-child(1) { opacity:1; transform:none; transition-delay:.0s; }
+    .stagger.shown > *:nth-child(2) { opacity:1; transform:none; transition-delay:.1s; }
+    .stagger.shown > *:nth-child(3) { opacity:1; transform:none; transition-delay:.2s; }
+    .stagger.shown > *:nth-child(4) { opacity:1; transform:none; transition-delay:.3s; }
+    .stagger.shown > *:nth-child(5) { opacity:1; transform:none; transition-delay:.4s; }
+    .stagger.shown > *:nth-child(6) { opacity:1; transform:none; transition-delay:.5s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    @keyframes trait {
+      0%,100% { opacity: .35; }
+      50%      { opacity: .9; }
+    }
+
+    /* ══════════════════ RESPONSIVE ══════════════════ */
+    @media (max-width: 960px) {
+      .wrap { padding: 0 28px; }
+
+      .nav-links, .nav-rdv { display: none; }
+      .burger { display: flex; }
+
+      .about-grid { grid-template-columns: 1fr; gap: 52px; }
+      .about-photo { max-width: 460px; }
+      .about-photo::after { display: none; }
+
+      .services-grid { grid-template-columns: 1fr; }
+      .projets-grid  { grid-template-columns: repeat(2,1fr); }
+
+      .processus-grid { grid-template-columns: repeat(2,1fr); }
+      .processus-grid::before { display: none; }
+
+      .equipe-grid { grid-template-columns: repeat(2,1fr); }
+      .temoignages-grid { grid-template-columns: 1fr; }
+
+      .contact-grid { grid-template-columns: 1fr; gap: 56px; }
+
+      .footer-top { flex-direction: column; gap: 24px; text-align: center; }
+      .footer-bas { flex-direction: column; gap: 10px; text-align: center; }
+    }
+
+    @media (max-width: 540px) {
+      .wrap { padding: 0 20px; }
+      .section { padding: 80px 0; }
+      .projets-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .chiffres { flex-wrap: wrap; gap: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav id="nav">
+    <div class="wrap">
+      <div class="nav-row">
+        <a href="#accueil" class="logo">Atelier <em>Brune</em></a>
+        <ul class="nav-links">
+          <li><a href="#projets">Projets</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#atelier">L'atelier</a></li>
+          <li><a href="#equipe">L'équipe</a></li>
+        </ul>
+        <a href="#contact" class="nav-rdv">Prendre rendez-vous</a>
+        <button class="burger" id="burger" aria-label="Menu mobile">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Menu mobile -->
+  <div class="mobile-overlay" id="mobileOverlay">
+    <button class="close-btn" id="closeMenu">×</button>
+    <a href="#projets" class="ml">Projets</a>
+    <a href="#services" class="ml">Services</a>
+    <a href="#atelier" class="ml">L'atelier</a>
+    <a href="#equipe" class="ml">L'équipe</a>
+    <a href="#contact" class="ml">Contact</a>
+  </div>
+
+  <!-- ══ HERO ══ -->
+  <section class="hero" id="accueil">
+    <div class="hero-bg"></div>
+    <div class="wrap">
+      <div class="hero-content">
+        <p class="hero-eyebrow">Architecture &amp; Design d'intérieur — Bordeaux</p>
+        <h1>L'architecture<br>au service de<br>votre vie</h1>
+        <p class="hero-sub">Depuis 2016, nous concevons des espaces qui vous ressemblent. Chaque projet est unique, pensé avec vous, livré pour durer.</p>
+        <div class="hero-cta">
+          <a href="#projets" class="btn-or">Voir nos réalisations</a>
+          <a href="#atelier" class="btn-contour">Découvrir l'atelier</a>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <div class="scroll-trait"></div>
+    </div>
+  </section>
+
+  <!-- ══ À PROPOS ══ -->
+  <section class="section" id="atelier">
+    <div class="wrap">
+      <div class="about-grid">
+        <div class="about-body reveal">
+          <p class="label">L'Atelier</p>
+          <h2 class="titre">Une approche<br>humaine et sur mesure</h2>
+          <p>Fondé en 2016 par Sophie Brune, architecte DPLG et ancienne élève des Beaux-Arts de Bordeaux, l'Atelier Brune s'est construit sur une conviction simple : la bonne architecture naît d'une écoute attentive.</p>
+          <p>Nous intervenons sur des projets de rénovation, d'extension et de design d'intérieur dans la métropole bordelaise et le Sud-Ouest. Chaque chantier est traité avec la même exigence, qu'il s'agisse d'un appartement aux Chartrons ou d'une villa sur le Bassin d'Arcachon.</p>
+          <p>Notre méthode : une relation directe avec le client, de la première esquisse à la remise des clés. Pas d'intermédiaire superflu. Pas de mauvaise surprise.</p>
+          <div class="chiffres">
+            <div>
+              <div class="chiffre-val">87<sup>+</sup></div>
+              <div class="chiffre-lab">Projets livrés</div>
+            </div>
+            <div>
+              <div class="chiffre-val">8</div>
+              <div class="chiffre-lab">Ans d'expérience</div>
+            </div>
+            <div>
+              <div class="chiffre-val">100<sup>%</sup></div>
+              <div class="chiffre-lab">Sur mesure</div>
+            </div>
+          </div>
+        </div>
+        <div class="about-photo reveal" style="transition-delay:.2s"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ SERVICES ══ -->
+  <section class="section section-blanc" id="services">
+    <div class="wrap">
+      <div class="reveal">
+        <p class="label">Ce que nous faisons</p>
+        <h2 class="titre">Nos prestations</h2>
+      </div>
+      <div class="services-grid stagger">
+        <div class="service">
+          <div class="s-num">01</div>
+          <h3 class="s-titre">Rénovation complète</h3>
+          <p class="s-desc">Maisons anciennes, appartements haussmanniens, corps de ferme. Nous prenons en charge l'intégralité du projet&nbsp;: permis de construire, suivi de chantier, coordination des corps de métier. De la démolition à la finition.</p>
+          <div class="s-prix">À partir de 45 000 €</div>
+        </div>
+        <div class="service">
+          <div class="s-num">02</div>
+          <h3 class="s-titre">Design d'intérieur</h3>
+          <p class="s-desc">Conception des espaces, choix des matériaux, mobilier sur mesure, scénographie lumineuse. Nous travaillons avec un réseau d'artisans et de fabricants locaux sélectionnés pour la qualité et le savoir-faire.</p>
+          <div class="s-prix">À partir de 8 000 €</div>
+        </div>
+        <div class="service">
+          <div class="s-num">03</div>
+          <h3 class="s-titre">Extension &amp; surélévation</h3>
+          <p class="s-desc">Agrandir sans déménager. Étude de faisabilité technique et réglementaire, conception de l'extension en cohérence avec l'existant, dépôt du permis, suivi complet. Ossature bois, béton, acier — selon vos préférences.</p>
+          <div class="s-prix">Sur devis</div>
+        </div>
+        <div class="service">
+          <div class="s-num">04</div>
+          <h3 class="s-titre">Aménagement de bureaux</h3>
+          <p class="s-desc">Des espaces de travail qui reflètent l'identité de votre entreprise et améliorent la qualité de vie au bureau. Flex-office, open-space acoustique, salles de réunion, accueil client — chaque mètre carré est pensé.</p>
+          <div class="s-prix">À partir de 15 000 €</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ RÉALISATIONS ══ -->
+  <section class="section" id="projets">
+    <div class="wrap">
+      <div class="projets-head reveal">
+        <div>
+          <p class="label">Portfolio</p>
+          <h2 class="titre">Quelques réalisations</h2>
+        </div>
+        <a href="#contact" class="lien-or">Parler de votre projet →</a>
+      </div>
+      <div class="projets-grid stagger">
+        <div class="projet p1">
+          <div class="projet-img"><div class="projet-img-inner"></div></div>
+          <div class="projet-cat">Rénovation complète</div>
+          <div class="projet-nom">Villa Cap Ferret</div>
+          <div class="projet-txt">Villa des années 70, 210 m². Rénovation complète avec ouverture sur jardin et création d'une grande terrasse en ipé.</div>
+        </div>
+        <div class="projet p2">
+          <div class="projet-img"><div class="projet-img-inner"></div></div>
+          <div class="projet-cat">Design d'intérieur</div>
+          <div class="projet-nom">Loft Saint-Michel</div>
+          <div class="projet-txt">Ancien atelier de menuisier transformé en loft 130 m². Conservation du cachet industriel, béton ciré et acier brut.</div>
+        </div>
+        <div class="projet p3">
+          <div class="projet-img"><div class="projet-img-inner"></div></div>
+          <div class="projet-cat">Extension</div>
+          <div class="projet-nom">Maison Arcachon</div>
+          <div class="projet-txt">Extension 45 m² en ossature bois sur maison de pêcheur. Vue dégagée sur le Bassin d'Arcachon.</div>
+        </div>
+        <div class="projet p4">
+          <div class="projet-img"><div class="projet-img-inner"></div></div>
+          <div class="projet-cat">Aménagement bureaux</div>
+          <div class="projet-nom">Bureaux Mérignac</div>
+          <div class="projet-txt">620 m² pour une ESN bordelaise. Flex-office, 3 salles de réunion modulables, espace détente avec terrasse.</div>
+        </div>
+        <div class="projet p5">
+          <div class="projet-img"><div class="projet-img-inner"></div></div>
+          <div class="projet-cat">Rénovation complète</div>
+          <div class="projet-nom">Appartement Chartrons</div>
+          <div class="projet-txt">95 m² dans un hôtel particulier XVIIIe. Moulures restaurées à l'ancienne, parquet chêne, tomettes d'origine.</div>
+        </div>
+        <div class="projet p6">
+          <div class="projet-img"><div class="projet-img-inner"></div></div>
+          <div class="projet-cat">Rénovation &amp; Extension</div>
+          <div class="projet-nom">Mas en Périgord</div>
+          <div class="projet-txt">Mas du XVIIe, 380 m² habitables. Rénovation patrimoniale et ajout d'une aile contemporaine en pierre et bois.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PROCESSUS ══ -->
+  <section class="section section-blanc" id="processus">
+    <div class="wrap">
+      <div class="reveal" style="text-align:center;max-width:580px;margin:0 auto">
+        <p class="label">Notre méthode</p>
+        <h2 class="titre">Un accompagnement de A à Z</h2>
+        <p style="color:var(--gris);font-size:16px;line-height:1.75">Chaque projet démarre par une vraie conversation. Ce que vous voulez, ce qui vous inquiète, votre budget réel, vos délais. On part de là.</p>
+      </div>
+      <div class="processus-grid stagger">
+        <div class="etape">
+          <div class="etape-dot">01</div>
+          <h3 class="etape-titre">Rencontre</h3>
+          <p class="etape-desc">Première consultation gratuite dans nos locaux ou sur votre site. On écoute, on pose des questions, on esquisse quelques pistes ensemble.</p>
+        </div>
+        <div class="etape">
+          <div class="etape-dot">02</div>
+          <h3 class="etape-titre">Conception</h3>
+          <p class="etape-desc">Études de faisabilité, avant-projet sommaire, dépôt du permis si nécessaire. Chaque étape est validée par vous avant de passer à la suivante.</p>
+        </div>
+        <div class="etape">
+          <div class="etape-dot">03</div>
+          <h3 class="etape-titre">Suivi chantier</h3>
+          <p class="etape-desc">Coordination des entreprises, visites hebdomadaires, comptes rendus réguliers. On reste présents jusqu'à ce que ce soit parfait.</p>
+        </div>
+        <div class="etape">
+          <div class="etape-dot">04</div>
+          <h3 class="etape-titre">Livraison</h3>
+          <p class="etape-desc">Réception des travaux avec vous, levée des réserves, remise des clés et des dossiers. Et un verre pour fêter ça, si vous voulez.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ÉQUIPE ══ -->
+  <section class="section" id="equipe">
+    <div class="wrap">
+      <div class="reveal">
+        <p class="label">Qui sommes-nous</p>
+        <h2 class="titre">L'équipe</h2>
+      </div>
+      <div class="equipe-grid stagger">
+        <div class="m1">
+          <div class="membre-photo"></div>
+          <div class="membre-nom">Sophie Brune</div>
+          <div class="membre-role">Architecte DPLG — Fondatrice</div>
+        </div>
+        <div class="m2">
+          <div class="membre-photo"></div>
+          <div class="membre-nom">Thomas Auger</div>
+          <div class="membre-role">Architecte junior</div>
+        </div>
+        <div class="m3">
+          <div class="membre-photo"></div>
+          <div class="membre-nom">Léa Vidal</div>
+          <div class="membre-role">Décoratrice d'intérieur</div>
+        </div>
+        <div class="m4">
+          <div class="membre-photo"></div>
+          <div class="membre-nom">Paul Mercier</div>
+          <div class="membre-role">Dessinateur projeteur</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ TÉMOIGNAGES ══ -->
+  <section class="section section-blanc" id="temoignages">
+    <div class="wrap">
+      <div class="reveal" style="text-align:center">
+        <p class="label">Ce qu'ils en disent</p>
+        <h2 class="titre">Nos clients témoignent</h2>
+      </div>
+      <div class="temoignages-grid">
+        <div class="temoignage reveal">
+          <p class="temoignage-txt">Sophie a su comprendre ce qu'on cherchait avant même qu'on puisse l'expliquer. La villa a été livrée en 8 mois, dans le budget, avec des finitions qu'on n'espérait plus. On n'imaginait pas que ça pouvait être aussi fluide.</p>
+          <div class="temoignage-auteur">
+            <strong>Claire &amp; Renaud Lefèvre</strong>
+            <span>Villa Cap Ferret — Rénovation complète, 2022</span>
+          </div>
+        </div>
+        <div class="temoignage reveal" style="transition-delay:.15s">
+          <p class="temoignage-txt">Notre loft était un atelier délabré. Aujourd'hui c'est notre plus belle réussite. Thomas et Léa ont su garder toute l'âme industrielle du lieu tout en créant quelque chose de vraiment habitable. Le résultat est spectaculaire.</p>
+          <div class="temoignage-auteur">
+            <strong>Julien Marchand</strong>
+            <span>Loft Saint-Michel — Design d'intérieur, 2023</span>
+          </div>
+        </div>
+        <div class="temoignage reveal" style="transition-delay:.3s">
+          <p class="temoignage-txt">On a fait appel à l'Atelier Brune pour nos bureaux à Mérignac. Sophie a compris notre culture d'entreprise et l'a traduite en espace. Depuis l'emménagement, nos équipes ne veulent plus travailler de chez elles.</p>
+          <div class="temoignage-auteur">
+            <strong>Nathalie Perez</strong>
+            <span>DRH Altéa Consulting — Bureaux Mérignac, 2023</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CONTACT ══ -->
+  <section class="section" id="contact">
+    <div class="wrap">
+      <div class="contact-grid">
+        <div class="reveal">
+          <p class="label">Parlons de votre projet</p>
+          <h2 class="titre" style="margin-bottom:40px">Prenons<br>rendez-vous</h2>
+          <form class="form-contact" id="contactForm" novalidate>
+            <div class="form-row">
+              <div class="champ">
+                <label>Prénom</label>
+                <input type="text" placeholder="Marie">
+              </div>
+              <div class="champ">
+                <label>Nom</label>
+                <input type="text" placeholder="Bonnemaison">
+              </div>
+            </div>
+            <div class="champ">
+              <label>Email</label>
+              <input type="email" placeholder="marie@exemple.fr">
+            </div>
+            <div class="champ">
+              <label>Téléphone</label>
+              <input type="tel" placeholder="06 XX XX XX XX">
+            </div>
+            <div class="champ">
+              <label>Type de projet</label>
+              <select>
+                <option value="">— Sélectionner —</option>
+                <option>Rénovation complète</option>
+                <option>Design d'intérieur</option>
+                <option>Extension / surélévation</option>
+                <option>Aménagement de bureaux</option>
+                <option>Autre</option>
+              </select>
+            </div>
+            <div class="champ">
+              <label>Décrivez votre projet</label>
+              <textarea placeholder="Superficie, localisation, état actuel, vos attentes, budget indicatif..."></textarea>
+            </div>
+            <button type="submit" class="btn-envoyer">Envoyer le message</button>
+          </form>
+        </div>
+        <div class="contact-infos reveal" style="transition-delay:.2s">
+          <h3>Atelier Brune</h3>
+          <div class="info-ligne">
+            <div class="info-icone">📍</div>
+            <div class="info-corps">
+              <strong>Adresse</strong>
+              <span>8 rue du Palais Gallien<br>33000 Bordeaux</span>
+            </div>
+          </div>
+          <div class="info-ligne">
+            <div class="info-icone">📞</div>
+            <div class="info-corps">
+              <strong>Téléphone</strong>
+              <span>05 56 44 27 83</span>
+            </div>
+          </div>
+          <div class="info-ligne">
+            <div class="info-icone">✉️</div>
+            <div class="info-corps">
+              <strong>Email</strong>
+              <span>contact@atelier-brune.fr</span>
+            </div>
+          </div>
+          <div class="info-ligne">
+            <div class="info-icone">🕐</div>
+            <div class="info-corps">
+              <strong>Horaires</strong>
+              <span>Lundi — Vendredi<br>9h00 — 18h00</span>
+            </div>
+          </div>
+          <div class="carte">Bordeaux, rue du Palais Gallien</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="wrap">
+      <div class="footer-top">
+        <div class="footer-logo">Atelier <em>Brune</em></div>
+        <ul class="footer-nav">
+          <li><a href="#projets">Projets</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#atelier">L'atelier</a></li>
+          <li><a href="#equipe">L'équipe</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-bas">
+        <span>© 2024 Atelier Brune — Architecture &amp; Design d'intérieur, Bordeaux</span>
+        <span>DPLG · SIRET 812 447 930 00021</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Navbar scroll
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 50);
+    }, { passive: true });
+
+    // Mobile menu
+    const burger = document.getElementById('burger');
+    const overlay = document.getElementById('mobileOverlay');
+    const closeMenu = document.getElementById('closeMenu');
+
+    burger.addEventListener('click', () => overlay.classList.add('open'));
+    closeMenu.addEventListener('click', () => overlay.classList.remove('open'));
+    document.querySelectorAll('.ml').forEach(a => {
+      a.addEventListener('click', () => overlay.classList.remove('open'));
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('shown');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal, .stagger').forEach(el => observer.observe(el));
+
+    // Form submit
+    document.getElementById('contactForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const btn = e.currentTarget.querySelector('.btn-envoyer');
+      const orig = btn.textContent;
+      btn.textContent = 'Message envoyé ✓';
+      btn.style.background = '#4a7c59';
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.background = '';
+      }, 3500);
+    });
+  </script>
+
+</body>
+</html>
