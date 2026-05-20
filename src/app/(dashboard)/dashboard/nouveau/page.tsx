@@ -135,15 +135,17 @@ function NouveauForm() {
 
   const inputBase: React.CSSProperties = {
     width: '100%',
-    background: 'var(--bg)',
-    border: '1px solid var(--border)',
+    background: 'var(--surface)',
+    border: '1.5px solid var(--border)',
     borderRadius: 12,
-    padding: '12px 16px',
-    fontSize: 14,
+    padding: '14px 20px',
+    fontSize: 16,
+    fontWeight: 500,
     color: 'var(--fg)',
     outline: 'none',
-    transition: 'border-color 0.15s',
+    transition: 'border-color 0.15s, box-shadow 0.15s',
     resize: 'none' as const,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
   }
 
   return (
@@ -197,8 +199,14 @@ function NouveauForm() {
           rows={5}
           style={{ ...inputBase, marginBottom: 16 }}
           autoFocus
-          onFocus={e => { e.target.style.borderColor = 'var(--accent)' }}
-          onBlur={e => { e.target.style.borderColor = 'var(--border)' }}
+          onFocus={e => {
+            e.target.style.borderColor = 'var(--accent)'
+            e.target.style.boxShadow = '0 0 0 3px rgba(124,58,237,0.15), 0 2px 8px rgba(0,0,0,0.06)'
+          }}
+          onBlur={e => {
+            e.target.style.borderColor = 'var(--border)'
+            e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
+          }}
         />
 
         {/* Quality selector */}

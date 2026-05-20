@@ -76,15 +76,13 @@ export default function PromptInput({
         className="flex items-center w-full rounded-2xl transition-all duration-200"
         style={{
           height,
-          background: 'var(--glass)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: 'var(--surface)',
           border: focused
             ? '2px solid var(--accent)'
             : '2px solid var(--border)',
           boxShadow: focused
-            ? '0 0 0 4px var(--accent-ring), var(--shadow-lg)'
-            : 'var(--shadow)',
+            ? '0 0 0 4px rgba(124,58,237,0.15), 0 8px 32px rgba(0,0,0,0.12)'
+            : '0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)',
         }}
       >
         {/* Input zone */}
@@ -100,7 +98,7 @@ export default function PromptInput({
             autoFocus={autoFocus}
             className={cn(
               'w-full bg-transparent outline-none font-medium',
-              isLarge ? 'text-base px-6' : 'text-sm px-5',
+              isLarge ? 'text-lg px-6' : 'text-base px-5',
             )}
             style={{ height, color: 'var(--fg)' }}
           />
