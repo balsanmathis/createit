@@ -5,6 +5,7 @@ import { Toaster } from 'sonner'
 import { Analytics } from '@vercel/analytics/next'
 import SessionRefresher from '@/components/SessionRefresher'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { LanguageProvider } from '@/contexts/language'
 import './globals.css'
 
 const inter = Inter({
@@ -56,6 +57,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
+          <LanguageProvider>
           <Analytics />
           <SessionRefresher />
           <ErrorBoundary>{children}</ErrorBoundary>
@@ -70,6 +72,7 @@ export default function RootLayout({
               },
             }}
           />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

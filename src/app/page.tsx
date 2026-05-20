@@ -12,18 +12,14 @@ import {
 import AuroraBackground from '@/components/ui/AuroraBackground'
 import GlassCard from '@/components/ui/GlassCard'
 import PromptInput from '@/components/ui/PromptInput'
-import PricingCard, { type PricingPlan } from '@/components/ui/PricingCard'
+import PricingCard from '@/components/ui/PricingCard'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import { useLanguage } from '@/contexts/language'
+import { content } from '@/lib/landing-content'
 import { cn } from '@/lib/utils'
 
-/* ─── Data ───────────────────────────────────────────────────── */
-const NAV_LINKS = [
-  { label: 'Exemples', href: '/exemples' },
-  { label: 'Tarifs',   href: '/tarifs' },
-  { label: 'À propos', href: '/a-propos' },
-]
-
-const SECTORS = [
+/* ─── Static data (language-agnostic) ───────────────────────── */
+const SECTORS_FR = [
   { label: 'Restaurant', slug: 'restaurant' },
   { label: 'Portfolio',  slug: 'portfolio' },
   { label: 'Boutique',   slug: 'boutique' },
@@ -32,16 +28,12 @@ const SECTORS = [
   { label: 'Coach',      slug: 'coach' },
 ]
 
-const STATS = [
-  { value: '2 847',     label: 'sites créés ce mois' },
-  { value: '4.9 / 5',  label: 'note moyenne' },
-  { value: '< 30 s',   label: 'temps de génération' },
-  { value: '100 %',    label: 'code exportable' },
-  { value: '6',        label: 'secteurs couverts' },
-  { value: '0 €',      label: "de lock-in" },
-  { value: '30 j',     label: 'sans engagement' },
-  { value: '2 min',    label: 'pour démarrer' },
-]
+const PLAN_PRICES: Record<string, number> = {
+  free: 0,
+  starter: 20,
+  pro: 45,
+  agency: 250,
+}
 
 const EXAMPLES = [
   {
@@ -88,116 +80,6 @@ const EXAMPLES = [
   },
 ]
 
-const FEATURES = [
-  {
-    icon: <Zap size={20} style={{ color: 'var(--accent)' }} />,
-    title: 'Généré en moins de 30 secondes',
-    desc: 'Décrivez votre projet en quelques mots. Le site est construit, structuré et designé automatiquement.',
-  },
-  {
-    icon: <PenLine size={20} style={{ color: 'var(--accent)' }} />,
-    title: 'Éditeur visuel inclus',
-    desc: 'Modifiez textes, images et couleurs directement sur votre site, sans toucher au code.',
-  },
-  {
-    icon: <Download size={20} style={{ color: 'var(--accent)' }} />,
-    title: 'Code propre, exportable',
-    desc: "Téléchargez votre site en HTML/CSS/JS prêt à l'emploi. Hébergez-le où vous voulez.",
-  },
-  {
-    icon: <Lock size={20} style={{ color: 'var(--accent)' }} />,
-    title: '100 % à vous, zéro lock-in',
-    desc: "Vous possédez le code. Aucun abonnement d'hébergement imposé, aucune plateforme propriétaire.",
-  },
-]
-
-const PERSONAS = [
-  {
-    icon: '💼',
-    title: 'Freelance & développeur',
-    subtitle: 'Multipliez vos projets, pas vos heures',
-    bullets: [
-      "Livrez un site en 24 h — facturable au prix d'une semaine",
-      'Draft complet en 30 s, vous finalisez à la main ensuite',
-      'Portfolio, vitrine, restaurant, boutique : tous secteurs',
-      'Gardez 100 % de la marge, zéro sous-traitance',
-    ],
-    cta: 'Voir un portfolio',
-    href: '/exemples?secteur=portfolio',
-  },
-  {
-    icon: '🚀',
-    title: 'Entrepreneur & fondateur',
-    subtitle: 'Testez votre idée sans agence ni développeur',
-    bullets: [
-      "Landing page opérationnelle en moins d'une minute",
-      'Modifiez textes et couleurs vous-même, en temps réel',
-      'Zéro budget tech requis pour la v1',
-      'Pivotez sans coût — régénérez en quelques secondes',
-    ],
-    cta: 'Voir une landing SaaS',
-    href: '/exemples/startup-tech',
-  },
-  {
-    icon: '🏢',
-    title: 'Agence & studio',
-    subtitle: 'Scalez votre production sans recruter',
-    bullets: [
-      '10 drafts clients en 5 minutes — effet waouh garanti',
-      'Accès multi-membres inclus dans le plan Agency',
-      'Export HTML/CSS propre, intégrable à votre workflow',
-      'Marque blanche disponible sur demande',
-    ],
-    cta: 'Voir un exemple agence',
-    href: '/exemples/agence-digitale',
-  },
-]
-
-const STEPS = [
-  {
-    num: '01',
-    title: 'Décrivez',
-    desc: 'Tapez votre idée en une ou deux phrases. Un restaurant, un portfolio, une boutique, une landing page — tout fonctionne.',
-  },
-  {
-    num: '02',
-    title: 'Générez',
-    desc: "En moins de 30 secondes, votre site est prêt : structure, contenu, design. Peaufinez avec l'éditeur visuel intégré.",
-  },
-  {
-    num: '03',
-    title: 'Exportez',
-    desc: 'Téléchargez un ZIP propre (HTML/CSS/JS). Hébergez sur Netlify, Vercel, OVH ou votre propre serveur.',
-  },
-]
-
-const FAQS = [
-  {
-    q: "Le code m'appartient-il vraiment ?",
-    a: "Oui, entièrement. Vous téléchargez un fichier ZIP contenant du HTML, CSS et JavaScript standard. Pas de dépendance à CreateIt, pas d'abonnement d'hébergement imposé.",
-  },
-  {
-    q: 'Où puis-je héberger mon site ?',
-    a: "N'importe où : Netlify, Vercel, OVH, GitHub Pages, votre propre serveur. Le code exporté est du HTML pur, compatible partout.",
-  },
-  {
-    q: 'Que se passe-t-il si mes tokens sont épuisés ?',
-    a: "Vous pouvez consulter et exporter vos sites existants. Pour en générer de nouveaux, il suffit de passer à un plan supérieur ou d'attendre le renouvellement mensuel.",
-  },
-  {
-    q: 'Puis-je revendre les sites créés à mes clients ?',
-    a: "Oui, les plans Starter, Pro et Agency autorisent la revente. Le plan Agency inclut un volume adapté aux agences et un support dédié.",
-  },
-  {
-    q: 'Quels secteurs sont couverts ?',
-    a: 'Restaurant, portfolio, boutique, agence, blog, coach, cabinet médical, immobilier, startup SaaS… Si vous pouvez le décrire, CreateIt peut le créer.',
-  },
-  {
-    q: "Comment annuler l'abonnement ?",
-    a: "En un clic depuis votre tableau de bord > Abonnement > Gérer. Sans engagement, sans frais d'annulation.",
-  },
-]
-
 const TESTIMONIALS = [
   {
     name: 'Sophie Martin',
@@ -241,70 +123,26 @@ const TESTIMONIALS = [
   },
 ]
 
-const PLANS: PricingPlan[] = [
-  {
-    key: 'free',
-    name: 'Gratuit',
-    desc: 'Pour tester sans engagement',
-    monthlyPrice: 0,
-    tokens: '8 000 tokens',
-    features: ['1 génération de site', 'Éditeur visuel', 'Export ZIP'],
-    cta: 'Commencer gratuitement',
-    href: '/auth/signup',
-  },
-  {
-    key: 'starter',
-    name: 'Starter',
-    desc: 'Pour les indépendants',
-    monthlyPrice: 20,
-    tokens: '800 000 tokens',
-    features: ['~100 sites/mois', 'Éditeur visuel', 'Export ZIP', 'Support email'],
-    cta: 'Choisir Starter',
-    href: '/auth/signup?plan=starter',
-  },
-  {
-    key: 'pro',
-    name: 'Pro',
-    desc: 'Pour les professionnels',
-    monthlyPrice: 45,
-    tokens: '2 400 000 tokens',
-    features: [
-      '~300 sites/mois',
-      'Éditeur visuel avancé',
-      'Export ZIP',
-      'Support prioritaire',
-      'Historique illimité',
-    ],
-    cta: 'Choisir Pro',
-    href: '/auth/signup?plan=pro',
-  },
-  {
-    key: 'agency',
-    name: 'Agency',
-    desc: 'Pour les agences',
-    monthlyPrice: 250,
-    tokens: '16 000 000 tokens',
-    features: [
-      'Volume illimité',
-      'Tout le Pro',
-      'Support dédié 24/7',
-      'API access',
-      'Revente autorisée',
-      'White label',
-    ],
-    cta: 'Choisir Agency',
-    href: '/auth/signup?plan=agency',
-  },
+const FEATURE_ICONS = [
+  <Zap key="z"  size={20} style={{ color: 'var(--accent)' }} />,
+  <PenLine key="p" size={20} style={{ color: 'var(--accent)' }} />,
+  <Download key="d" size={20} style={{ color: 'var(--accent)' }} />,
+  <Lock key="l" size={20} style={{ color: 'var(--accent)' }} />,
 ]
+
+const ANNUAL_DISCOUNT = 0.80
 
 /* ─── Main component ─────────────────────────────────────────── */
 export default function HomePage() {
   const router = useRouter()
+  const { lang, setLang } = useLanguage()
+  const T = content[lang]
+
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const [isAuth, setIsAuth] = useState(false)
-  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [scrolled, setScrolled]     = useState(false)
+  const [isAuth, setIsAuth]         = useState(false)
+  const [billing, setBilling]       = useState<'monthly' | 'annual'>('monthly')
+  const [openFaq, setOpenFaq]       = useState<number | null>(null)
 
   useEffect(() => {
     const sb = createBrowserClient(
@@ -336,6 +174,23 @@ export default function HomePage() {
     router.push(`${dest}?prompt=${encodeURIComponent(prompt)}`)
   }
 
+  const NAV_LINKS = [
+    { label: T.nav.examples, href: '/exemples' },
+    { label: T.nav.pricing,  href: '/tarifs' },
+    { label: T.nav.about,    href: '/a-propos' },
+  ]
+
+  const PLANS = T.plans.map(p => ({
+    key: p.key,
+    name: p.name,
+    desc: p.desc,
+    monthlyPrice: PLAN_PRICES[p.key] ?? 0,
+    tokens: p.tokens,
+    features: [...p.features],
+    cta: p.cta,
+    href: p.href,
+  }))
+
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--fg)' }}>
 
@@ -354,14 +209,12 @@ export default function HomePage() {
         }}
       >
         <nav className="max-w-6xl mx-auto px-5 h-full flex items-center justify-between">
-          {/* Logo */}
           <Link href="/" className="flex items-center" style={{ textDecoration: 'none' }}>
             <span className="text-lg font-bold tracking-tight" style={{ color: 'var(--fg)' }}>
               Create<span style={{ color: 'var(--accent)' }}>It</span>
             </span>
           </Link>
 
-          {/* Desktop links */}
           <div className="hidden md:flex items-center gap-7">
             {NAV_LINKS.map(l => (
               <Link
@@ -377,7 +230,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Desktop right */}
           <div className="hidden md:flex items-center gap-2">
             <ThemeToggle />
             <Link
@@ -387,7 +239,7 @@ export default function HomePage() {
               onMouseEnter={e => { e.currentTarget.style.color = 'var(--fg)'; e.currentTarget.style.background = 'var(--surface-2)' }}
               onMouseLeave={e => { e.currentTarget.style.color = 'var(--fg-muted)'; e.currentTarget.style.background = 'transparent' }}
             >
-              Connexion
+              {T.nav.login}
             </Link>
             <Link
               href="/auth/signup"
@@ -396,11 +248,10 @@ export default function HomePage() {
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--accent-hover)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'var(--accent)')}
             >
-              Commencer
+              {T.nav.start}
             </Link>
           </div>
 
-          {/* Mobile burger */}
           <button
             onClick={() => setMobileOpen(o => !o)}
             className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg"
@@ -412,7 +263,7 @@ export default function HomePage() {
         </nav>
       </header>
 
-      {/* Mobile menu — plein écran glass */}
+      {/* Mobile menu */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -422,11 +273,7 @@ export default function HomePage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             className="fixed inset-0 z-40 flex flex-col pt-[60px]"
-            style={{
-              background: 'var(--glass)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-            }}
+            style={{ background: 'var(--glass)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
           >
             <div className="flex flex-col p-6 gap-0">
               {NAV_LINKS.map(l => (
@@ -446,7 +293,7 @@ export default function HomePage() {
                 className="py-4 text-xl font-medium border-b"
                 style={{ color: 'var(--fg)', textDecoration: 'none', borderColor: 'var(--border)' }}
               >
-                Connexion
+                {T.nav.login}
               </Link>
               <div className="pt-6 flex flex-col gap-3">
                 <Link
@@ -455,12 +302,12 @@ export default function HomePage() {
                   className="text-center py-4 rounded-2xl text-white font-bold text-base"
                   style={{ background: 'var(--accent)', textDecoration: 'none' }}
                 >
-                  Commencer gratuitement
+                  {T.nav.start_free}
                 </Link>
               </div>
               <div className="pt-5 flex items-center gap-2">
                 <ThemeToggle />
-                <span className="text-sm" style={{ color: 'var(--fg-muted)' }}>Thème</span>
+                <span className="text-sm" style={{ color: 'var(--fg-muted)' }}>{T.footer.theme}</span>
               </div>
             </div>
           </motion.div>
@@ -468,34 +315,22 @@ export default function HomePage() {
       </AnimatePresence>
 
       {/* ══════════════════════════════════════════════════════════
-          2. HERO — grande carte glass centrale
+          2. HERO
       ══════════════════════════════════════════════════════════ */}
-      <AuroraBackground
-        intensity="strong"
-        className="min-h-screen flex items-center justify-center pt-[60px]"
-      >
+      <AuroraBackground intensity="strong" className="min-h-screen flex items-center justify-center pt-[60px]">
         <section className="w-full max-w-3xl mx-auto px-5 py-16">
-          <GlassCard
-            strong
-            className="flex flex-col items-center text-center px-8 py-12 sm:px-14 sm:py-16"
-          >
-            {/* Eyebrow */}
+          <GlassCard strong className="flex flex-col items-center text-center px-8 py-12 sm:px-14 sm:py-16">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-7"
-              style={{
-                background: 'var(--accent-light)',
-                color: 'var(--accent)',
-                border: '1px solid rgba(124,58,237,0.2)',
-              }}
+              style={{ background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid rgba(124,58,237,0.2)' }}
             >
               <span className="pulse-dot w-1.5 h-1.5 rounded-full bg-current inline-block" />
-              Générateur de sites web
+              {T.hero.badge}
             </motion.div>
 
-            {/* H1 */}
             <motion.h1
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -503,12 +338,11 @@ export default function HomePage() {
               className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-5"
               style={{ color: 'var(--fg)' }}
             >
-              Votre site web.{' '}
+              {T.hero.title1}{' '}
               <br className="hidden sm:block" />
-              <span className="gradient-text">Décrit. Généré. Exporté.</span>
+              <span className="gradient-text">{T.hero.title2}</span>
             </motion.h1>
 
-            {/* Subtitle */}
             <motion.p
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -516,41 +350,30 @@ export default function HomePage() {
               className="text-base sm:text-lg mb-8 max-w-xl"
               style={{ color: 'var(--fg-muted)' }}
             >
-              Décrivez votre projet en français. Obtenez un site professionnel complet en moins de 30 secondes. Éditez, exportez le code, hébergez où vous voulez.
+              {T.hero.subtitle}
             </motion.p>
 
-            {/* Prompt input */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="w-full mb-5"
             >
-              <PromptInput
-                onSubmit={handlePromptSubmit}
-                size="large"
-                buttonLabel="Générer mon site"
-              />
+              <PromptInput onSubmit={handlePromptSubmit} size="large" buttonLabel={T.hero.cta} />
             </motion.div>
 
-            {/* Sector pills */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.28 }}
               className="flex flex-wrap gap-2 justify-center mb-7"
             >
-              {SECTORS.map(s => (
+              {SECTORS_FR.map(s => (
                 <Link
                   key={s.slug}
                   href={`/exemples?secteur=${s.slug}`}
                   className="text-xs px-3 py-1.5 rounded-full transition-all"
-                  style={{
-                    background: 'var(--surface)',
-                    color: 'var(--fg-muted)',
-                    border: '1px solid var(--border)',
-                    textDecoration: 'none',
-                  }}
+                  style={{ background: 'var(--surface)', color: 'var(--fg-muted)', border: '1px solid var(--border)', textDecoration: 'none' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--fg-muted)' }}
                 >
@@ -559,7 +382,6 @@ export default function HomePage() {
               ))}
             </motion.div>
 
-            {/* Social proof */}
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -568,14 +390,14 @@ export default function HomePage() {
               style={{ color: 'var(--fg-subtle)' }}
             >
               <span className="pulse-dot w-2 h-2 rounded-full inline-block" style={{ background: '#22c55e' }} />
-              2 847 sites créés ce mois — sans carte bancaire requise
+              {T.hero.proof}
             </motion.p>
           </GlassCard>
         </section>
       </AuroraBackground>
 
       {/* ══════════════════════════════════════════════════════════
-          3. STATS MARQUEE — défilement infini
+          3. STATS MARQUEE
       ══════════════════════════════════════════════════════════ */}
       <section
         className="reveal border-y overflow-hidden"
@@ -583,18 +405,12 @@ export default function HomePage() {
       >
         <div className="carousel-wrapper py-7">
           <div className="carousel-track">
-            {[...STATS, ...STATS].map((s, i) => (
-              <div
-                key={i}
-                className="shrink-0 flex items-center gap-6 px-10"
-              >
+            {[...T.stats, ...T.stats].map((s, i) => (
+              <div key={i} className="shrink-0 flex items-center gap-6 px-10">
                 <div className="text-center">
-                  <p className="text-2xl font-bold tracking-tight" style={{ color: 'var(--accent)' }}>
-                    {s.value}
-                  </p>
+                  <p className="text-2xl font-bold tracking-tight" style={{ color: 'var(--accent)' }}>{s.value}</p>
                   <p className="text-xs mt-0.5 whitespace-nowrap" style={{ color: 'var(--fg-muted)' }}>{s.label}</p>
                 </div>
-                {/* Separator */}
                 <span className="block w-px h-8" style={{ background: 'var(--border)' }} />
               </div>
             ))}
@@ -609,10 +425,10 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'var(--fg)' }}>
-              Ce que vous pouvez créer
+              {T.examples_section.heading}
             </h2>
             <p className="text-base" style={{ color: 'var(--fg-muted)' }}>
-              Des sites professionnels dans tous les secteurs, prêts en quelques secondes
+              {T.examples_section.subheading}
             </p>
           </div>
 
@@ -621,7 +437,6 @@ export default function HomePage() {
               <GlassCard key={ex.slug} hover className="overflow-hidden group">
                 <Link href={`/exemples/${ex.slug}`} style={{ textDecoration: 'none' }}>
                   <div className="relative overflow-hidden" style={{ height: 180 }}>
-                    {/* Chrome bar */}
                     <div
                       className="flex items-center gap-1.5 px-3"
                       style={{ height: 24, background: '#1A1A1A', flexShrink: 0 }}
@@ -630,7 +445,6 @@ export default function HomePage() {
                       <span className="w-2 h-2 rounded-full" style={{ background: '#FEBC2E' }} />
                       <span className="w-2 h-2 rounded-full" style={{ background: '#28C840' }} />
                     </div>
-                    {/* Screenshot */}
                     <div className="relative" style={{ height: 156, overflow: 'hidden' }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -644,13 +458,12 @@ export default function HomePage() {
                         <p className="text-[10px] text-white/55 truncate mt-0.5">{ex.desc}</p>
                       </div>
                     </div>
-                    {/* Hover overlay */}
                     <div
                       className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                       style={{ background: 'rgba(124,58,237,0.7)' }}
                     >
                       <span className="text-white text-sm font-semibold flex items-center gap-2">
-                        Voir cet exemple <ArrowRight size={14} />
+                        {T.examples_section.view_example} <ArrowRight size={14} />
                       </span>
                     </div>
                   </div>
@@ -669,7 +482,7 @@ export default function HomePage() {
               className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
               style={{ color: 'var(--accent)', textDecoration: 'none' }}
             >
-              Voir les 50+ exemples <ChevronRight size={14} />
+              {T.examples_section.see_all} <ChevronRight size={14} />
             </Link>
           </div>
         </div>
@@ -684,24 +497,18 @@ export default function HomePage() {
       >
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold tracking-tight text-center mb-14" style={{ color: 'var(--fg)' }}>
-            Simple comme bonjour
+            {T.how_it_works.heading}
           </h2>
           <div className="flex flex-col md:flex-row">
-            {STEPS.map((step, i) => (
+            {T.how_it_works.steps.map((step, i) => (
               <div
                 key={i}
-                className={cn(
-                  'flex-1 relative',
-                  i < STEPS.length - 1 && 'md:border-r',
-                  i > 0 && 'border-t md:border-t-0',
-                )}
+                className={cn('flex-1 relative', i < 2 && 'md:border-r', i > 0 && 'border-t md:border-t-0')}
                 style={{ borderColor: 'var(--border)' }}
               >
-                <div className={cn('py-8', i > 0 && 'md:pl-10', i < STEPS.length - 1 && 'md:pr-10')}>
-                  <div
-                    className="text-7xl font-black mb-4 leading-none select-none"
-                    style={{ color: 'var(--surface-2)', fontVariantNumeric: 'tabular-nums' }}
-                  >
+                <div className={cn('py-8', i > 0 && 'md:pl-10', i < 2 && 'md:pr-10')}>
+                  <div className="text-7xl font-black mb-4 leading-none select-none"
+                    style={{ color: 'var(--surface-2)', fontVariantNumeric: 'tabular-nums' }}>
                     {step.num}
                   </div>
                   <h3 className="text-xl font-bold mb-3" style={{ color: 'var(--fg)' }}>{step.title}</h3>
@@ -714,26 +521,23 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          6. FEATURES 2×2
+          6. FEATURES
       ══════════════════════════════════════════════════════════ */}
       <section className="reveal py-20 px-5" style={{ background: 'var(--bg)' }}>
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'var(--fg)' }}>
-              Tout ce qu&apos;il vous faut
+              {T.features.heading}
             </h2>
             <p className="text-base" style={{ color: 'var(--fg-muted)' }}>
-              Des outils pensés pour créer, personnaliser et livrer sans friction
+              {T.features.subheading}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {FEATURES.map((f, i) => (
+            {T.features.items.map((f, i) => (
               <GlassCard key={i} hover className="p-7">
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: 'var(--accent-light)' }}
-                >
-                  {f.icon}
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style={{ background: 'var(--accent-light)' }}>
+                  {FEATURE_ICONS[i]}
                 </div>
                 <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--fg)' }}>{f.title}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--fg-muted)' }}>{f.desc}</p>
@@ -752,13 +556,12 @@ export default function HomePage() {
       >
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold tracking-tight text-center mb-12" style={{ color: 'var(--fg)' }}>
-            Fait pour vous
+            {T.personas.heading}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {PERSONAS.map(p => (
+            {T.personas.items.map(p => (
               <GlassCard key={p.title} hover className="p-7 flex flex-col gap-5">
                 <div>
-                  <div className="text-3xl mb-3">{p.icon}</div>
                   <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--fg)' }}>{p.title}</h3>
                   <p className="text-sm" style={{ color: 'var(--fg-subtle)' }}>{p.subtitle}</p>
                 </div>
@@ -784,19 +587,17 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          8. TARIFS APERÇU
+          8. TARIFS
       ══════════════════════════════════════════════════════════ */}
       <section id="tarifs" className="reveal py-20 px-5" style={{ background: 'var(--bg)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'var(--fg)' }}>
-              Tarifs simples et transparents
+              {T.pricing.heading}
             </h2>
             <p className="text-base mb-6" style={{ color: 'var(--fg-muted)' }}>
-              Commencez gratuitement, évoluez selon vos besoins. Sans engagement.
+              {T.pricing.subheading}
             </p>
-
-            {/* Billing toggle */}
             <div
               className="inline-flex items-center rounded-xl p-1 gap-1"
               style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
@@ -812,7 +613,7 @@ export default function HomePage() {
                       : { color: 'var(--fg-muted)', background: 'transparent' }
                   }
                 >
-                  {b === 'monthly' ? 'Mensuel' : 'Annuel'}
+                  {b === 'monthly' ? T.pricing.monthly : T.pricing.annual}
                   {b === 'annual' && (
                     <span
                       className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
@@ -821,7 +622,7 @@ export default function HomePage() {
                         color: billing === 'annual' ? 'white' : 'var(--accent)',
                       }}
                     >
-                      −20 %
+                      {T.pricing.annual_discount}
                     </span>
                   )}
                 </button>
@@ -831,26 +632,21 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
             {PLANS.map(plan => (
-              <PricingCard
-                key={plan.key}
-                plan={plan}
-                highlighted={plan.key === 'pro'}
-                billing={billing}
-              />
+              <PricingCard key={plan.key} plan={plan} highlighted={plan.key === 'pro'} billing={billing} />
             ))}
           </div>
 
           <p className="text-center mt-8 text-sm" style={{ color: 'var(--fg-subtle)' }}>
-            Plan gratuit inclus — aucune carte bancaire requise.{' '}
+            {T.pricing.note}{' '}
             <Link href="/tarifs" className="underline" style={{ color: 'var(--accent)' }}>
-              Comparer toutes les fonctionnalités →
+              {T.pricing.compare}
             </Link>
           </p>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          9. FAQ accordion
+          9. FAQ
       ══════════════════════════════════════════════════════════ */}
       <section
         className="reveal py-20 px-5"
@@ -858,10 +654,10 @@ export default function HomePage() {
       >
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl font-bold tracking-tight text-center mb-10" style={{ color: 'var(--fg)' }}>
-            Questions fréquentes
+            {T.faq.heading}
           </h2>
           <div className="space-y-2">
-            {FAQS.map((faq, i) => (
+            {T.faq.items.map((faq, i) => (
               <GlassCard key={i} className="overflow-hidden">
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -873,10 +669,7 @@ export default function HomePage() {
                   <ChevronDown
                     size={16}
                     className="shrink-0 transition-transform duration-200"
-                    style={{
-                      color: 'var(--fg-muted)',
-                      transform: openFaq === i ? 'rotate(180deg)' : 'none',
-                    }}
+                    style={{ color: 'var(--fg-muted)', transform: openFaq === i ? 'rotate(180deg)' : 'none' }}
                   />
                 </button>
                 <AnimatePresence initial={false}>
@@ -898,27 +691,21 @@ export default function HomePage() {
             ))}
           </div>
           <div className="text-center mt-8">
-            <Link
-              href="/dashboard/aide"
-              className="text-sm font-medium"
-              style={{ color: 'var(--accent)', textDecoration: 'none' }}
-            >
-              Voir toutes les questions →
+            <Link href="/dashboard/aide" className="text-sm font-medium" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+              {T.faq.see_all}
             </Link>
           </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          10. TÉMOIGNAGES — carrousel snap horizontal
+          10. TÉMOIGNAGES
       ══════════════════════════════════════════════════════════ */}
       <section className="reveal py-20" style={{ background: 'var(--bg)' }}>
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold tracking-tight text-center mb-10 px-5" style={{ color: 'var(--fg)' }}>
-            Ce qu&apos;ils en disent
+            {T.testimonials.heading}
           </h2>
-
-          {/* Horizontal snap scroll */}
           <div
             className="flex gap-5 overflow-x-auto pb-6 px-5"
             style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
@@ -927,92 +714,62 @@ export default function HomePage() {
               <GlassCard
                 key={i}
                 className="shrink-0 p-6 flex flex-col"
-                style={{
-                  width: 'min(85vw, 340px)',
-                  scrollSnapAlign: 'start',
-                }}
+                style={{ width: 'min(85vw, 340px)', scrollSnapAlign: 'start' }}
               >
-                {/* Stars */}
                 <div className="flex gap-0.5 mb-4">
                   {Array.from({ length: t.stars }).map((_, j) => (
                     <Star key={j} size={13} fill="#F59E0B" style={{ color: '#F59E0B' }} />
                   ))}
                 </div>
-
-                {/* Quote */}
                 <p className="text-sm leading-relaxed flex-1 mb-5" style={{ color: 'var(--fg)' }}>
                   &ldquo;{t.text}&rdquo;
                 </p>
-
-                {/* Author */}
                 <div className="flex items-center gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={t.avatar}
-                    alt={t.name}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
+                  <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>{t.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--fg-muted)' }}>
-                      {t.role} · {t.city}
-                    </p>
+                    <p className="text-xs" style={{ color: 'var(--fg-muted)' }}>{t.role} · {t.city}</p>
                   </div>
                 </div>
               </GlassCard>
             ))}
           </div>
-
-          {/* Scroll hint on mobile */}
           <p className="text-center text-xs mt-2 sm:hidden" style={{ color: 'var(--fg-subtle)' }}>
-            ← Faites glisser →
+            {T.testimonials.hint}
           </p>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          11. CTA FINAL — aurora fort
+          11. CTA FINAL
       ══════════════════════════════════════════════════════════ */}
       <AuroraBackground intensity="strong" className="py-28 px-5">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-4xl font-bold tracking-tight mb-4" style={{ color: 'var(--fg)' }}>
-            Prêt à créer votre premier site ?
+            {T.cta_final.heading}
           </h2>
           <p className="text-lg mb-10" style={{ color: 'var(--fg-muted)' }}>
-            Gratuit. Sans carte bancaire. Sans engagement.
+            {T.cta_final.subtitle}
           </p>
           <Link
             href="/auth/signup"
             className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-white font-bold text-base transition-all"
             style={{ background: 'var(--accent)', textDecoration: 'none', boxShadow: '0 0 40px rgba(124,58,237,0.45)' }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'var(--accent-hover)'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 0 56px rgba(124,58,237,0.55)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'var(--accent)'
-              e.currentTarget.style.transform = 'none'
-              e.currentTarget.style.boxShadow = '0 0 40px rgba(124,58,237,0.45)'
-            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 56px rgba(124,58,237,0.55)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 0 40px rgba(124,58,237,0.45)' }}
           >
-            Commencer gratuitement <ArrowRight size={16} />
+            {T.cta_final.button} <ArrowRight size={16} />
           </Link>
         </div>
       </AuroraBackground>
 
       {/* ══════════════════════════════════════════════════════════
-          12. FOOTER 4 colonnes
+          12. FOOTER
       ══════════════════════════════════════════════════════════ */}
-      <footer
-        className="py-14 px-5"
-        style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)' }}
-      >
+      <footer className="py-14 px-5" style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
         <div className="max-w-6xl mx-auto">
-          {/* Top grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-
-            {/* Brand */}
             <div className="col-span-2 md:col-span-1">
               <Link href="/" className="inline-block mb-3" style={{ textDecoration: 'none' }}>
                 <span className="text-lg font-bold" style={{ color: 'var(--fg)' }}>
@@ -1020,9 +777,8 @@ export default function HomePage() {
                 </span>
               </Link>
               <p className="text-sm mb-5" style={{ color: 'var(--fg-muted)' }}>
-                Générez des sites web professionnels en quelques secondes.
+                {T.footer.tagline}
               </p>
-              {/* Socials */}
               <div className="flex items-center gap-3">
                 <SocialLink href="#" label="Twitter / X">
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"/></svg>
@@ -1036,55 +792,58 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Produit */}
-            <FooterCol
-              title="Produit"
-              links={[
-                { label: 'Exemples',  href: '/exemples' },
-                { label: 'Tarifs',    href: '/tarifs' },
-                { label: 'Dashboard', href: '/dashboard' },
-              ]}
-            />
+            <FooterCol title={T.footer.product} links={[
+              { label: lang === 'en' ? 'Examples' : 'Exemples',  href: '/exemples' },
+              { label: lang === 'en' ? 'Pricing' : 'Tarifs',     href: '/tarifs' },
+              { label: 'Dashboard', href: '/dashboard' },
+            ]} />
 
-            {/* Entreprise */}
-            <FooterCol
-              title="Entreprise"
-              links={[
-                { label: 'Blog',     href: '/blog' },
-                { label: 'À propos', href: '/a-propos' },
-                { label: 'Contact',  href: '/contact' },
-              ]}
-            />
+            <FooterCol title={T.footer.company} links={[
+              { label: 'Blog',     href: '/blog' },
+              { label: lang === 'en' ? 'About' : 'À propos', href: '/a-propos' },
+              { label: lang === 'en' ? 'Contact' : 'Contact',  href: '/contact' },
+            ]} />
 
-            {/* Légal */}
-            <FooterCol
-              title="Légal"
-              links={[
-                { label: 'Mentions légales', href: '/legal/mentions-legales' },
-                { label: 'CGV',              href: '/legal/cgv' },
-                { label: 'Confidentialité',  href: '/legal/confidentialite' },
-                { label: 'Cookies',          href: '/legal/cookies' },
-              ]}
-            />
+            <FooterCol title={T.footer.legal} links={[
+              { label: lang === 'en' ? 'Legal notice' : 'Mentions légales', href: '/legal/mentions-legales' },
+              { label: 'CGV',              href: '/legal/cgv' },
+              { label: lang === 'en' ? 'Privacy' : 'Confidentialité',  href: '/legal/confidentialite' },
+              { label: 'Cookies',          href: '/legal/cookies' },
+            ]} />
           </div>
 
-          {/* Bottom bar */}
           <div
             className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8"
             style={{ borderTop: '1px solid var(--border)' }}
           >
             <p className="text-xs" style={{ color: 'var(--fg-subtle)' }}>
-              © {new Date().getFullYear()} CreateIt — Tous droits réservés
+              {T.footer.copyright}
             </p>
             <div className="flex items-center gap-3">
               <ThemeToggle />
-              {/* Language stub */}
+              {/* Language toggle */}
               <div
                 className="flex items-center rounded-lg text-xs font-medium overflow-hidden"
                 style={{ border: '1px solid var(--border)' }}
               >
-                <span className="px-2.5 py-1.5 font-semibold" style={{ background: 'var(--surface-2)', color: 'var(--fg)' }}>FR</span>
-                <span className="px-2.5 py-1.5" style={{ color: 'var(--fg-subtle)', cursor: 'not-allowed' }}>EN</span>
+                <button
+                  onClick={() => setLang('fr')}
+                  className="px-2.5 py-1.5 transition-all"
+                  style={lang === 'fr'
+                    ? { background: 'var(--surface-2)', color: 'var(--fg)', fontWeight: 600 }
+                    : { color: 'var(--fg-subtle)' }}
+                >
+                  FR
+                </button>
+                <button
+                  onClick={() => setLang('en')}
+                  className="px-2.5 py-1.5 transition-all"
+                  style={lang === 'en'
+                    ? { background: 'var(--surface-2)', color: 'var(--fg)', fontWeight: 600 }
+                    : { color: 'var(--fg-subtle)' }}
+                >
+                  EN
+                </button>
               </div>
             </div>
           </div>
@@ -1095,7 +854,6 @@ export default function HomePage() {
   )
 }
 
-/* ─── Social link helper ─────────────────────────────────────── */
 function SocialLink({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
   return (
     <a
@@ -1103,23 +861,14 @@ function SocialLink({ href, label, children }: { href: string; label: string; ch
       aria-label={label}
       className="flex items-center justify-center w-8 h-8 rounded-lg transition-all"
       style={{ color: 'var(--fg-subtle)', border: '1px solid var(--border)' }}
-      onMouseEnter={e => {
-        e.currentTarget.style.color = 'var(--fg)'
-        e.currentTarget.style.borderColor = 'var(--border-hover)'
-        e.currentTarget.style.background = 'var(--surface-2)'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.color = 'var(--fg-subtle)'
-        e.currentTarget.style.borderColor = 'var(--border)'
-        e.currentTarget.style.background = 'transparent'
-      }}
+      onMouseEnter={e => { e.currentTarget.style.color = 'var(--fg)'; e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.background = 'var(--surface-2)' }}
+      onMouseLeave={e => { e.currentTarget.style.color = 'var(--fg-subtle)'; e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent' }}
     >
       {children}
     </a>
   )
 }
 
-/* ─── Footer column helper ───────────────────────────────────── */
 function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div>

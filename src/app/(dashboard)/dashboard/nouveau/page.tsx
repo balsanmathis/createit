@@ -8,31 +8,14 @@ import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 import { createClient } from '@/lib/supabase/client'
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
-const TOKEN_COST_BASE = 8_000
-
-type QualityKey = 'rapide' | 'standard' | 'premium' | 'ultra'
-
-const QUALITY_OPTIONS: Array<{
-  key: QualityKey
-  icon: string
-  label: string
-  desc: string
-  credits: number
-  expectedChars: number
-  badge?: string
-}> = [
-  { key: 'rapide',   icon: '⚡', label: 'Rapide',   desc: 'Site simple, 3 sections',             credits: 1, expectedChars: 14_000 },
-  { key: 'standard', icon: '⭐', label: 'Standard',  desc: 'Site complet et professionnel',       credits: 2, expectedChars: 28_000 },
-  { key: 'premium',  icon: '🔥', label: 'Premium',   desc: 'Qualité agence, animations avancées', credits: 4, expectedChars: 55_000 },
-  { key: 'ultra',    icon: '💎', label: 'Ultra',     desc: 'Site exceptionnel, qualité maximale', credits: 8, expectedChars: 110_000, badge: 'Meilleure qualité' },
-]
+const TOKEN_COST  = 16_000
+const EXPECTED_CHARS = 28_000
 
 function NouveauForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [prompt, setPrompt]     = useState(searchParams.get('prompt') || '')
   const [siteName, setSiteName] = useState('')
-  const [quality, setQuality]   = useState<QualityKey>('standard')
   const [loading, setLoading]   = useState(false)
   const [step, setStep]         = useState<'idle' | 'generating' | 'saving'>('idle')
   const [generatedChars, setGeneratedChars] = useState(0)
@@ -55,18 +38,15 @@ function NouveauForm() {
     })
   }, [])
 
-  const selectedQ       = QUALITY_OPTIONS.find(q => q.key === quality)!
   const tokensRemaining = tokens ? Math.max(0, tokens.limit - tokens.used) : null
-  const tokenPct        = tokens && tokens.limit > 0 ? (tokensRemaining! / tokens.limit) * 100 : 100
-  const tokensNeeded    = selectedQ.credits * TOKEN_COST_BASE
-  const creditsAfter    = tokensRemaining !== null ? Math.floor((tokensRemaining - tokensNeeded) / TOKEN_COST_BASE) : null
-  const noTokens        = !isAdmin && tokens !== null && tokensRemaining !== null && tokensRemaining < tokensNeeded
+  const tokenPct        = tokens && tokens.limit > 0 ? ((tokensRemaining ?? 0) / tokens.limit) * 100 : 100
+  const noTokens        = !isAdmin && tokens !== null && tokensRemaining !== null && tokensRemaining < TOKEN_COST
 
   const progress = step === 'saving' ? 100
-    : generatedChars > 0 ? Math.min(Math.round((generatedChars / selectedQ.expectedChars) * 100), 99)
+    : generatedChars > 0 ? Math.min(Math.round((generatedChars / EXPECTED_CHARS) * 100), 99)
     : 0
 
-  const tokenColor  = tokenPct > 50 ? 'var(--accent)' : tokenPct > 20 ? '#d97706' : '#dc2626'
+  const tokenColor = tokenPct > 50 ? 'var(--accent)' : tokenPct > 20 ? '#d97706' : '#dc2626'
 
   const handleGenerate = async () => {
     if (!prompt.trim()) { toast.error('Décris le site que tu veux créer'); return }
@@ -80,7 +60,7 @@ function NouveauForm() {
         body: JSON.stringify({
           prompt: prompt.trim(),
           name: siteName.trim() || `Site IA — ${new Date().toLocaleDateString('fr-FR')}`,
-          quality,
+          quality: 'standard',
         }),
       })
 
@@ -196,7 +176,7 @@ function NouveauForm() {
           onChange={e => setPrompt(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ex : Un site restaurant gastronomique à Paris, thème sombre élégant, avec menu, réservations et galerie photo…"
-          rows={5}
+          rows={6}
           style={{ ...inputBase, marginBottom: 16 }}
           autoFocus
           onFocus={e => {
@@ -209,79 +189,15 @@ function NouveauForm() {
           }}
         />
 
-        {/* Quality selector */}
-        <div className="mb-4">
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--fg-subtle)' }}>Qualité</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {QUALITY_OPTIONS.map((q) => {
-              const isSelected = quality === q.key
-              return (
-                <button
-                  key={q.key}
-                  onClick={() => setQuality(q.key)}
-                  disabled={loading}
-                  className="relative flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all disabled:opacity-50"
-                  style={{
-                    background:   isSelected ? 'var(--accent-light)' : 'var(--bg)',
-                    borderColor:  isSelected ? 'var(--accent)' : 'var(--border)',
-                    boxShadow:    isSelected ? '0 0 0 1px rgba(124,58,237,0.2)' : 'none',
-                  }}
-                >
-                  {q.badge && (
-                    <span
-                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap text-white"
-                      style={{ background: 'var(--accent)' }}
-                    >
-                      {q.badge}
-                    </span>
-                  )}
-                  <span className="text-base leading-none">{q.icon}</span>
-                  <span className="text-xs font-bold" style={{ color: isSelected ? 'var(--accent)' : 'var(--fg-muted)' }}>{q.label}</span>
-                  <span className="text-[10px] leading-tight" style={{ color: 'var(--fg-subtle)' }}>{q.desc}</span>
-                  <span className="text-[10px] font-semibold mt-0.5" style={{ color: isSelected ? 'var(--accent)' : 'var(--fg-subtle)' }}>
-                    {q.credits} crédit{q.credits > 1 ? 's' : ''}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Ultra warning */}
-        {quality === 'ultra' && !loading && (
-          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-4 text-xs"
-            style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', color: '#92400e' }}>
-            <span>⏱</span>
-            <span>La génération Ultra peut prendre 30–60 secondes</span>
-          </div>
-        )}
-
-        {/* Credit preview */}
-        {!isAdmin && tokens && !noTokens && (
-          <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5 rounded-xl mb-4 text-xs"
-            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
-            <span>Ce site consommera</span>
-            <span className="font-semibold" style={{ color: 'var(--accent)' }}>
-              {selectedQ.credits} crédit{selectedQ.credits > 1 ? 's' : ''}
-            </span>
-            <span>—</span>
-            <span>Il vous restera</span>
-            <span className="font-semibold" style={{ color: (creditsAfter ?? 0) >= 0 ? 'var(--accent)' : '#dc2626' }}>
-              {Math.max(0, creditsAfter ?? 0)} crédit{Math.max(0, creditsAfter ?? 0) !== 1 ? 's' : ''}
-            </span>
-          </div>
-        )}
-
         {/* Upgrade banner */}
         {noTokens && (
           <div className="rounded-xl p-4 mb-4 text-center"
             style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)' }}>
             <p className="text-sm mb-1" style={{ color: '#dc2626' }}>
-              Pas assez de crédits pour ce niveau de qualité.
+              Tokens insuffisants pour générer un site.
             </p>
             <p className="text-xs mb-3" style={{ color: '#ef4444' }}>
-              Il vous faut {selectedQ.credits} crédits ({tokensNeeded.toLocaleString('fr-FR')} tokens),
-              vous en avez {tokensRemaining!.toLocaleString('fr-FR')}.
+              Il vous reste {tokensRemaining!.toLocaleString('fr-FR')} tokens, la génération en requiert {TOKEN_COST.toLocaleString('fr-FR')}.
             </p>
             <Link
               href="/tarifs"
@@ -298,9 +214,7 @@ function NouveauForm() {
           <div className="mb-4">
             <div className="flex items-center justify-between text-xs mb-1.5">
               <span style={{ color: 'var(--fg-muted)' }}>
-                {step === 'saving' ? 'Sauvegarde…'
-                  : quality === 'ultra' ? '💎 Génération Ultra en cours…'
-                  : 'Génération en cours…'}
+                {step === 'saving' ? 'Sauvegarde…' : 'Génération en cours…'}
               </span>
               <span className="font-semibold tabular-nums" style={{ color: 'var(--accent)' }}>{progress}%</span>
             </div>
@@ -342,10 +256,7 @@ function NouveauForm() {
                 {step === 'saving' ? 'Sauvegarde…' : progress > 0 ? `${progress}%` : 'Génération…'}
               </>
             ) : (
-              <>
-                <span>{selectedQ.icon}</span>
-                Générer · {selectedQ.label}
-              </>
+              'Générer mon site'
             )}
           </button>
         </div>
@@ -354,7 +265,7 @@ function NouveauForm() {
       <p className="text-center text-xs mt-4" style={{ color: 'var(--fg-subtle)' }}>
         {loading
           ? `${generatedChars.toLocaleString('fr-FR')} caractères générés…`
-          : 'Ctrl+Entrée pour générer · 10–60 sec selon qualité'}
+          : 'Ctrl+Entrée pour lancer la génération'}
       </p>
     </div>
   )

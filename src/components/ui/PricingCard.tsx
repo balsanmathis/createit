@@ -110,15 +110,14 @@ export default function PricingCard({
       )}
 
       {/* Tokens badge */}
-      <div
-        className="inline-flex items-center self-start px-3 py-1.5 rounded-lg text-xs font-semibold mb-5"
-        style={{
-          background: 'var(--accent-light)',
-          color: 'var(--accent)',
-        }}
-      >
-        {plan.tokens}
-      </div>
+      {plan.tokens && (
+        <div
+          className="inline-flex items-center self-start px-3 py-1.5 rounded-lg text-xs font-semibold mb-5"
+          style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}
+        >
+          {plan.tokens}
+        </div>
+      )}
 
       {/* Features */}
       <ul className="flex-1 space-y-2.5 mb-7">
