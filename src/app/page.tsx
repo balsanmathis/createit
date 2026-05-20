@@ -114,24 +114,42 @@ const FEATURES = [
 const PERSONAS = [
   {
     icon: '💼',
-    title: 'Freelance',
-    desc: 'Livrez des sites à vos clients en une journée, pas en trois semaines. Augmentez votre marge sans augmenter vos heures.',
+    title: 'Freelance & développeur',
+    subtitle: 'Multipliez vos projets, pas vos heures',
+    bullets: [
+      "Livrez un site en 24 h — facturable au prix d'une semaine",
+      'Draft complet en 30 s, vous finalisez à la main ensuite',
+      'Portfolio, vitrine, restaurant, boutique : tous secteurs',
+      'Gardez 100 % de la marge, zéro sous-traitance',
+    ],
     cta: 'Voir un portfolio',
     href: '/exemples?secteur=portfolio',
   },
   {
     icon: '🚀',
-    title: 'Entrepreneur',
-    desc: "Testez votre idée avec une landing page soignée en 30 secondes. Pas besoin d'agence ni de développeur.",
-    cta: 'Voir une startup',
-    href: '/exemples?secteur=agence',
+    title: 'Entrepreneur & fondateur',
+    subtitle: 'Testez votre idée sans agence ni développeur',
+    bullets: [
+      "Landing page opérationnelle en moins d'une minute",
+      'Modifiez textes et couleurs vous-même, en temps réel',
+      'Zéro budget tech requis pour la v1',
+      'Pivotez sans coût — régénérez en quelques secondes',
+    ],
+    cta: 'Voir une landing SaaS',
+    href: '/exemples/startup-tech',
   },
   {
     icon: '🏢',
-    title: 'Agence',
-    desc: 'Multipliez votre capacité de production. Générez le premier draft, finalisez à la main. Le plan Agency est fait pour vous.',
+    title: 'Agence & studio',
+    subtitle: 'Scalez votre production sans recruter',
+    bullets: [
+      '10 drafts clients en 5 minutes — effet waouh garanti',
+      'Accès multi-membres inclus dans le plan Agency',
+      'Export HTML/CSS propre, intégrable à votre workflow',
+      'Marque blanche disponible sur demande',
+    ],
     cta: 'Voir un exemple agence',
-    href: '/exemples?secteur=agence',
+    href: '/exemples/agence-digitale',
   },
 ]
 
@@ -737,14 +755,24 @@ export default function HomePage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {PERSONAS.map(p => (
-              <GlassCard key={p.title} hover className="p-7 flex flex-col">
-                <div className="text-3xl mb-4">{p.icon}</div>
-                <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--fg)' }}>{p.title}</h3>
-                <p className="text-sm leading-relaxed flex-1 mb-5" style={{ color: 'var(--fg-muted)' }}>{p.desc}</p>
+              <GlassCard key={p.title} hover className="p-7 flex flex-col gap-5">
+                <div>
+                  <div className="text-3xl mb-3">{p.icon}</div>
+                  <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--fg)' }}>{p.title}</h3>
+                  <p className="text-sm" style={{ color: 'var(--fg-subtle)' }}>{p.subtitle}</p>
+                </div>
+                <ul className="flex flex-col gap-2.5 flex-1">
+                  {p.bullets.map(b => (
+                    <li key={b} className="flex items-start gap-2 text-sm leading-snug" style={{ color: 'var(--fg-muted)' }}>
+                      <span className="mt-0.5 shrink-0 font-bold" style={{ color: 'var(--accent)' }}>✓</span>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
                 <Link
                   href={p.href}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium"
-                  style={{ color: 'var(--accent)', textDecoration: 'none' }}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium pt-4"
+                  style={{ color: 'var(--accent)', textDecoration: 'none', borderTop: '1px solid var(--border)' }}
                 >
                   {p.cta} <ChevronRight size={13} />
                 </Link>
@@ -1021,6 +1049,7 @@ export default function HomePage() {
             <FooterCol
               title="Entreprise"
               links={[
+                { label: 'Blog',     href: '/blog' },
                 { label: 'À propos', href: '/a-propos' },
                 { label: 'Contact',  href: '/contact' },
               ]}

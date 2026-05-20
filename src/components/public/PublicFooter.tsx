@@ -79,6 +79,7 @@ export default function PublicFooter() {
           ]} />
 
           <FooterCol title="Entreprise" links={[
+            { label: 'Blog',     href: '/blog' },
             { label: 'À propos', href: '/a-propos' },
             { label: 'Contact',  href: '/contact' },
           ]} />
