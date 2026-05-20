@@ -76,14 +76,11 @@ export default function PublicFooter() {
             { label: 'Exemples',  href: '/exemples' },
             { label: 'Tarifs',    href: '/tarifs' },
             { label: 'Dashboard', href: '/dashboard' },
-            { label: 'Changelog', href: '#' },
-            { label: 'Statut',    href: '#' },
           ]} />
 
           <FooterCol title="Entreprise" links={[
             { label: 'À propos', href: '/a-propos' },
             { label: 'Contact',  href: '/contact' },
-            { label: 'Blog',     href: '#' },
           ]} />
 
           <FooterCol title="Légal" links={[

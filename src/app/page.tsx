@@ -1003,11 +1003,9 @@ export default function HomePage() {
             <FooterCol
               title="Produit"
               links={[
-                { label: 'Exemples',   href: '/exemples' },
-                { label: 'Tarifs',     href: '/tarifs' },
-                { label: 'Dashboard',  href: '/dashboard' },
-                { label: 'Changelog',  href: '#' },
-                { label: 'Statut',     href: '#' },
+                { label: 'Exemples',  href: '/exemples' },
+                { label: 'Tarifs',    href: '/tarifs' },
+                { label: 'Dashboard', href: '/dashboard' },
               ]}
             />
 
@@ -1017,7 +1015,6 @@ export default function HomePage() {
               links={[
                 { label: 'À propos', href: '/a-propos' },
                 { label: 'Contact',  href: '/contact' },
-                { label: 'Blog',     href: '#' },
               ]}
             />
 
