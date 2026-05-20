@@ -8,6 +8,7 @@ import PublicNav from '@/components/public/PublicNav'
 import PublicFooter from '@/components/public/PublicFooter'
 import { EXAMPLES } from '@/data/examples'
 import ExempleCtaButton from './ExempleCtaButton'
+import SiteMockup from '@/components/examples/SiteMockup'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -94,12 +95,7 @@ export default async function ExempleDetailPage({ params }: Props) {
                 </div>
                 {/* Screenshot */}
                 <div className="relative overflow-hidden" style={{ height: 420 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={ex.img}
-                    alt={ex.label}
-                    className="w-full h-full object-cover object-top"
-                  />
+                  <SiteMockup sector={ex.sector} slug={ex.slug} scale={420 / 576} />
                 </div>
               </GlassCard>
             </div>
@@ -119,8 +115,7 @@ export default async function ExempleDetailPage({ params }: Props) {
                 <GlassCard key={o.slug} hover className="overflow-hidden group">
                   <Link href={`/exemples/${o.slug}`} style={{ textDecoration: 'none' }}>
                     <div className="relative overflow-hidden" style={{ height: 140 }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={o.img} alt={o.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <SiteMockup sector={o.sector} slug={o.slug} scale={140 / 576} />
                     </div>
                     <div className="p-4">
                       <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--fg)' }}>{o.label}</p>

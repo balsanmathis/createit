@@ -14,6 +14,7 @@ import GlassCard from '@/components/ui/GlassCard'
 import PromptInput from '@/components/ui/PromptInput'
 import PricingCard, { type PricingPlan } from '@/components/ui/PricingCard'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import SiteMockup from '@/components/examples/SiteMockup'
 import { cn } from '@/lib/utils'
 
 /* ─── Data ───────────────────────────────────────────────────── */
@@ -603,12 +604,7 @@ export default function HomePage() {
               <GlassCard key={ex.slug} hover className="overflow-hidden group">
                 <Link href={`/exemples/${ex.slug}`} style={{ textDecoration: 'none' }}>
                   <div className="relative overflow-hidden" style={{ height: 180 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={ex.img}
-                      alt={ex.label}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                    <SiteMockup sector={ex.sector} slug={ex.slug} scale={180 / 576} />
                     {/* Browser chrome overlay */}
                     <div
                       className="absolute inset-x-0 top-0 flex items-center gap-1.5 px-3 py-2"

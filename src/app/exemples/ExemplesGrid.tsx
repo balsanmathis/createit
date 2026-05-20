@@ -7,6 +7,7 @@ import { ArrowRight } from 'lucide-react'
 import GlassCard from '@/components/ui/GlassCard'
 import { EXAMPLES, SECTORS } from '@/data/examples'
 import { cn } from '@/lib/utils'
+import SiteMockup from '@/components/examples/SiteMockup'
 
 interface Props {
   initialSector: string
@@ -53,12 +54,7 @@ export default function ExemplesGrid({ initialSector }: Props) {
             <Link href={`/exemples/${ex.slug}`} style={{ textDecoration: 'none' }}>
               {/* Image + chrome */}
               <div className="relative overflow-hidden" style={{ height: 200 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={ex.img}
-                  alt={ex.label}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+                <SiteMockup sector={ex.sector} slug={ex.slug} />
                 {/* Browser chrome bar */}
                 <div
                   className="absolute inset-x-0 top-0 flex items-center gap-1.5 px-3 py-2.5"
