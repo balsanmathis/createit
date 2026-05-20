@@ -8,6 +8,7 @@ import PublicNav from '@/components/public/PublicNav'
 import PublicFooter from '@/components/public/PublicFooter'
 import { EXAMPLES } from '@/data/examples'
 import ExempleCtaButton from './ExempleCtaButton'
+import SitePreview from '@/components/examples/SitePreview'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -92,19 +93,8 @@ export default async function ExempleDetailPage({ params }: Props) {
                     createit.app/sites/{ex.slug}
                   </span>
                 </div>
-                {/* Screenshot */}
-                <div className="relative overflow-hidden" style={{ height: 420 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={ex.img}
-                    alt={ex.label}
-                    className="w-full h-full object-cover object-top"
-                  />
-                  <div
-                    className="absolute inset-x-0 bottom-0"
-                    style={{ height: 80, background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.25))' }}
-                  />
-                </div>
+                {/* Site preview */}
+                <SitePreview example={ex} />
               </GlassCard>
             </div>
           </div>
