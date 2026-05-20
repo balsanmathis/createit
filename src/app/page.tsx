@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Menu, X, ChevronDown, ChevronRight, ArrowRight,
-  Zap, PenLine, Download, Lock, Star, Check,
+  Zap, PenLine, Download, Lock, Star,
 } from 'lucide-react'
 import AuroraBackground from '@/components/ui/AuroraBackground'
 import GlassCard from '@/components/ui/GlassCard'
@@ -15,9 +15,6 @@ import PromptInput from '@/components/ui/PromptInput'
 import PricingCard, { type PricingPlan } from '@/components/ui/PricingCard'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
-
-/* ─── Font token ─────────────────────────────────────────────── */
-const F = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
 /* ─── Data ───────────────────────────────────────────────────── */
 const NAV_LINKS = [
@@ -27,19 +24,23 @@ const NAV_LINKS = [
 ]
 
 const SECTORS = [
-  { label: 'Restaurant',  slug: 'restaurant' },
-  { label: 'Portfolio',   slug: 'portfolio' },
-  { label: 'Boutique',    slug: 'boutique' },
-  { label: 'Agence',      slug: 'agence' },
-  { label: 'Blog',        slug: 'blog' },
-  { label: 'Coach',       slug: 'coach' },
+  { label: 'Restaurant', slug: 'restaurant' },
+  { label: 'Portfolio',  slug: 'portfolio' },
+  { label: 'Boutique',   slug: 'boutique' },
+  { label: 'Agence',     slug: 'agence' },
+  { label: 'Blog',       slug: 'blog' },
+  { label: 'Coach',      slug: 'coach' },
 ]
 
 const STATS = [
-  { value: '2 847', label: 'sites créés ce mois' },
-  { value: '4.9/5', label: 'note moyenne' },
-  { value: '< 30s', label: 'temps de génération' },
-  { value: '100%',  label: 'code exportable' },
+  { value: '2 847',     label: 'sites créés ce mois' },
+  { value: '4.9 / 5',  label: 'note moyenne' },
+  { value: '< 30 s',   label: 'temps de génération' },
+  { value: '100 %',    label: 'code exportable' },
+  { value: '6',        label: 'secteurs couverts' },
+  { value: '0 €',      label: "de lock-in" },
+  { value: '30 j',     label: 'sans engagement' },
+  { value: '2 min',    label: 'pour démarrer' },
 ]
 
 const EXAMPLES = [
@@ -105,7 +106,7 @@ const FEATURES = [
   },
   {
     icon: <Lock size={20} style={{ color: 'var(--accent)' }} />,
-    title: '100% à vous, zéro lock-in',
+    title: '100 % à vous, zéro lock-in',
     desc: "Vous possédez le code. Aucun abonnement d'hébergement imposé, aucune plateforme propriétaire.",
   },
 ]
@@ -201,7 +202,7 @@ const TESTIMONIALS = [
     role: 'Fondatrice SaaS',
     city: 'Bordeaux',
     stars: 5,
-    text: 'Notre landing page convertit mieux que celle faite par notre agence à 4 000€. On a tout généré et modifié en interne.',
+    text: 'Notre landing page convertit mieux que celle faite par notre agence à 4 000 €. On a tout généré et modifié en interne.',
     avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b1a7?w=80&q=80',
   },
   {
@@ -211,6 +212,14 @@ const TESTIMONIALS = [
     stars: 5,
     text: "Je n'y connais rien en web. J'ai décrit mon activité, en 30 secondes j'avais un site professionnel. Aucun bug, aucun souci.",
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80',
+  },
+  {
+    name: 'Camille Rousseau',
+    role: 'Photographe',
+    city: 'Nantes',
+    stars: 5,
+    text: "Mon portfolio en ligne en moins d'une minute. Sobre, élégant, exactement ce que je voulais. Exporter le ZIP et le mettre sur Netlify, facile.",
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80',
   },
 ]
 
@@ -278,10 +287,7 @@ export default function HomePage() {
   const [isAuth, setIsAuth] = useState(false)
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const [activeTestimonial, setActiveTestimonial] = useState(0)
-  const revealRefs = useRef<HTMLElement[]>([])
 
-  /* auth check */
   useEffect(() => {
     const sb = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -290,32 +296,21 @@ export default function HomePage() {
     sb.auth.getUser().then(({ data: { user } }) => setIsAuth(!!user))
   }, [])
 
-  /* scroll listener for nav */
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 24)
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  /* scroll reveal */
   useEffect(() => {
     const obs = new IntersectionObserver(
       entries => entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('revealed')
-          obs.unobserve(e.target)
-        }
+        if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target) }
       }),
-      { threshold: 0.1 },
+      { threshold: 0.08 },
     )
     document.querySelectorAll<HTMLElement>('.reveal').forEach(el => obs.observe(el))
     return () => obs.disconnect()
-  }, [])
-
-  /* auto-advance testimonials */
-  useEffect(() => {
-    const id = setInterval(() => setActiveTestimonial(i => (i + 1) % TESTIMONIALS.length), 5000)
-    return () => clearInterval(id)
   }, [])
 
   const handlePromptSubmit = (prompt: string) => {
@@ -324,18 +319,16 @@ export default function HomePage() {
   }
 
   return (
-    <div style={{ fontFamily: F, background: 'var(--bg)', color: 'var(--fg)' }}>
+    <div style={{ background: 'var(--bg)', color: 'var(--fg)' }}>
 
       {/* ══════════════════════════════════════════════════════════
-          1. NAV
+          1. NAV sticky
       ══════════════════════════════════════════════════════════ */}
       <header
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
           height: 60,
-          background: scrolled
-            ? 'var(--glass)'
-            : 'transparent',
+          background: scrolled ? 'var(--glass)' : 'transparent',
           backdropFilter: scrolled ? 'blur(20px)' : 'none',
           WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
           borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
@@ -356,7 +349,7 @@ export default function HomePage() {
               <Link
                 key={l.href}
                 href={l.href}
-                className="text-sm transition-colors hover:opacity-100"
+                className="text-sm transition-colors"
                 style={{ color: 'var(--fg-muted)', textDecoration: 'none' }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--fg)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-muted)')}
@@ -371,19 +364,10 @@ export default function HomePage() {
             <ThemeToggle />
             <Link
               href="/auth/login"
-              className="text-sm px-4 py-2 rounded-lg transition-colors"
-              style={{
-                color: 'var(--fg-muted)',
-                textDecoration: 'none',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = 'var(--fg)'
-                e.currentTarget.style.background = 'var(--surface-2)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = 'var(--fg-muted)'
-                e.currentTarget.style.background = 'transparent'
-              }}
+              className="text-sm px-4 py-2 rounded-lg transition-all"
+              style={{ color: 'var(--fg-muted)', textDecoration: 'none' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--fg)'; e.currentTarget.style.background = 'var(--surface-2)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--fg-muted)'; e.currentTarget.style.background = 'transparent' }}
             >
               Connexion
             </Link>
@@ -410,25 +394,29 @@ export default function HomePage() {
         </nav>
       </header>
 
-      {/* Mobile menu overlay */}
+      {/* Mobile menu — plein écran glass */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
             key="mobile-menu"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
             className="fixed inset-0 z-40 flex flex-col pt-[60px]"
-            style={{ background: 'var(--bg)' }}
+            style={{
+              background: 'var(--glass)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+            }}
           >
-            <div className="flex flex-col p-6 gap-1">
+            <div className="flex flex-col p-6 gap-0">
               {NAV_LINKS.map(l => (
                 <Link
                   key={l.href}
                   href={l.href}
                   onClick={() => setMobileOpen(false)}
-                  className="py-4 text-lg border-b"
+                  className="py-4 text-xl font-medium border-b"
                   style={{ color: 'var(--fg)', textDecoration: 'none', borderColor: 'var(--border)' }}
                 >
                   {l.label}
@@ -437,7 +425,7 @@ export default function HomePage() {
               <Link
                 href="/auth/login"
                 onClick={() => setMobileOpen(false)}
-                className="py-4 text-lg border-b"
+                className="py-4 text-xl font-medium border-b"
                 style={{ color: 'var(--fg)', textDecoration: 'none', borderColor: 'var(--border)' }}
               >
                 Connexion
@@ -446,13 +434,13 @@ export default function HomePage() {
                 <Link
                   href="/auth/signup"
                   onClick={() => setMobileOpen(false)}
-                  className="text-center py-3.5 rounded-xl text-white font-semibold"
+                  className="text-center py-4 rounded-2xl text-white font-bold text-base"
                   style={{ background: 'var(--accent)', textDecoration: 'none' }}
                 >
                   Commencer gratuitement
                 </Link>
               </div>
-              <div className="pt-4 flex items-center gap-2">
+              <div className="pt-5 flex items-center gap-2">
                 <ThemeToggle />
                 <span className="text-sm" style={{ color: 'var(--fg-muted)' }}>Thème</span>
               </div>
@@ -462,129 +450,137 @@ export default function HomePage() {
       </AnimatePresence>
 
       {/* ══════════════════════════════════════════════════════════
-          2. HERO
+          2. HERO — grande carte glass centrale
       ══════════════════════════════════════════════════════════ */}
       <AuroraBackground
         intensity="strong"
         className="min-h-screen flex items-center justify-center pt-[60px]"
       >
-        <section className="w-full max-w-3xl mx-auto px-5 py-20 flex flex-col items-center text-center">
-          {/* Eyebrow */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6"
-            style={{
-              background: 'var(--accent-light)',
-              color: 'var(--accent)',
-              border: '1px solid rgba(124,58,237,0.2)',
-            }}
+        <section className="w-full max-w-3xl mx-auto px-5 py-16">
+          <GlassCard
+            strong
+            className="flex flex-col items-center text-center px-8 py-12 sm:px-14 sm:py-16"
           >
-            <span className="pulse-dot w-1.5 h-1.5 rounded-full bg-current inline-block" />
-            Générateur de sites web
-          </motion.div>
+            {/* Eyebrow */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-7"
+              style={{
+                background: 'var(--accent-light)',
+                color: 'var(--accent)',
+                border: '1px solid rgba(124,58,237,0.2)',
+              }}
+            >
+              <span className="pulse-dot w-1.5 h-1.5 rounded-full bg-current inline-block" />
+              Générateur de sites web
+            </motion.div>
 
-          {/* H1 */}
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.08 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
-            style={{ color: 'var(--fg)' }}
-          >
-            Votre site web.{' '}
-            <br className="hidden sm:block" />
-            <span className="gradient-text">Décrit. Généré. Exporté.</span>
-          </motion.h1>
+            {/* H1 */}
+            <motion.h1
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.08 }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-5"
+              style={{ color: 'var(--fg)' }}
+            >
+              Votre site web.{' '}
+              <br className="hidden sm:block" />
+              <span className="gradient-text">Décrit. Généré. Exporté.</span>
+            </motion.h1>
 
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.14 }}
-            className="text-base sm:text-lg mb-8 max-w-xl"
-            style={{ color: 'var(--fg-muted)' }}
-          >
-            Décrivez votre projet en français. Obtenez un site professionnel complet en moins de 30 secondes. Éditez, exportez le code, hébergez où vous voulez.
-          </motion.p>
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.14 }}
+              className="text-base sm:text-lg mb-8 max-w-xl"
+              style={{ color: 'var(--fg-muted)' }}
+            >
+              Décrivez votre projet en français. Obtenez un site professionnel complet en moins de 30 secondes. Éditez, exportez le code, hébergez où vous voulez.
+            </motion.p>
 
-          {/* Prompt input */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-full mb-5"
-          >
-            <PromptInput
-              onSubmit={handlePromptSubmit}
-              size="large"
-              buttonLabel="Générer mon site"
-            />
-          </motion.div>
+            {/* Prompt input */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="w-full mb-5"
+            >
+              <PromptInput
+                onSubmit={handlePromptSubmit}
+                size="large"
+                buttonLabel="Générer mon site"
+              />
+            </motion.div>
 
-          {/* Sector pills */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.28 }}
-            className="flex flex-wrap gap-2 justify-center mb-8"
-          >
-            {SECTORS.map(s => (
-              <Link
-                key={s.slug}
-                href={`/exemples?secteur=${s.slug}`}
-                className="text-xs px-3 py-1.5 rounded-full transition-all"
-                style={{
-                  background: 'var(--surface)',
-                  color: 'var(--fg-muted)',
-                  border: '1px solid var(--border)',
-                  textDecoration: 'none',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'var(--accent)'
-                  e.currentTarget.style.color = 'var(--accent)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'var(--border)'
-                  e.currentTarget.style.color = 'var(--fg-muted)'
-                }}
-              >
-                {s.label}
-              </Link>
-            ))}
-          </motion.div>
+            {/* Sector pills */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.28 }}
+              className="flex flex-wrap gap-2 justify-center mb-7"
+            >
+              {SECTORS.map(s => (
+                <Link
+                  key={s.slug}
+                  href={`/exemples?secteur=${s.slug}`}
+                  className="text-xs px-3 py-1.5 rounded-full transition-all"
+                  style={{
+                    background: 'var(--surface)',
+                    color: 'var(--fg-muted)',
+                    border: '1px solid var(--border)',
+                    textDecoration: 'none',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--fg-muted)' }}
+                >
+                  {s.label}
+                </Link>
+              ))}
+            </motion.div>
 
-          {/* Social proof */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.34 }}
-            className="text-sm flex items-center gap-2"
-            style={{ color: 'var(--fg-subtle)' }}
-          >
-            <span className="pulse-dot w-2 h-2 rounded-full inline-block" style={{ background: '#22c55e' }} />
-            2 847 sites créés ce mois — sans carte bancaire requise
-          </motion.p>
+            {/* Social proof */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.34 }}
+              className="text-sm flex items-center gap-2"
+              style={{ color: 'var(--fg-subtle)' }}
+            >
+              <span className="pulse-dot w-2 h-2 rounded-full inline-block" style={{ background: '#22c55e' }} />
+              2 847 sites créés ce mois — sans carte bancaire requise
+            </motion.p>
+          </GlassCard>
         </section>
       </AuroraBackground>
 
       {/* ══════════════════════════════════════════════════════════
-          3. STATS STRIP
+          3. STATS MARQUEE — défilement infini
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="reveal border-y py-10"
+        className="reveal border-y overflow-hidden"
         style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
       >
-        <div className="max-w-4xl mx-auto px-5 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {STATS.map(s => (
-            <div key={s.label}>
-              <p className="text-3xl font-bold tracking-tight mb-1" style={{ color: 'var(--accent)' }}>
-                {s.value}
-              </p>
-              <p className="text-sm" style={{ color: 'var(--fg-muted)' }}>{s.label}</p>
-            </div>
-          ))}
+        <div className="carousel-wrapper py-7">
+          <div className="carousel-track">
+            {[...STATS, ...STATS].map((s, i) => (
+              <div
+                key={i}
+                className="shrink-0 flex items-center gap-6 px-10"
+              >
+                <div className="text-center">
+                  <p className="text-2xl font-bold tracking-tight" style={{ color: 'var(--accent)' }}>
+                    {s.value}
+                  </p>
+                  <p className="text-xs mt-0.5 whitespace-nowrap" style={{ color: 'var(--fg-muted)' }}>{s.label}</p>
+                </div>
+                {/* Separator */}
+                <span className="block w-px h-8" style={{ background: 'var(--border)' }} />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -604,11 +600,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {EXAMPLES.map(ex => (
-              <GlassCard
-                key={ex.slug}
-                hover
-                className="overflow-hidden group"
-              >
+              <GlassCard key={ex.slug} hover className="overflow-hidden group">
                 <Link href={`/exemples/${ex.slug}`} style={{ textDecoration: 'none' }}>
                   <div className="relative overflow-hidden" style={{ height: 180 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -622,9 +614,9 @@ export default function HomePage() {
                       className="absolute inset-x-0 top-0 flex items-center gap-1.5 px-3 py-2"
                       style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
                     >
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-400 opacity-80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 opacity-80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-green-400 opacity-80" />
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FC6358' }} />
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FEBC2E' }} />
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28C840' }} />
                     </div>
                     <div
                       className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -647,7 +639,7 @@ export default function HomePage() {
           <div className="text-center mt-8">
             <Link
               href="/exemples"
-              className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
               style={{ color: 'var(--accent)', textDecoration: 'none' }}
             >
               Voir les 50+ exemples <ChevronRight size={14} />
@@ -667,7 +659,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold tracking-tight text-center mb-14" style={{ color: 'var(--fg)' }}>
             Simple comme bonjour
           </h2>
-          <div className="flex flex-col md:flex-row gap-0">
+          <div className="flex flex-col md:flex-row">
             {STEPS.map((step, i) => (
               <div
                 key={i}
@@ -679,7 +671,6 @@ export default function HomePage() {
                 style={{ borderColor: 'var(--border)' }}
               >
                 <div className={cn('py-8', i > 0 && 'md:pl-10', i < STEPS.length - 1 && 'md:pr-10')}>
-                  {/* Big number background */}
                   <div
                     className="text-7xl font-black mb-4 leading-none select-none"
                     style={{ color: 'var(--surface-2)', fontVariantNumeric: 'tabular-nums' }}
@@ -702,7 +693,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'var(--fg)' }}>
-              Tout ce qu'il vous faut
+              Tout ce qu&apos;il vous faut
             </h2>
             <p className="text-base" style={{ color: 'var(--fg-muted)' }}>
               Des outils pensés pour créer, personnaliser et livrer sans friction
@@ -744,7 +735,7 @@ export default function HomePage() {
                 <p className="text-sm leading-relaxed flex-1 mb-5" style={{ color: 'var(--fg-muted)' }}>{p.desc}</p>
                 <Link
                   href={p.href}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium"
                   style={{ color: 'var(--accent)', textDecoration: 'none' }}
                 >
                   {p.cta} <ChevronRight size={13} />
@@ -784,16 +775,16 @@ export default function HomePage() {
                       : { color: 'var(--fg-muted)', background: 'transparent' }
                   }
                 >
-                  {b === 'monthly' ? 'Mensuel' : 'Annuel'}{' '}
+                  {b === 'monthly' ? 'Mensuel' : 'Annuel'}
                   {b === 'annual' && (
                     <span
-                      className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                       style={{
                         background: billing === 'annual' ? 'rgba(255,255,255,0.25)' : 'var(--accent-light)',
                         color: billing === 'annual' ? 'white' : 'var(--accent)',
                       }}
                     >
-                      -20%
+                      −20 %
                     </span>
                   )}
                 </button>
@@ -822,7 +813,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          9. FAQ
+          9. FAQ accordion
       ══════════════════════════════════════════════════════════ */}
       <section
         className="reveal py-20 px-5"
@@ -839,6 +830,7 @@ export default function HomePage() {
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full flex items-center justify-between px-5 py-4 text-left"
                   style={{ color: 'var(--fg)' }}
+                  aria-expanded={openFaq === i}
                 >
                   <span className="text-sm font-medium pr-4">{faq.q}</span>
                   <ChevronDown
@@ -859,10 +851,7 @@ export default function HomePage() {
                       transition={{ duration: 0.22 }}
                       className="overflow-hidden"
                     >
-                      <p
-                        className="px-5 pb-5 text-sm leading-relaxed"
-                        style={{ color: 'var(--fg-muted)' }}
-                      >
+                      <p className="px-5 pb-5 text-sm leading-relaxed" style={{ color: 'var(--fg-muted)' }}>
                         {faq.a}
                       </p>
                     </motion.div>
@@ -884,40 +873,47 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          10. TÉMOIGNAGES
+          10. TÉMOIGNAGES — carrousel snap horizontal
       ══════════════════════════════════════════════════════════ */}
-      <section className="reveal py-20 px-5" style={{ background: 'var(--bg)' }}>
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold tracking-tight text-center mb-10" style={{ color: 'var(--fg)' }}>
+      <section className="reveal py-20" style={{ background: 'var(--bg)' }}>
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold tracking-tight text-center mb-10 px-5" style={{ color: 'var(--fg)' }}>
             Ce qu&apos;ils en disent
           </h2>
 
-          {/* Cards grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Horizontal snap scroll */}
+          <div
+            className="flex gap-5 overflow-x-auto pb-6 px-5"
+            style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
+          >
             {TESTIMONIALS.map((t, i) => (
               <GlassCard
                 key={i}
-                className={cn(
-                  'p-6 cursor-pointer transition-all duration-300',
-                  activeTestimonial === i && 'ring-2 ring-[var(--accent)]',
-                )}
-                onClick={() => setActiveTestimonial(i)}
+                className="shrink-0 p-6 flex flex-col"
+                style={{
+                  width: 'min(85vw, 340px)',
+                  scrollSnapAlign: 'start',
+                }}
               >
                 {/* Stars */}
-                <div className="flex gap-0.5 mb-3">
+                <div className="flex gap-0.5 mb-4">
                   {Array.from({ length: t.stars }).map((_, j) => (
                     <Star key={j} size={13} fill="#F59E0B" style={{ color: '#F59E0B' }} />
                   ))}
                 </div>
-                <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--fg)' }}>
+
+                {/* Quote */}
+                <p className="text-sm leading-relaxed flex-1 mb-5" style={{ color: 'var(--fg)' }}>
                   &ldquo;{t.text}&rdquo;
                 </p>
+
+                {/* Author */}
                 <div className="flex items-center gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={t.avatar}
                     alt={t.name}
-                    className="w-9 h-9 rounded-full object-cover"
+                    className="w-10 h-10 rounded-full object-cover"
                   />
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>{t.name}</p>
@@ -930,49 +926,37 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Dots */}
-          <div className="flex justify-center gap-2 mt-6">
-            {TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveTestimonial(i)}
-                className="rounded-full transition-all duration-300"
-                style={{
-                  width: activeTestimonial === i ? 20 : 6,
-                  height: 6,
-                  background: activeTestimonial === i ? 'var(--accent)' : 'var(--border)',
-                }}
-                aria-label={`Témoignage ${i + 1}`}
-              />
-            ))}
-          </div>
+          {/* Scroll hint on mobile */}
+          <p className="text-center text-xs mt-2 sm:hidden" style={{ color: 'var(--fg-subtle)' }}>
+            ← Faites glisser →
+          </p>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          11. CTA FINAL
+          11. CTA FINAL — aurora fort
       ══════════════════════════════════════════════════════════ */}
-      <AuroraBackground intensity="strong" className="py-24 px-5">
+      <AuroraBackground intensity="strong" className="py-28 px-5">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-4xl font-bold tracking-tight mb-4" style={{ color: 'var(--fg)' }}>
             Prêt à créer votre premier site ?
           </h2>
-          <p className="text-lg mb-8" style={{ color: 'var(--fg-muted)' }}>
+          <p className="text-lg mb-10" style={{ color: 'var(--fg-muted)' }}>
             Gratuit. Sans carte bancaire. Sans engagement.
           </p>
           <Link
             href="/auth/signup"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-bold text-base transition-all"
-            style={{ background: 'var(--accent)', textDecoration: 'none', boxShadow: '0 0 32px rgba(124,58,237,0.4)' }}
+            className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-white font-bold text-base transition-all"
+            style={{ background: 'var(--accent)', textDecoration: 'none', boxShadow: '0 0 40px rgba(124,58,237,0.45)' }}
             onMouseEnter={e => {
               e.currentTarget.style.background = 'var(--accent-hover)'
               e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 0 48px rgba(124,58,237,0.5)'
+              e.currentTarget.style.boxShadow = '0 0 56px rgba(124,58,237,0.55)'
             }}
             onMouseLeave={e => {
               e.currentTarget.style.background = 'var(--accent)'
               e.currentTarget.style.transform = 'none'
-              e.currentTarget.style.boxShadow = '0 0 32px rgba(124,58,237,0.4)'
+              e.currentTarget.style.boxShadow = '0 0 40px rgba(124,58,237,0.45)'
             }}
           >
             Commencer gratuitement <ArrowRight size={16} />
@@ -981,15 +965,16 @@ export default function HomePage() {
       </AuroraBackground>
 
       {/* ══════════════════════════════════════════════════════════
-          12. FOOTER
+          12. FOOTER 4 colonnes
       ══════════════════════════════════════════════════════════ */}
       <footer
-        className="py-12 px-5"
+        className="py-14 px-5"
         style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)' }}
       >
         <div className="max-w-6xl mx-auto">
           {/* Top grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
               <Link href="/" className="inline-block mb-3" style={{ textDecoration: 'none' }}>
@@ -997,88 +982,55 @@ export default function HomePage() {
                   Create<span style={{ color: 'var(--accent)' }}>It</span>
                 </span>
               </Link>
-              <p className="text-sm mb-4" style={{ color: 'var(--fg-muted)' }}>
+              <p className="text-sm mb-5" style={{ color: 'var(--fg-muted)' }}>
                 Générez des sites web professionnels en quelques secondes.
               </p>
+              {/* Socials */}
+              <div className="flex items-center gap-3">
+                <SocialLink href="#" label="Twitter / X">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"/></svg>
+                </SocialLink>
+                <SocialLink href="#" label="LinkedIn">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                </SocialLink>
+                <SocialLink href="#" label="GitHub">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                </SocialLink>
+              </div>
             </div>
 
             {/* Produit */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--fg-subtle)' }}>
-                Produit
-              </p>
-              <ul className="space-y-2.5">
-                {[
-                  { label: 'Exemples',    href: '/exemples' },
-                  { label: 'Tarifs',      href: '/tarifs' },
-                  { label: 'Dashboard',   href: '/dashboard' },
-                ].map(l => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      className="text-sm transition-colors"
-                      style={{ color: 'var(--fg-muted)', textDecoration: 'none' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--fg)')}
-                      onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-muted)')}
-                    >
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <FooterCol
+              title="Produit"
+              links={[
+                { label: 'Exemples',   href: '/exemples' },
+                { label: 'Tarifs',     href: '/tarifs' },
+                { label: 'Dashboard',  href: '/dashboard' },
+                { label: 'Changelog',  href: '#' },
+                { label: 'Statut',     href: '#' },
+              ]}
+            />
 
             {/* Entreprise */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--fg-subtle)' }}>
-                Entreprise
-              </p>
-              <ul className="space-y-2.5">
-                {[
-                  { label: 'À propos',  href: '/a-propos' },
-                  { label: 'Contact',   href: '/contact' },
-                ].map(l => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      className="text-sm transition-colors"
-                      style={{ color: 'var(--fg-muted)', textDecoration: 'none' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--fg)')}
-                      onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-muted)')}
-                    >
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <FooterCol
+              title="Entreprise"
+              links={[
+                { label: 'À propos', href: '/a-propos' },
+                { label: 'Contact',  href: '/contact' },
+                { label: 'Blog',     href: '#' },
+              ]}
+            />
 
             {/* Légal */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--fg-subtle)' }}>
-                Légal
-              </p>
-              <ul className="space-y-2.5">
-                {[
-                  { label: 'Mentions légales',  href: '/legal/mentions-legales' },
-                  { label: 'CGV',               href: '/legal/cgv' },
-                  { label: 'Confidentialité',   href: '/legal/confidentialite' },
-                  { label: 'Cookies',           href: '/legal/cookies' },
-                ].map(l => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      className="text-sm transition-colors"
-                      style={{ color: 'var(--fg-muted)', textDecoration: 'none' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--fg)')}
-                      onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-muted)')}
-                    >
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <FooterCol
+              title="Légal"
+              links={[
+                { label: 'Mentions légales', href: '/legal/mentions-legales' },
+                { label: 'CGV',              href: '/legal/cgv' },
+                { label: 'Confidentialité',  href: '/legal/confidentialite' },
+                { label: 'Cookies',          href: '/legal/cookies' },
+              ]}
+            />
           </div>
 
           {/* Bottom bar */}
@@ -1091,11 +1043,69 @@ export default function HomePage() {
             </p>
             <div className="flex items-center gap-3">
               <ThemeToggle />
+              {/* Language stub */}
+              <div
+                className="flex items-center rounded-lg text-xs font-medium overflow-hidden"
+                style={{ border: '1px solid var(--border)' }}
+              >
+                <span className="px-2.5 py-1.5 font-semibold" style={{ background: 'var(--surface-2)', color: 'var(--fg)' }}>FR</span>
+                <span className="px-2.5 py-1.5" style={{ color: 'var(--fg-subtle)', cursor: 'not-allowed' }}>EN</span>
+              </div>
             </div>
           </div>
         </div>
       </footer>
 
+    </div>
+  )
+}
+
+/* ─── Social link helper ─────────────────────────────────────── */
+function SocialLink({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      aria-label={label}
+      className="flex items-center justify-center w-8 h-8 rounded-lg transition-all"
+      style={{ color: 'var(--fg-subtle)', border: '1px solid var(--border)' }}
+      onMouseEnter={e => {
+        e.currentTarget.style.color = 'var(--fg)'
+        e.currentTarget.style.borderColor = 'var(--border-hover)'
+        e.currentTarget.style.background = 'var(--surface-2)'
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.color = 'var(--fg-subtle)'
+        e.currentTarget.style.borderColor = 'var(--border)'
+        e.currentTarget.style.background = 'transparent'
+      }}
+    >
+      {children}
+    </a>
+  )
+}
+
+/* ─── Footer column helper ───────────────────────────────────── */
+function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--fg-subtle)' }}>
+        {title}
+      </p>
+      <ul className="space-y-2.5">
+        {links.map(l => (
+          <li key={l.href}>
+            <Link
+              href={l.href}
+              className="text-sm transition-colors"
+              style={{ color: 'var(--fg-muted)', textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--fg)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-muted)')}
+            >
+              {l.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
