@@ -135,6 +135,7 @@ export interface GenerateOptions {
   maxTokens?: number
   systemPrompt?: string
   model?: string
+  timeoutMs?: number
 }
 
 const MODEL_HAIKU  = 'claude-haiku-4-5-20251001'
@@ -195,10 +196,7 @@ function getContinueMsg(html: string): string {
   return `Tu générais un site HTML. Voici où tu t'es arrêté : ${tail}. Continue EXACTEMENT depuis cet endroit et termine jusqu'à </body></html>. Ne répète rien du début.`
 }
 
-// Total budget for the whole generation (leaves 8s for Supabase save)
-const VERCEL_TIMEOUT_MS = 55_000
-// Haiku is fast — give it more time on first pass for a coherent single-pass output
-const FIRST_PASS_MS = 38_000
+// Timeouts are computed per-call based on maxTokens (see generateWebsiteStreaming)
 
 export async function generateWebsite(prompt: string): Promise<string> {
   return generateWebsiteStreaming(prompt, () => {})
@@ -209,12 +207,16 @@ export async function generateWebsiteStreaming(
   onChunk: (totalChars: number) => void,
   options: GenerateOptions = {},
 ): Promise<string> {
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-  const deadline        = Date.now() + VERCEL_TIMEOUT_MS
-  const firstPassLimit  = Date.now() + FIRST_PASS_MS
-  const maxTokens   = options.maxTokens   ?? 8000
+  const anthropic   = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+  const maxTokens   = options.maxTokens   ?? 8_000
   const systemToUse = options.systemPrompt ?? SYSTEM_PROMPT
   const model       = options.model       ?? MODEL_HAIKU
+
+  // Dynamic budget: Haiku ~200 tok/s, +25s buffer, capped at 270s (maxDuration is 300s)
+  const totalMs        = options.timeoutMs ?? Math.min(Math.ceil(maxTokens / 180) * 1_000 + 25_000, 270_000)
+  const firstPassMs    = Math.floor(totalMs * 0.75)
+  const deadline       = Date.now() + totalMs
+  const firstPassLimit = Date.now() + firstPassMs
 
   let html = ''
   let timedOut = false

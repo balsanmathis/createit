@@ -260,11 +260,16 @@ QUALITÉ FINALE :
 
 const HAIKU = 'claude-haiku-4-5-20251001'
 
+// Haiku output: $4/1M tokens. Budget per tier (max $0.20/site):
+//   rapide  : 10k tokens → ~$0.04   (fast, landing page)
+//   standard: 20k tokens → ~$0.08   (site complet)
+//   premium : 32k tokens → ~$0.13   (site riche + galerie)
+//   ultra   : 46k tokens → ~$0.19   (site de qualité agence)
 const QUALITY_CONFIG: Record<string, { maxTokens: number; tokenCost: number; model: string; systemPrompt?: string }> = {
-  rapide:   { maxTokens: 4_000,  tokenCost: 1 * TOKEN_COST_GENERATE, model: HAIKU },
-  standard: { maxTokens: 10_000, tokenCost: 2 * TOKEN_COST_GENERATE, model: HAIKU },
-  premium:  { maxTokens: 16_000, tokenCost: 4 * TOKEN_COST_GENERATE, model: HAIKU },
-  ultra:    { maxTokens: 32_000, tokenCost: 8 * TOKEN_COST_GENERATE, model: HAIKU, systemPrompt: ULTRA_SYSTEM_PROMPT },
+  rapide:   { maxTokens: 10_000, tokenCost: 1 * TOKEN_COST_GENERATE, model: HAIKU },
+  standard: { maxTokens: 20_000, tokenCost: 2 * TOKEN_COST_GENERATE, model: HAIKU },
+  premium:  { maxTokens: 32_000, tokenCost: 4 * TOKEN_COST_GENERATE, model: HAIKU },
+  ultra:    { maxTokens: 46_000, tokenCost: 8 * TOKEN_COST_GENERATE, model: HAIKU, systemPrompt: ULTRA_SYSTEM_PROMPT },
 }
 
 export async function POST(request: Request) {
