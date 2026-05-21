@@ -292,8 +292,8 @@ export async function POST(request: Request) {
   if (!prompt?.trim()) {
     return NextResponse.json({ error: 'Le prompt est requis' }, { status: 400 })
   }
-  if (typeof prompt !== 'string' || prompt.trim().length > 2000) {
-    return NextResponse.json({ error: 'Le prompt ne peut pas dépasser 2000 caractères' }, { status: 400 })
+  if (typeof prompt !== 'string' || prompt.trim().length > 5000) {
+    return NextResponse.json({ error: 'Le prompt ne peut pas dépasser 5000 caractères' }, { status: 400 })
   }
   if (name && typeof name !== 'string') {
     return NextResponse.json({ error: 'Nom invalide' }, { status: 400 })
