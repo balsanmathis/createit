@@ -2,8 +2,28 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 const PROTECTED_ROUTES = ['/dashboard', '/generate', '/sites', '/settings', '/analytics', '/prompt-builder']
+const BLOCKED_UA_FRAGMENTS = ['curl', 'wget', 'python-requests', 'scrapy', 'bot', 'crawler', 'spider']
+const AUTH_PATHS = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/api/auth/']
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  const ua = (request.headers.get('user-agent') ?? '').toLowerCase()
+  const acceptLang = request.headers.get('accept-language')
+
+  if (BLOCKED_UA_FRAGMENTS.some(f => ua.includes(f))) {
+    console.warn(`[security] Blocked UA "${ua}" on ${pathname}`)
+    return new NextResponse(null, { status: 403 })
+  }
+
+  if (!acceptLang) {
+    console.warn(`[security] No accept-language on ${pathname} from UA "${ua}"`)
+    return new NextResponse(null, { status: 403 })
+  }
+
+  if (AUTH_PATHS.some(p => pathname.startsWith(p)) && request.method === 'POST') {
+    await new Promise(r => setTimeout(r, 500))
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -33,7 +53,6 @@ export async function proxy(request: NextRequest) {
     // non-fatal — treat as unauthenticated
   }
 
-  const pathname = request.nextUrl.pathname
   const isProtected = PROTECTED_ROUTES.some((route) => pathname.startsWith(route))
 
   if (isProtected && !user) {
