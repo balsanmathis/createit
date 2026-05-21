@@ -258,11 +258,14 @@ QUALITÉ FINALE :
 - Le site doit pouvoir être montré à un client sans que personne ne devine qu'une machine l'a fait
 - TOUJOURS terminer par </body></html>`
 
-const QUALITY_CONFIG: Record<string, { maxTokens: number; tokenCost: number; systemPrompt?: string }> = {
-  rapide:   { maxTokens: 4_000,  tokenCost: 1 * TOKEN_COST_GENERATE },
-  standard: { maxTokens: 8_000,  tokenCost: 2 * TOKEN_COST_GENERATE },
-  premium:  { maxTokens: 16_000, tokenCost: 4 * TOKEN_COST_GENERATE },
-  ultra:    { maxTokens: 32_000, tokenCost: 8 * TOKEN_COST_GENERATE, systemPrompt: ULTRA_SYSTEM_PROMPT },
+const HAIKU  = 'claude-haiku-4-5-20251001'
+const SONNET = 'claude-sonnet-4-6'
+
+const QUALITY_CONFIG: Record<string, { maxTokens: number; tokenCost: number; model: string; systemPrompt?: string }> = {
+  rapide:   { maxTokens: 4_000,  tokenCost: 1 * TOKEN_COST_GENERATE, model: HAIKU },
+  standard: { maxTokens: 8_000,  tokenCost: 2 * TOKEN_COST_GENERATE, model: SONNET },
+  premium:  { maxTokens: 16_000, tokenCost: 4 * TOKEN_COST_GENERATE, model: SONNET },
+  ultra:    { maxTokens: 32_000, tokenCost: 8 * TOKEN_COST_GENERATE, model: SONNET, systemPrompt: ULTRA_SYSTEM_PROMPT },
 }
 
 export async function POST(request: Request) {
@@ -345,6 +348,7 @@ export async function POST(request: Request) {
         }, {
           maxTokens: qualityConfig.maxTokens,
           systemPrompt: qualityConfig.systemPrompt,
+          model: qualityConfig.model,
         })
 
         console.log(`[generate] HTML ready — ${htmlContent.length} chars, quality=${quality}, saving…`)

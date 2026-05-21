@@ -104,6 +104,34 @@ TECHNIQUE :
 - JAMAIS de lorem ipsum
 - JAMAIS de div comme image placeholder — TOUJOURS background-image CSS
 
+IMAGES OBLIGATOIRES — Utilise ces URLs Unsplash. JAMAIS de div gris placeholder. Les fonds de section utilisent background-image CSS. Les images de contenu (cards, équipe, témoignages) utilisent des balises <img>.
+
+RESTAURANTS : hero=https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1400&q=80 | plat=https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80 | table=https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80 | chef=https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80 | sushi=https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&q=80 | pizza=https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80 | burger=https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80 | bar=https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80
+
+AGENCES : open-space=https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80 | équipe=https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80 | laptop=https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80
+
+PORTFOLIO : studio=https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=1400&q=80 | desk=https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&q=80
+
+ARCHITECTURE : maison=https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1400&q=80 | intérieur=https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80
+
+SANTÉ : cabinet=https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&q=80 | médecin=https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=80
+
+FITNESS : gym=https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1400&q=80 | training=https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80 | yoga=https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80
+
+BEAUTÉ : salon=https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1400&q=80 | soin=https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&q=80
+
+E-COMMERCE : boutique=https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1400&q=80 | mode=https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80
+
+TECH : tech=https://images.unsplash.com/photo-1518770660439-4636190af475?w=1400&q=80 | code=https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80
+
+PERSONNES (avatars témoignages/équipe) : f1=https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80 | f2=https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80 | h1=https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80 | h2=https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80 | f3=https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80 | h3=https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80
+
+RÈGLES IMG : <img src='URL' alt='desc' style='width:100%;height:100%;object-fit:cover;' loading='lazy'> — hero min 500px — cards 220px — avatars 64x64px border-radius:50%
+
+RÈGLES BOUTONS : CHAQUE bouton a un href réel. 'Réserver'→#contact | 'Menu'→#menu | 'Services'→#services | 'Équipe'→#equipe | 'Contact'→#contact. Formulaires : JS affiche "Merci, nous vous recontactons sous 24h !". Tel→href='tel:+33XXXXXXXXX'. Email→href='mailto:'. Réseaux→href='https://instagram.com'. html{scroll-behavior:smooth}. Chaque section a son id.
+
+RÈGLES COMPLÉTUDE : Site 100% complet. Minimum 3 items par liste/grille. Contact = Nom+Prénom+Email+Tél+Message+Bouton. Footer = Logo+Adresse+Tél+Email+Horaires+Réseaux+Copyright. Navbar = tous les liens de section. JAMAIS de section vide.
+
 QUALITÉ FINALE :
 - Le site doit faire WOW dès le premier scroll
 - Un dev humain qui verrait le code dirait "c'est propre et professionnel"
@@ -112,7 +140,11 @@ QUALITÉ FINALE :
 export interface GenerateOptions {
   maxTokens?: number
   systemPrompt?: string
+  model?: string
 }
+
+const MODEL_HAIKU  = 'claude-haiku-4-5-20251001'
+const MODEL_SONNET = 'claude-sonnet-4-6'
 
 function stripFences(text: string): string {
   let t = text.trim()
@@ -188,13 +220,14 @@ export async function generateWebsiteStreaming(
   const firstPassLimit  = Date.now() + FIRST_PASS_MS
   const maxTokens   = options.maxTokens   ?? 8000
   const systemToUse = options.systemPrompt ?? SYSTEM_PROMPT
+  const model       = options.model       ?? MODEL_HAIKU
 
   let html = ''
   let timedOut = false
 
   // ── Pass 1: capped at FIRST_PASS_MS so continuations always have time ──
   for await (const event of anthropic.messages.stream({
-    model: 'claude-haiku-4-5-20251001',
+    model,
     max_tokens: maxTokens,
     system: systemToUse,
     messages: [{ role: 'user', content: prompt }],
@@ -218,7 +251,7 @@ export async function generateWebsiteStreaming(
     const continueMsg = getContinueMsg(html)
 
     for await (const event of anthropic.messages.stream({
-      model: 'claude-haiku-4-5-20251001',
+      model,
       max_tokens: 4000,
       system: systemToUse,
       messages: [
@@ -271,7 +304,7 @@ export async function modifyWebsite(currentHtml: string, instruction: string): P
     : currentHtml
 
   const { text, stopReason } = await streamCall(anthropic, {
-    model: 'claude-haiku-4-5-20251001',
+    model: MODEL_SONNET,
     max_tokens: 16000,
     system: MODIFY_SYSTEM,
     messages: [{
