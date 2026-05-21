@@ -36,48 +36,12 @@ const PLAN_PRICES: Record<string, number> = {
 }
 
 const EXAMPLES = [
-  {
-    slug: 'restaurant-gastronomique',
-    label: 'Restaurant gastronomique',
-    sector: 'restaurant',
-    desc: 'Menu, réservations en ligne, galerie photos',
-    img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80',
-  },
-  {
-    slug: 'cabinet-architecte',
-    label: "Cabinet d'architecte",
-    sector: 'agence',
-    desc: 'Portfolio visuel, galerie de réalisations',
-    img: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80',
-  },
-  {
-    slug: 'startup-tech',
-    label: 'Startup tech',
-    sector: 'agence',
-    desc: 'Landing page SaaS qui convertit',
-    img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=80',
-  },
-  {
-    slug: 'boutique-artisanale',
-    label: 'Boutique artisanale',
-    sector: 'boutique',
-    desc: 'Catalogue produits, prise de commande',
-    img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80',
-  },
-  {
-    slug: 'cabinet-medical',
-    label: 'Cabinet médical',
-    sector: 'coach',
-    desc: 'Site professionnel, prise de rendez-vous',
-    img: 'https://images.unsplash.com/photo-1551076805-e1869033e561?w=600&q=80',
-  },
-  {
-    slug: 'coach-sportif',
-    label: 'Coach sportif',
-    sector: 'coach',
-    desc: 'Programmes, tarifs, témoignages',
-    img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80',
-  },
+  { label: 'Le Jardin Secret',   badge: 'Restaurant', img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80' },
+  { label: 'Marie Chen Studio',  badge: 'Portfolio',  img: 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=600&q=80' },
+  { label: 'Pixel Agency',       badge: 'Agence',     img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80' },
+  { label: 'Maison Dorée',       badge: 'Boutique',   img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80' },
+  { label: 'Dr. Sarah Chen',     badge: 'Médecin',    img: 'https://images.unsplash.com/photo-1551076805-e1869033e561?w=600&q=80' },
+  { label: 'Transform Studio',   badge: 'Fitness',    img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80' },
 ]
 
 const TESTIMONIALS = [
@@ -433,46 +397,44 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {EXAMPLES.map(ex => (
-              <GlassCard key={ex.slug} hover className="overflow-hidden group">
-                <Link href={`/exemples/${ex.slug}`} style={{ textDecoration: 'none' }}>
-                  <div className="relative overflow-hidden" style={{ height: 180 }}>
+            {EXAMPLES.map((ex, i) => (
+              <Link key={i} href="/try" style={{ textDecoration: 'none', display: 'block' }}>
+                <div
+                  className="group"
+                  style={{ width: '100%', borderRadius: 12, overflow: 'hidden', position: 'relative', cursor: 'pointer', transition: 'transform 0.3s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.03)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)' }}
+                >
+                  <div style={{ position: 'relative', height: 240, overflow: 'hidden' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={ex.img}
+                      alt={ex.label}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      loading="lazy"
+                    />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
                     <div
-                      className="flex items-center gap-1.5 px-3"
-                      style={{ height: 24, background: '#1A1A1A', flexShrink: 0 }}
-                    >
-                      <span className="w-2 h-2 rounded-full" style={{ background: '#FC6358' }} />
-                      <span className="w-2 h-2 rounded-full" style={{ background: '#FEBC2E' }} />
-                      <span className="w-2 h-2 rounded-full" style={{ background: '#28C840' }} />
-                    </div>
-                    <div className="relative" style={{ height: 156, overflow: 'hidden' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={ex.img}
-                        alt={ex.label}
-                        className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.08) 55%, transparent 100%)' }} />
-                      <div className="absolute bottom-0 left-0 right-0 px-3 pb-2.5">
-                        <p className="text-xs font-semibold text-white truncate">{ex.label}</p>
-                        <p className="text-[10px] text-white/55 truncate mt-0.5">{ex.desc}</p>
-                      </div>
-                    </div>
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }}
+                    />
+                    <span style={{ position: 'absolute', top: 10, right: 10, background: 'white', color: '#0f172a', fontSize: 11, padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
+                      {ex.badge}
+                    </span>
+                    <p style={{ position: 'absolute', bottom: 12, left: 12, margin: 0, color: 'white', fontWeight: 600, fontSize: 15 }}>
+                      {ex.label}
+                    </p>
                     <div
-                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      style={{ background: 'rgba(124,58,237,0.7)' }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      <span className="text-white text-sm font-semibold flex items-center gap-2">
-                        {T.examples_section.view_example} <ArrowRight size={14} />
+                      <span style={{ background: 'white', color: '#0f172a', padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600 }}>
+                        Voir l&apos;exemple
                       </span>
                     </div>
                   </div>
-                  <div className="p-4">
-                    <p className="text-sm font-semibold mb-1" style={{ color: 'var(--fg)' }}>{ex.label}</p>
-                    <p className="text-xs" style={{ color: 'var(--fg-muted)' }}>{ex.desc}</p>
-                  </div>
-                </Link>
-              </GlassCard>
+                </div>
+              </Link>
             ))}
           </div>
 

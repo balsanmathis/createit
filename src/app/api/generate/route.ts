@@ -157,6 +157,101 @@ TECHNIQUE :
 - JAMAIS de lorem ipsum
 - JAMAIS de div comme image placeholder — TOUJOURS background-image CSS
 
+IMAGES OBLIGATOIRES — Utilise TOUJOURS de vraies balises <img> avec ces URLs Unsplash gratuites selon le contexte. JAMAIS de div placeholder gris.
+
+RESTAURANTS :
+- Hero : https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1400&q=80
+- Plat : https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80
+- Table : https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80
+- Chef : https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80
+- Sushi : https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&q=80
+- Pizza : https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80
+- Burger : https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80
+- Bar : https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80
+- Terrasse : https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80
+
+AGENCES & BUREAUX :
+- Open space : https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80
+- Équipe : https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80
+- Laptop : https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80
+- Réunion : https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80
+
+PORTFOLIO & CRÉATIF :
+- Studio photo : https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=1400&q=80
+- Design desk : https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800&q=80
+- Art : https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80
+
+ARCHITECTURE :
+- Maison moderne : https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1400&q=80
+- Intérieur : https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80
+- Villa : https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80
+
+SANTÉ :
+- Cabinet : https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&q=80
+- Médecin : https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=80
+
+FITNESS :
+- Gym : https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1400&q=80
+- Entraînement : https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80
+- Yoga : https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80
+
+BEAUTÉ :
+- Salon : https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1400&q=80
+- Soin : https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&q=80
+
+E-COMMERCE :
+- Boutique : https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1400&q=80
+- Mode : https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80
+- Bijoux : https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&q=80
+
+TECH & SAAS :
+- Tech : https://images.unsplash.com/photo-1518770660439-4636190af475?w=1400&q=80
+- Code : https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80
+
+PERSONNES (témoignages/équipe) :
+- Femme 1 : https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80
+- Femme 2 : https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80
+- Homme 1 : https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80
+- Homme 2 : https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80
+- Femme 3 : https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80
+- Homme 3 : https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80
+
+RÈGLES ABSOLUES IMAGES :
+- <img src='URL' alt='description' style='width:100%;height:100%;object-fit:cover;' loading='lazy'>
+- Hero : height 500px minimum
+- Cards : height 220px
+- Avatars : width 64px height 64px border-radius 50%
+- JAMAIS de div gris placeholder
+- Choisis l'image la plus pertinente selon le secteur
+
+RÈGLES ABSOLUES BOUTONS ET LIENS :
+- CHAQUE bouton doit mener quelque part de précis — INTERDIT de laisser href vide ou href='#' sans ancre réelle
+- Bouton 'Réserver' → href='#contact' ou href='#reservation' (section du site)
+- Bouton 'Voir le menu' → href='#menu'
+- Bouton 'Nos services' → href='#services'
+- Bouton 'Notre équipe' → href='#equipe'
+- Bouton 'Témoignages' → href='#temoignages'
+- Bouton 'Galerie' → href='#galerie'
+- Bouton 'Contact' → href='#contact'
+- Bouton 'Envoyer' dans les formulaires → JavaScript qui affiche 'Merci, nous vous recontactons sous 24h !'
+- Liens réseaux sociaux → href='https://instagram.com' (ou facebook, linkedin selon le business)
+- Liens téléphone → href='tel:+33XXXXXXXXX'
+- Liens email → href='mailto:contact@nomdusite.fr'
+- Chaque section doit avoir un id correspondant : id='menu', id='services', id='contact', etc.
+- La navbar doit avoir des ancres qui scrollent vers chaque section
+- Smooth scroll activé : html { scroll-behavior: smooth; }
+- AUCUN bouton ne peut rester sans destination — c'est INTERDIT
+
+RÈGLES ABSOLUES COMPLÉTUDE :
+- Le site doit être 100% complet avec TOUTES les sections demandées dans le prompt
+- Chaque section doit avoir du vrai contenu détaillé — pas de lorem ipsum
+- Si une section contient une liste : minimum 3 éléments
+- Si une section contient des cards : minimum 3 cards avec vrai contenu
+- Le formulaire de contact doit avoir : Nom, Prénom, Email, Téléphone, Message, Bouton Envoyer
+- Le footer doit contenir : Logo, Adresse, Téléphone, Email, Horaires, Liens réseaux sociaux, Copyright
+- La navbar doit avoir tous les liens vers toutes les sections
+- JAMAIS de section vide ou avec du contenu générique
+
 QUALITÉ FINALE :
 - Le site doit faire WOW dès le premier scroll
 - Un dev humain qui verrait le code dirait "c'est propre et professionnel"
