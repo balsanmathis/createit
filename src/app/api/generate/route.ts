@@ -271,21 +271,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true })
   }
 
-  // Rate limiting
-  const ip = (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
-  if (isRateLimited(ip, 5)) {
-    return NextResponse.json({ error: 'Trop de requêtes. Réessayez dans une minute.' }, { status: 429 })
-  }
-
-  // Auth check first
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
-  }
-
-  // Parse + validate body
+  // Parse + validate body early (before auth, so clients get meaningful errors)
   const body = await request.json()
   const { prompt, name, quality = 'standard' } = body
 
@@ -297,6 +283,20 @@ export async function POST(request: Request) {
   }
   if (name && typeof name !== 'string') {
     return NextResponse.json({ error: 'Nom invalide' }, { status: 400 })
+  }
+
+  // Rate limiting
+  const ip = (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  if (isRateLimited(ip, 5)) {
+    return NextResponse.json({ error: 'Trop de requêtes. Réessayez dans une minute.' }, { status: 429 })
+  }
+
+  // Auth check
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
 
   const sanitizedPrompt = prompt.trim()
