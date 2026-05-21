@@ -22,6 +22,7 @@ function SignupForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [honeypot, setHoneypot] = useState('')
 
   const planInfo = PLAN_INFO[plan.toLowerCase()]
 
@@ -29,6 +30,12 @@ function SignupForm() {
     e.preventDefault()
     setError('')
     setLoading(true)
+
+    if (honeypot) {
+      await new Promise(r => setTimeout(r, 1200))
+      router.push('/dashboard')
+      return
+    }
 
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -117,6 +124,16 @@ function SignupForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="text"
+          name="website"
+          autoComplete="off"
+          tabIndex={-1}
+          aria-hidden="true"
+          style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+        />
         <div>
           <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--fg-muted)' }}>Email</label>
           <input

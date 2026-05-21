@@ -171,9 +171,14 @@ const QUALITY_CONFIG: Record<string, { maxTokens: number; tokenCost: number; sys
 }
 
 export async function POST(request: Request) {
+  // Honeypot: silently absorb bot requests
+  if (request.headers.get('x-honeypot')) {
+    return NextResponse.json({ ok: true })
+  }
+
   // Rate limiting
   const ip = (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
-  if (isRateLimited(ip)) {
+  if (isRateLimited(ip, 5)) {
     return NextResponse.json({ error: 'Trop de requêtes. Réessayez dans une minute.' }, { status: 429 })
   }
 

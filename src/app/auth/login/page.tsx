@@ -15,6 +15,7 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [honeypot, setHoneypot] = useState('')
   const [error, setError] = useState(
     errorParam === 'missing_code' ? 'Lien invalide ou expiré.'
     : errorParam === 'exchange_failed' ? 'Erreur de connexion. Veuillez réessayer.'
@@ -26,6 +27,12 @@ function LoginForm() {
     e.preventDefault()
     setError('')
     setLoading(true)
+
+    if (honeypot) {
+      await new Promise(r => setTimeout(r, 1200))
+      router.push(redirectTo)
+      return
+    }
 
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,6 +75,16 @@ function LoginForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="text"
+          name="website"
+          autoComplete="off"
+          tabIndex={-1}
+          aria-hidden="true"
+          style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+        />
         <div>
           <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--fg-muted)' }}>Email</label>
           <input

@@ -3,6 +3,15 @@ import { createClient } from '@supabase/supabase-js'
 import { stripe } from '@/lib/stripe'
 import { generateWelcomeCode, sendWelcomeEmail } from '@/lib/email'
 
+const rlMap = new Map<string, number[]>()
+function isRateLimited(ip: string, limit = 5, windowMs = 60_000): boolean {
+  const now = Date.now()
+  const prev = (rlMap.get(ip) ?? []).filter(t => now - t < windowMs)
+  if (prev.length >= limit) return true
+  rlMap.set(ip, [...prev, now])
+  return false
+}
+
 function serviceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,6 +36,11 @@ async function getOrCreateWelcomeCoupon(): Promise<string> {
 }
 
 export async function POST(request: Request) {
+  const ip = (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  if (isRateLimited(ip)) {
+    return NextResponse.json({ ok: true }, { status: 429 })
+  }
+
   try {
     const { email } = await request.json()
     if (!email) return NextResponse.json({ error: 'Email requis' }, { status: 400 })
