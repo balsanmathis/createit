@@ -196,9 +196,10 @@ export async function generateWebsiteStreaming(
   const systemToUse = options.systemPrompt ?? SYSTEM_PROMPT
   const model       = options.model       ?? MODEL_HAIKU
 
-  // Dynamic budget: Haiku ~200 tok/s, +25s buffer, capped at 270s (maxDuration is 300s)
-  const totalMs        = options.timeoutMs ?? Math.min(Math.ceil(maxTokens / 180) * 1_000 + 25_000, 270_000)
-  const firstPassMs    = Math.floor(totalMs * 0.75)
+  // Haiku ~150 tok/s in practice, +45s buffer, capped at 270s (maxDuration is 300s)
+  // firstPassMs at 90% so one pass covers the whole generation; continuations are safety net only
+  const totalMs        = options.timeoutMs ?? Math.min(Math.ceil(maxTokens / 150) * 1_000 + 45_000, 270_000)
+  const firstPassMs    = Math.floor(totalMs * 0.90)
   const deadline       = Date.now() + totalMs
   const firstPassLimit = Date.now() + firstPassMs
 
