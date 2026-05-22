@@ -2,18 +2,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWebsiteStreaming } from '@/lib/claude'
 import { TOKEN_COST_GENERATE, PLAN_TOKEN_LIMITS } from '@/types'
+import { checkRateLimit } from '@/lib/ratelimit'
 
 export const maxDuration = 300
-
-// In-process rate limiter — per-instance (use Redis for distributed production)
-const rlMap = new Map<string, number[]>()
-function isRateLimited(ip: string, limit = 10, windowMs = 60_000): boolean {
-  const now = Date.now()
-  const prev = (rlMap.get(ip) ?? []).filter(t => now - t < windowMs)
-  if (prev.length >= limit) return true
-  rlMap.set(ip, [...prev, now])
-  return false
-}
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 
@@ -168,8 +159,9 @@ export async function POST(request: Request) {
 
   // Rate limiting
   const ip = (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
-  if (isRateLimited(ip, 5)) {
-    return NextResponse.json({ error: 'Trop de requêtes. Réessayez dans une minute.' }, { status: 429 })
+  const allowed = await checkRateLimit('generate', ip, 5, '1 m')
+  if (!allowed) {
+    return NextResponse.json({ error: 'Trop de tentatives, réessayez dans 1 minute' }, { status: 429 })
   }
 
   // Auth check

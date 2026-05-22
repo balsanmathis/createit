@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { Turnstile } from '@marsidev/react-turnstile'
 import AuthCard from '@/components/auth/AuthCard'
 
 const PLAN_INFO: Record<string, { label: string; price: string }> = {
@@ -11,6 +11,13 @@ const PLAN_INFO: Record<string, { label: string; price: string }> = {
   pro: { label: 'Pro', price: '45 €/mois' },
   agency: { label: 'Agency', price: '250 €/mois' },
 }
+
+const DISPOSABLE_DOMAINS = new Set([
+  'mailinator.com', 'tempmail.com', 'guerrillamail.com', 'yopmail.com',
+  'throwaway.email', 'sharklasers.com', 'trashmail.com', 'trashmail.me',
+  'trashmail.net', 'maildrop.cc', 'discard.email', 'spam4.me',
+  'dispostable.com', 'getairmail.com', 'fakeinbox.com', 'tempr.email',
+])
 
 function SignupForm() {
   const router = useRouter()
@@ -23,7 +30,9 @@ function SignupForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [honeypot, setHoneypot] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState('')
 
+  const openTimeRef = useRef(Date.now())
   const planInfo = PLAN_INFO[plan.toLowerCase()]
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -31,28 +40,52 @@ function SignupForm() {
     setError('')
     setLoading(true)
 
+    // Honeypot check (client-side, instant)
     if (honeypot) {
       await new Promise(r => setTimeout(r, 1200))
       router.push('/dashboard')
       return
     }
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    // Behavioral check: submitted in < 2s = likely bot
+    if (Date.now() - openTimeRef.current < 2000) {
+      await new Promise(r => setTimeout(r, 1200))
+      router.push('/dashboard')
+      return
+    }
 
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
-
-    if (signUpError) {
-      setError(signUpError.message === 'User already registered'
-        ? 'Un compte existe déjà avec cet email. Connectez-vous.'
-        : signUpError.message)
+    // Disposable email check (client-side pre-validation)
+    const domain = email.split('@')[1]?.toLowerCase()
+    if (domain && DISPOSABLE_DOMAINS.has(domain)) {
+      setError('Veuillez utiliser une adresse email professionnelle')
       setLoading(false)
       return
     }
 
-    if (data?.user) {
+    // Call server-side signup route (rate limit + Turnstile + disposable email + account creation)
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        turnstileToken,
+        openTime: openTimeRef.current,
+      }),
+    })
+
+    const json = await res.json()
+
+    if (!res.ok) {
+      setError(json.error ?? 'Une erreur est survenue.')
+      setLoading(false)
+      return
+    }
+
+    // ok: true = silent bot rejection (fake success)
+    // user: { id } = real user created
+
+    if (json.user) {
       fetch('/api/auth/welcome', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -62,18 +95,18 @@ function SignupForm() {
 
     if (plan) {
       try {
-        const res = await fetch('/api/stripe/create-checkout', {
+        const checkoutRes = await fetch('/api/stripe/create-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ plan }),
         })
-        const json = await res.json()
-        if (json?.url) {
-          window.location.href = json.url
+        const checkoutJson = await checkoutRes.json()
+        if (checkoutJson?.url) {
+          window.location.href = checkoutJson.url
           return
         }
       } catch {
-        // fall through to tarifs
+        // fall through
       }
       router.push(`/tarifs?plan=${plan}`)
     } else if (prompt) {
@@ -124,6 +157,7 @@ function SignupForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Honeypot */}
         <input
           type="text"
           name="website"
@@ -134,6 +168,7 @@ function SignupForm() {
           value={honeypot}
           onChange={(e) => setHoneypot(e.target.value)}
         />
+
         <div>
           <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--fg-muted)' }}>Email</label>
           <input
@@ -177,9 +212,21 @@ function SignupForm() {
           />
         </div>
 
+        {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          <div className="flex justify-center">
+            <Turnstile
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+              onSuccess={setTurnstileToken}
+              onError={() => setTurnstileToken('')}
+              onExpire={() => setTurnstileToken('')}
+              options={{ theme: 'auto', size: 'normal' }}
+            />
+          </div>
+        )}
+
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken)}
           className="w-full text-white font-medium rounded-lg text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ background: 'var(--accent)', height: 42, marginTop: 4 }}
           onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'var(--accent-hover)' }}

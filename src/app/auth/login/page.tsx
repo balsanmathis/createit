@@ -3,7 +3,6 @@
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
 import AuthCard from '@/components/auth/AuthCard'
 
 function LoginForm() {
@@ -34,17 +33,16 @@ function LoginForm() {
       return
     }
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    const json = await res.json()
 
-    if (signInError) {
-      setError(signInError.message === 'Invalid login credentials'
-        ? 'Email ou mot de passe incorrect.'
-        : signInError.message)
+    if (!res.ok) {
+      setError(json.error ?? 'Une erreur est survenue.')
       setLoading(false)
       return
     }
@@ -75,6 +73,7 @@ function LoginForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Honeypot */}
         <input
           type="text"
           name="website"
@@ -85,6 +84,7 @@ function LoginForm() {
           value={honeypot}
           onChange={(e) => setHoneypot(e.target.value)}
         />
+
         <div>
           <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--fg-muted)' }}>Email</label>
           <input
