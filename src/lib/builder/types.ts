@@ -1,6 +1,15 @@
 export type BlockCategory = 'layout' | 'navigation' | 'hero' | 'text' | 'media' | 'buttons' | 'cards' | 'sections' | 'forms' | 'effects'
 
-export type AnimationType = 'none' | 'fadeIn' | 'slideUp' | 'slideLeft' | 'slideRight' | 'zoomIn' | 'bounce'
+export type AnimationType =
+  | 'none'
+  | 'fadeIn' | 'fadeInDown' | 'fadeInLeft' | 'fadeInRight'
+  | 'slideUp' | 'slideLeft' | 'slideRight'
+  | 'zoomIn' | 'zoomOut'
+  | 'flipX' | 'flipY'
+  | 'bounce' | 'swing' | 'shake' | 'pulse' | 'heartbeat' | 'rubberBand' | 'tada'
+  | 'float' | 'spin' | 'ping' | 'shimmer'
+
+export type HoverEffect = 'none' | 'lift' | 'grow' | 'shrink' | 'glow' | 'tilt' | 'underline'
 
 export type Viewport = 'desktop' | 'tablet' | 'mobile'
 
@@ -21,6 +30,8 @@ export interface BlockStyle {
   fontFamily?: string
   opacity?: number
   width?: string
+  minHeight?: string
+  height?: string
 }
 
 export interface BlockAnimation {
@@ -28,6 +39,7 @@ export interface BlockAnimation {
   duration: number  // 0.2 to 2.0
   delay: number     // 0 to 1.0
   trigger: 'load' | 'scroll'
+  hover?: HoverEffect
 }
 
 export interface Block {
@@ -42,7 +54,7 @@ export interface BlockDef {
   type: string
   label: string
   category: BlockCategory
-  icon: string  // emoji or SVG string
+  icon: string
   defaultContent: Record<string, string>
   defaultStyle: BlockStyle
   render: (content: Record<string, string>, style: BlockStyle) => string

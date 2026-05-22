@@ -2,57 +2,73 @@
 
 import { useState } from 'react'
 import { useBuilder } from '@/lib/builder/context'
-import type { BlockStyle, BlockAnimation, AnimationType } from '@/lib/builder/types'
+import { BLOCK_DEFS } from '@/lib/builder/blocks'
+import ImageUploader from './ImageUploader'
+import type { BlockStyle, BlockAnimation, AnimationType, HoverEffect } from '@/lib/builder/types'
+
+const IMAGE_KEYS = new Set(['image', 'src', 'photo', 'avatar'])
+const BOOL_KEYS = new Set(['autoplay', 'muted', 'loop', 'controls'])
 
 const CONTENT_LABEL_MAP: Record<string, string> = {
-  title: 'Titre',
-  subtitle: 'Sous-titre',
-  text: 'Texte',
-  cta: 'Bouton CTA',
-  href: 'Lien URL',
-  logo: 'Logo',
-  link1: 'Lien 1',
-  link2: 'Lien 2',
-  link3: 'Lien 3',
-  copyright: 'Copyright',
-  image: 'URL image',
-  src: 'URL image',
-  alt: 'Texte alternatif',
-  author: 'Auteur',
-  name: 'Nom',
-  role: 'Rôle',
-  photo: 'URL photo',
-  avatar: 'URL avatar',
-  url: 'URL vidéo',
-  height: 'Hauteur (px)',
-  bg: 'Couleur de fond',
-  color: 'Couleur du texte',
-  left: 'Colonne gauche',
-  right: 'Colonne droite',
-  col1: 'Colonne 1',
-  col2: 'Colonne 2',
-  col3: 'Colonne 3',
-  price: 'Prix',
-  icon: 'Icône',
-  email: 'Email',
-  phone: 'Téléphone',
-  address: 'Adresse',
-  submitLabel: 'Label bouton',
+  title: 'Titre', subtitle: 'Sous-titre', text: 'Texte', cta: 'Bouton CTA',
+  href: 'Lien URL', logo: 'Logo', link1: 'Lien 1', link2: 'Lien 2', link3: 'Lien 3',
+  copyright: 'Copyright', image: 'Image', src: 'Image', alt: 'Texte alternatif',
+  author: 'Auteur', name: 'Nom', role: 'Rôle', photo: 'Photo', avatar: 'Avatar',
+  url: 'URL', height: 'Hauteur (px)', bg: 'Couleur fond', color: 'Couleur texte',
+  left: 'Colonne gauche', right: 'Colonne droite',
+  col1: 'Colonne 1', col2: 'Colonne 2', col3: 'Colonne 3',
+  price: 'Prix', icon: 'Icône', email: 'Email', phone: 'Téléphone', address: 'Adresse',
+  submitLabel: 'Label bouton', html: 'HTML', autoplay: 'Autoplay', muted: 'Muet',
+  loop: 'Boucle', controls: 'Contrôles', ratio: 'Format vidéo',
 }
 
 function labelForKey(key: string): string {
   if (CONTENT_LABEL_MAP[key]) return CONTENT_LABEL_MAP[key]
-  // Auto-generate readable label
-  return key
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, s => s.toUpperCase())
-    .replace(/(\d+)/, ' $1')
-    .trim()
+  return key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).replace(/(\d+)/, ' $1').trim()
 }
 
 function isLongText(key: string, value: string): boolean {
-  return value.length > 60 || key === 'text' || key === 'subtitle' || key.startsWith('col') || key.startsWith('a')
+  return (
+    value.length > 60 || key === 'text' || key === 'subtitle' || key === 'html' ||
+    key.startsWith('col') || key === 'left' || key === 'right' || key === 'address'
+  )
 }
+
+const ANIMATION_OPTIONS: { value: AnimationType; label: string; group: string }[] = [
+  { value: 'none', label: 'Aucune', group: '' },
+  { value: 'fadeIn', label: 'Fondu', group: 'Entrée' },
+  { value: 'fadeInDown', label: 'Fondu ↓', group: 'Entrée' },
+  { value: 'fadeInLeft', label: 'Fondu ←', group: 'Entrée' },
+  { value: 'fadeInRight', label: 'Fondu →', group: 'Entrée' },
+  { value: 'slideUp', label: 'Glissement ↑', group: 'Entrée' },
+  { value: 'slideLeft', label: 'Glissement ←', group: 'Entrée' },
+  { value: 'slideRight', label: 'Glissement →', group: 'Entrée' },
+  { value: 'zoomIn', label: 'Zoom entrant', group: 'Entrée' },
+  { value: 'zoomOut', label: 'Zoom sortant', group: 'Entrée' },
+  { value: 'flipX', label: 'Flip horizontal', group: 'Entrée' },
+  { value: 'flipY', label: 'Flip vertical', group: 'Entrée' },
+  { value: 'bounce', label: 'Rebond', group: 'Attention' },
+  { value: 'swing', label: 'Balancement', group: 'Attention' },
+  { value: 'shake', label: 'Secousse', group: 'Attention' },
+  { value: 'pulse', label: 'Pulsation', group: 'Attention' },
+  { value: 'heartbeat', label: 'Battement', group: 'Attention' },
+  { value: 'rubberBand', label: 'Élastique', group: 'Attention' },
+  { value: 'tada', label: 'Tada !', group: 'Attention' },
+  { value: 'float', label: 'Flottement', group: 'Continu' },
+  { value: 'spin', label: 'Rotation', group: 'Continu' },
+  { value: 'ping', label: 'Ping', group: 'Continu' },
+  { value: 'shimmer', label: 'Shimmer', group: 'Continu' },
+]
+
+const HOVER_OPTIONS: { value: HoverEffect; label: string }[] = [
+  { value: 'none', label: 'Aucun' },
+  { value: 'lift', label: '⬆ Lever' },
+  { value: 'grow', label: '↔ Agrandir' },
+  { value: 'shrink', label: '↕ Réduire' },
+  { value: 'glow', label: '✨ Halo' },
+  { value: 'tilt', label: '↗ Inclinaison' },
+  { value: 'underline', label: '— Souligner' },
+]
 
 type Tab = 'content' | 'style' | 'animation'
 
@@ -61,25 +77,14 @@ export default function StylePanel() {
   const [tab, setTab] = useState<Tab>('content')
 
   const selectedBlock = state.blocks.find(b => b.id === state.selectedId)
+  const def = selectedBlock ? BLOCK_DEFS.find(d => d.type === selectedBlock.type) : null
 
   if (!selectedBlock) {
     return (
-      <aside style={{
-        width: 300,
-        flexShrink: 0,
-        background: 'var(--surface)',
-        borderLeft: '1px solid var(--border)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 24,
-        height: '100%',
-      }}>
-        <div style={{ textAlign: 'center', color: 'var(--fg-muted)' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🎨</div>
-          <p style={{ fontSize: 13, lineHeight: 1.5, margin: 0 }}>
-            Sélectionnez un bloc pour<br />éditer ses propriétés
-          </p>
+      <aside style={{ width: 300, flexShrink: 0, background: '#fff', borderLeft: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, height: '100%' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🎨</div>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>Sélectionnez un bloc<br />pour éditer ses propriétés</p>
         </div>
       </aside>
     )
@@ -88,43 +93,29 @@ export default function StylePanel() {
   const { id, content, style, animation } = selectedBlock
 
   return (
-    <aside style={{
-      width: 300,
-      flexShrink: 0,
-      background: 'var(--surface)',
-      borderLeft: '1px solid var(--border)',
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      overflow: 'hidden',
-    }}>
-      {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-        {(['content', 'style', 'animation'] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              flex: 1,
-              padding: '10px 0',
-              background: 'none',
-              border: 'none',
-              borderBottom: tab === t ? '2px solid var(--accent)' : '2px solid transparent',
-              color: tab === t ? 'var(--accent)' : 'var(--fg-muted)',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              marginBottom: -1,
-              textTransform: 'capitalize',
-            }}
-          >
-            {t === 'content' ? '✏️ Contenu' : t === 'style' ? '🎨 Style' : '✨ Animation'}
-          </button>
-        ))}
+    <aside style={{ width: 300, flexShrink: 0, background: '#fff', borderLeft: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Block name + tabs */}
+      <div style={{ flexShrink: 0, borderBottom: '1px solid #e2e8f0', padding: '12px 16px 0' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#18181b', marginBottom: 10 }}>
+          {def?.icon} {def?.label || selectedBlock.type}
+        </div>
+        <div style={{ display: 'flex' }}>
+          {(['content', 'style', 'animation'] as Tab[]).map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{
+              flex: 1, padding: '6px 0', background: 'none', border: 'none',
+              borderBottom: tab === t ? '2px solid #2563eb' : '2px solid transparent',
+              color: tab === t ? '#2563eb' : '#94a3b8',
+              fontSize: 11, fontWeight: 600, cursor: 'pointer', marginBottom: -1,
+              textTransform: 'uppercase', letterSpacing: '0.06em',
+            }}>
+              {t === 'content' ? 'Contenu' : t === 'style' ? 'Style' : 'Animation'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Panel body */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
         {tab === 'content' && (
           <ContentTab
             content={content}
@@ -132,16 +123,10 @@ export default function StylePanel() {
           />
         )}
         {tab === 'style' && (
-          <StyleTab
-            style={style}
-            onChange={(patch) => updateStyle(id, patch)}
-          />
+          <StyleTab style={style} onChange={(patch) => updateStyle(id, patch)} />
         )}
         {tab === 'animation' && (
-          <AnimationTab
-            animation={animation}
-            onChange={(patch) => updateAnimation(id, patch)}
-          />
+          <AnimationTab animation={animation} onChange={(patch) => updateAnimation(id, patch)} />
         )}
       </div>
     </aside>
@@ -155,30 +140,45 @@ function ContentTab({ content, onChange }: {
 }) {
   const entries = Object.entries(content)
   if (entries.length === 0) {
-    return <p style={{ color: 'var(--fg-muted)', fontSize: 13 }}>Aucun contenu configurable.</p>
+    return <div style={{ padding: 16 }}><p style={{ color: '#94a3b8', fontSize: 12, margin: 0 }}>Aucun contenu configurable.</p></div>
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div>
       {entries.map(([key, value]) => (
-        <div key={key}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--fg-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            {labelForKey(key)}
-          </label>
-          {isLongText(key, value) ? (
+        <div key={key} style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+          <label style={labelSt}>{labelForKey(key)}</label>
+
+          {IMAGE_KEYS.has(key) ? (
+            <ImageUploader value={value} onChange={v => onChange(key, v)} />
+          ) : BOOL_KEYS.has(key) ? (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={value === 'true'}
+                onChange={e => onChange(key, e.target.checked ? 'true' : 'false')}
+                style={{ accentColor: '#2563eb', width: 14, height: 14 }}
+              />
+              <span style={{ fontSize: 12, color: '#374151' }}>{value === 'true' ? 'Activé' : 'Désactivé'}</span>
+            </label>
+          ) : key === 'ratio' ? (
+            <select value={value} onChange={e => onChange(key, e.target.value)} style={selectSt}>
+              <option value="16/9">16:9 (YouTube)</option>
+              <option value="4/3">4:3 (Standard)</option>
+              <option value="1/1">1:1 (Carré)</option>
+              <option value="9/16">9:16 (Vertical)</option>
+            </select>
+          ) : key === 'html' ? (
             <textarea
               value={value}
               onChange={e => onChange(key, e.target.value)}
-              rows={4}
-              style={inputStyle}
+              rows={8}
+              style={{ ...textareaSt, fontFamily: 'monospace', fontSize: 11 }}
             />
+          ) : isLongText(key, value) ? (
+            <textarea value={value} onChange={e => onChange(key, e.target.value)} rows={3} style={textareaSt} />
           ) : (
-            <input
-              type="text"
-              value={value}
-              onChange={e => onChange(key, e.target.value)}
-              style={inputStyle}
-            />
+            <input type="text" value={value} onChange={e => onChange(key, e.target.value)} style={inputSt} />
           )}
         </div>
       ))}
@@ -187,73 +187,80 @@ function ContentTab({ content, onChange }: {
 }
 
 // ─── Style Tab ────────────────────────────────────────────────────────────────
-function StyleTab({ style: s, onChange }: {
-  style: BlockStyle
-  onChange: (patch: BlockStyle) => void
-}) {
+function StyleTab({ style: s, onChange }: { style: BlockStyle; onChange: (p: BlockStyle) => void }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Colors */}
+    <div>
       <Section title="Couleurs">
-        <ColorField label="Fond" value={s.background || ''} onChange={v => onChange({ background: v })} />
-        <ColorField label="Texte" value={s.color || ''} onChange={v => onChange({ color: v })} />
+        <ColorRow label="Fond" value={s.background || ''} onChange={v => onChange({ background: v })} />
+        <ColorRow label="Texte" value={s.color || ''} onChange={v => onChange({ color: v })} />
       </Section>
 
-      {/* Padding */}
-      <Section title="Espacement intérieur (padding)">
-        <SliderField label="Haut" value={s.paddingTop ?? 0} min={0} max={120} onChange={v => onChange({ paddingTop: v })} />
-        <SliderField label="Droite" value={s.paddingRight ?? 0} min={0} max={120} onChange={v => onChange({ paddingRight: v })} />
-        <SliderField label="Bas" value={s.paddingBottom ?? 0} min={0} max={120} onChange={v => onChange({ paddingBottom: v })} />
-        <SliderField label="Gauche" value={s.paddingLeft ?? 0} min={0} max={120} onChange={v => onChange({ paddingLeft: v })} />
-      </Section>
-
-      {/* Margin */}
-      <Section title="Marge extérieure (margin)">
-        <SliderField label="Haut" value={s.marginTop ?? 0} min={0} max={100} onChange={v => onChange({ marginTop: v })} />
-        <SliderField label="Bas" value={s.marginBottom ?? 0} min={0} max={100} onChange={v => onChange({ marginBottom: v })} />
-      </Section>
-
-      {/* Typography */}
-      <Section title="Typographie">
-        <SliderField label="Taille police" value={s.fontSize ?? 16} min={10} max={80} onChange={v => onChange({ fontSize: v })} />
-        <SliderField label="Graisse" value={s.fontWeight ?? 400} min={100} max={900} step={100} onChange={v => onChange({ fontWeight: v })} />
+      <Section title="Dimensions">
         <div>
-          <label style={labelStyle}>Alignement</label>
-          <select value={s.textAlign || 'left'} onChange={e => onChange({ textAlign: e.target.value as BlockStyle['textAlign'] })} style={selectStyle}>
-            <option value="left">Gauche</option>
-            <option value="center">Centre</option>
-            <option value="right">Droite</option>
-          </select>
+          <label style={labelSt}>Largeur</label>
+          <input type="text" placeholder="100%, 800px…" value={s.width || ''} onChange={e => onChange({ width: e.target.value })} style={inputSt} />
         </div>
         <div>
-          <label style={labelStyle}>Police</label>
-          <select value={s.fontFamily || ''} onChange={e => onChange({ fontFamily: e.target.value })} style={selectStyle}>
+          <label style={labelSt}>Hauteur min</label>
+          <input type="text" placeholder="400px, auto…" value={s.minHeight || ''} onChange={e => onChange({ minHeight: e.target.value })} style={inputSt} />
+        </div>
+      </Section>
+
+      <Section title="Espacement">
+        <SliderRow label="Padding haut" value={s.paddingTop ?? 0} min={0} max={120} onChange={v => onChange({ paddingTop: v })} />
+        <SliderRow label="Padding droite" value={s.paddingRight ?? 0} min={0} max={120} onChange={v => onChange({ paddingRight: v })} />
+        <SliderRow label="Padding bas" value={s.paddingBottom ?? 0} min={0} max={120} onChange={v => onChange({ paddingBottom: v })} />
+        <SliderRow label="Padding gauche" value={s.paddingLeft ?? 0} min={0} max={120} onChange={v => onChange({ paddingLeft: v })} />
+        <SliderRow label="Marge haut" value={s.marginTop ?? 0} min={0} max={100} onChange={v => onChange({ marginTop: v })} />
+        <SliderRow label="Marge bas" value={s.marginBottom ?? 0} min={0} max={100} onChange={v => onChange({ marginBottom: v })} />
+      </Section>
+
+      <Section title="Typographie">
+        <SliderRow label="Taille police" value={s.fontSize ?? 16} min={10} max={80} onChange={v => onChange({ fontSize: v })} />
+        <SliderRow label="Graisse" value={s.fontWeight ?? 400} min={100} max={900} step={100} onChange={v => onChange({ fontWeight: v })} />
+        <div>
+          <label style={labelSt}>Alignement</label>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {(['left', 'center', 'right'] as const).map(a => (
+              <button key={a} onClick={() => onChange({ textAlign: a })} style={{
+                flex: 1, height: 32,
+                border: `1px solid ${s.textAlign === a ? '#2563eb' : '#e2e8f0'}`,
+                background: s.textAlign === a ? '#eff6ff' : '#fff',
+                borderRadius: 5, cursor: 'pointer', fontSize: 14,
+                color: s.textAlign === a ? '#2563eb' : '#64748b',
+              }}>
+                {a === 'left' ? '⬅' : a === 'center' ? '↔' : '➡'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label style={labelSt}>Police</label>
+          <select value={s.fontFamily || ''} onChange={e => onChange({ fontFamily: e.target.value })} style={selectSt}>
             <option value="">Par défaut</option>
-            <option value="Georgia,serif">Georgia (serif)</option>
+            <option value="Georgia,serif">Georgia</option>
             <option value="'Times New Roman',serif">Times New Roman</option>
             <option value="Arial,sans-serif">Arial</option>
             <option value="'Helvetica Neue',sans-serif">Helvetica Neue</option>
             <option value="'Courier New',monospace">Courier New</option>
+            <option value="'Playfair Display',serif">Playfair Display</option>
+            <option value="'Montserrat',sans-serif">Montserrat</option>
           </select>
         </div>
       </Section>
 
-      {/* Appearance */}
       <Section title="Apparence">
-        <SliderField label="Border radius" value={s.borderRadius ?? 0} min={0} max={50} onChange={v => onChange({ borderRadius: v })} />
-        <SliderField label="Opacité (%)" value={s.opacity ?? 100} min={0} max={100} onChange={v => onChange({ opacity: v })} />
+        <SliderRow label="Border radius" value={s.borderRadius ?? 0} min={0} max={50} onChange={v => onChange({ borderRadius: v })} />
+        <SliderRow label="Opacité" value={s.opacity ?? 100} min={0} max={100} onChange={v => onChange({ opacity: v })} />
         <div>
-          <label style={labelStyle}>Ombre</label>
-          <select value={s.boxShadow || ''} onChange={e => onChange({ boxShadow: e.target.value })} style={selectStyle}>
+          <label style={labelSt}>Ombre</label>
+          <select value={s.boxShadow || ''} onChange={e => onChange({ boxShadow: e.target.value })} style={selectSt}>
             <option value="">Aucune</option>
-            <option value="0 1px 2px rgba(0,0,0,0.05)">Légère (sm)</option>
-            <option value="0 4px 6px rgba(0,0,0,0.07),0 1px 3px rgba(0,0,0,0.06)">Moyenne (md)</option>
-            <option value="0 10px 15px rgba(0,0,0,0.1),0 4px 6px rgba(0,0,0,0.05)">Grande (lg)</option>
+            <option value="0 1px 2px rgba(0,0,0,0.05)">Légère</option>
+            <option value="0 4px 6px rgba(0,0,0,0.07),0 1px 3px rgba(0,0,0,0.06)">Moyenne</option>
+            <option value="0 10px 15px rgba(0,0,0,0.1),0 4px 6px rgba(0,0,0,0.05)">Grande</option>
+            <option value="0 25px 50px rgba(0,0,0,0.15)">XL</option>
           </select>
-        </div>
-        <div>
-          <label style={labelStyle}>Largeur</label>
-          <input type="text" placeholder="Ex: 100%, 800px" value={s.width || ''} onChange={e => onChange({ width: e.target.value })} style={inputStyle} />
         </div>
       </Section>
     </div>
@@ -261,71 +268,85 @@ function StyleTab({ style: s, onChange }: {
 }
 
 // ─── Animation Tab ────────────────────────────────────────────────────────────
-const ANIMATION_OPTIONS: { value: AnimationType; label: string }[] = [
-  { value: 'none', label: 'Aucune' },
-  { value: 'fadeIn', label: 'Fondu entrant' },
-  { value: 'slideUp', label: 'Glissement bas → haut' },
-  { value: 'slideLeft', label: 'Glissement droite → gauche' },
-  { value: 'slideRight', label: 'Glissement gauche → droite' },
-  { value: 'zoomIn', label: 'Zoom entrant' },
-  { value: 'bounce', label: 'Rebond' },
-]
-
 function AnimationTab({ animation, onChange }: {
   animation: BlockAnimation
-  onChange: (patch: Partial<BlockAnimation>) => void
+  onChange: (p: Partial<BlockAnimation>) => void
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div>
-        <label style={labelStyle}>Type d'animation</label>
-        <select
-          value={animation.type}
-          onChange={e => onChange({ type: e.target.value as AnimationType })}
-          style={selectStyle}
-        >
-          {ANIMATION_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-      </div>
-
-      {animation.type !== 'none' && (
-        <>
-          <SliderField
-            label={`Durée: ${animation.duration.toFixed(1)}s`}
-            value={animation.duration * 10}
-            min={2}
-            max={20}
-            onChange={v => onChange({ duration: v / 10 })}
-          />
-          <SliderField
-            label={`Délai: ${animation.delay.toFixed(1)}s`}
-            value={animation.delay * 10}
-            min={0}
-            max={10}
-            onChange={v => onChange({ delay: v / 10 })}
-          />
-          <div>
-            <label style={labelStyle}>Déclencheur</label>
-            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-              {(['load', 'scroll'] as const).map(t => (
-                <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--fg)' }}>
-                  <input
-                    type="radio"
-                    name="trigger"
-                    value={t}
-                    checked={animation.trigger === t}
-                    onChange={() => onChange({ trigger: t })}
-                    style={{ accentColor: 'var(--accent)' }}
-                  />
-                  {t === 'load' ? 'Au chargement' : 'Au scroll'}
-                </label>
+    <div>
+      <Section title="Animation d'entrée">
+        <div>
+          <label style={labelSt}>Type</label>
+          <select value={animation.type} onChange={e => onChange({ type: e.target.value as AnimationType })} style={selectSt}>
+            <option value="none">Aucune</option>
+            <optgroup label="Entrée">
+              {ANIMATION_OPTIONS.filter(o => o.group === 'Entrée').map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
               ))}
+            </optgroup>
+            <optgroup label="Attention">
+              {ANIMATION_OPTIONS.filter(o => o.group === 'Attention').map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Continu">
+              {ANIMATION_OPTIONS.filter(o => o.group === 'Continu').map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </optgroup>
+          </select>
+        </div>
+
+        {animation.type !== 'none' && (
+          <>
+            <SliderRow
+              label={`Durée : ${animation.duration.toFixed(1)}s`}
+              value={Math.round(animation.duration * 10)}
+              min={2} max={20}
+              onChange={v => onChange({ duration: v / 10 })}
+            />
+            <SliderRow
+              label={`Délai : ${animation.delay.toFixed(1)}s`}
+              value={Math.round(animation.delay * 10)}
+              min={0} max={10}
+              onChange={v => onChange({ delay: v / 10 })}
+            />
+            <div>
+              <label style={labelSt}>Déclencheur</label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {(['load', 'scroll'] as const).map(t => (
+                  <button key={t} onClick={() => onChange({ trigger: t })} style={{
+                    flex: 1, height: 32,
+                    border: `1px solid ${animation.trigger === t ? '#2563eb' : '#e2e8f0'}`,
+                    background: animation.trigger === t ? '#eff6ff' : '#fff',
+                    borderRadius: 5, cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                    color: animation.trigger === t ? '#2563eb' : '#64748b',
+                    textTransform: 'uppercase', letterSpacing: '0.04em',
+                  }}>
+                    {t === 'load' ? 'Chargement' : 'Scroll'}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </Section>
+
+      <Section title="Effet au survol">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+          {HOVER_OPTIONS.map(opt => (
+            <button key={opt.value} onClick={() => onChange({ hover: opt.value })} style={{
+              height: 32, border: `1px solid ${animation.hover === opt.value ? '#2563eb' : '#e2e8f0'}`,
+              background: animation.hover === opt.value ? '#eff6ff' : '#fff',
+              borderRadius: 5, cursor: 'pointer', fontSize: 11,
+              color: animation.hover === opt.value ? '#2563eb' : '#64748b',
+              fontWeight: animation.hover === opt.value ? 600 : 400,
+            }}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </Section>
     </div>
   )
 }
@@ -333,82 +354,87 @@ function AnimationTab({ animation, onChange }: {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+    <div style={{ borderTop: '1px solid #f1f5f9', padding: 16 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
         {title}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {children}
       </div>
     </div>
   )
 }
 
-function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <label style={{ fontSize: 13, color: 'var(--fg)', fontWeight: 500 }}>{label}</label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <input type="color" value={value || '#ffffff'} onChange={e => onChange(e.target.value)}
-          style={{ width: 32, height: 28, border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: 2 }} />
-        <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder="#ffffff"
-          style={{ ...inputStyle, width: 90, marginBottom: 0 }} />
+      <span style={{ fontSize: 12, color: '#374151' }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ position: 'relative', width: 24, height: 24, flexShrink: 0 }}>
+          <div style={{ width: 24, height: 24, borderRadius: 4, background: value || '#fff', border: '1px solid #e2e8f0' }} />
+          <input
+            type="color"
+            value={value || '#ffffff'}
+            onChange={e => onChange(e.target.value)}
+            style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+          />
+        </div>
+        <input
+          type="text"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="#ffffff"
+          style={{ ...inputSt, width: 80 }}
+        />
       </div>
     </div>
   )
 }
 
-function SliderField({ label, value, min, max, step = 1, onChange }: {
+function SliderRow({ label, value, min, max, step = 1, onChange }: {
   label: string; value: number; min: number; max: number; step?: number; onChange: (v: number) => void
 }) {
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-        <label style={{ fontSize: 12, color: 'var(--fg-muted)', fontWeight: 500 }}>{label}</label>
-        <span style={{ fontSize: 12, color: 'var(--fg)', fontWeight: 600, minWidth: 32, textAlign: 'right' }}>{value}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 11, color: '#64748b' }}>{label}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#18181b' }}>{value}</span>
       </div>
       <input
         type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
+        min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: 'var(--accent)' }}
+        style={{ width: '100%', accentColor: '#2563eb' }}
       />
     </div>
   )
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '8px 10px',
-  border: '1px solid var(--border)',
-  borderRadius: 6,
-  fontSize: 13,
-  background: 'var(--bg)',
-  color: 'var(--fg)',
-  outline: 'none',
-  resize: 'vertical',
-  boxSizing: 'border-box',
+// ─── Shared styles ────────────────────────────────────────────────────────────
+const inputSt: React.CSSProperties = {
+  width: '100%', height: 32, padding: '0 10px',
+  border: '1px solid #e2e8f0', borderRadius: 5,
+  fontSize: 13, background: '#fff', color: '#18181b',
+  outline: 'none', boxSizing: 'border-box',
 }
 
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 12,
-  fontWeight: 600,
-  color: 'var(--fg-muted)',
-  marginBottom: 6,
+const textareaSt: React.CSSProperties = {
+  width: '100%', padding: '8px 10px',
+  border: '1px solid #e2e8f0', borderRadius: 5,
+  fontSize: 13, background: '#fff', color: '#18181b',
+  outline: 'none', resize: 'vertical', boxSizing: 'border-box',
+  lineHeight: 1.5,
 }
 
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '8px 10px',
-  border: '1px solid var(--border)',
-  borderRadius: 6,
-  fontSize: 13,
-  background: 'var(--bg)',
-  color: 'var(--fg)',
-  outline: 'none',
-  cursor: 'pointer',
+const selectSt: React.CSSProperties = {
+  width: '100%', height: 32, padding: '0 8px',
+  border: '1px solid #e2e8f0', borderRadius: 5,
+  fontSize: 13, background: '#fff', color: '#18181b',
+  outline: 'none', cursor: 'pointer',
+}
+
+const labelSt: React.CSSProperties = {
+  display: 'block', fontSize: 11, fontWeight: 600,
+  color: '#94a3b8', textTransform: 'uppercase',
+  letterSpacing: '0.08em', marginBottom: 4,
 }

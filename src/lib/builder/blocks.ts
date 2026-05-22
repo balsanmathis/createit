@@ -16,7 +16,50 @@ function styleToPartialCss(style: BlockStyle): string {
   if (style.fontWeight) parts.push(`font-weight:${style.fontWeight}`)
   if (style.fontFamily) parts.push(`font-family:${style.fontFamily}`)
   if (style.opacity !== undefined) parts.push(`opacity:${style.opacity / 100}`)
+  if (style.minHeight) parts.push(`min-height:${style.minHeight}`)
+  if (style.height) parts.push(`height:${style.height}`)
   return parts.join(';')
+}
+
+function buildVideoEmbed(
+  url: string,
+  opts: { autoplay?: string; muted?: string; loop?: string; controls?: string; ratio?: string }
+): string {
+  const autoplay = opts.autoplay === 'true'
+  const muted = opts.muted !== 'false'
+  const loop = opts.loop === 'true'
+  const controls = opts.controls !== 'false'
+  const ratio = opts.ratio || '16/9'
+  const [rw, rh] = ratio.split('/').map(Number)
+  const pb = rw && rh ? `${((rh / rw) * 100).toFixed(2)}%` : '56.25%'
+
+  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  if (ytMatch) {
+    const p = new URLSearchParams()
+    if (autoplay) p.set('autoplay', '1')
+    if (muted) p.set('mute', '1')
+    if (loop) { p.set('loop', '1'); p.set('playlist', ytMatch[1]) }
+    if (!controls) p.set('controls', '0')
+    p.set('rel', '0')
+    return `<div style="position:relative;padding-bottom:${pb};height:0;overflow:hidden;border-radius:12px"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}?${p}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allowfullscreen allow="autoplay;encrypted-media"></iframe></div>`
+  }
+
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeoMatch) {
+    const p = new URLSearchParams()
+    if (autoplay) p.set('autoplay', '1')
+    if (muted) p.set('muted', '1')
+    if (loop) p.set('loop', '1')
+    if (!controls) p.set('controls', '0')
+    return `<div style="position:relative;padding-bottom:${pb};height:0;overflow:hidden;border-radius:12px"><iframe src="https://player.vimeo.com/video/${vimeoMatch[1]}?${p}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allowfullscreen allow="autoplay"></iframe></div>`
+  }
+
+  if (/\.mp4(\?.*)?$/i.test(url)) {
+    const attrs = [controls ? 'controls' : '', autoplay ? 'autoplay' : '', muted ? 'muted' : '', loop ? 'loop' : '', 'playsinline'].filter(Boolean).join(' ')
+    return `<video src="${url}" ${attrs} style="width:100%;border-radius:12px;aspect-ratio:${ratio.replace('/', '/')}"></video>`
+  }
+
+  return `<div style="position:relative;padding-bottom:${pb};height:0;overflow:hidden;border-radius:12px"><iframe src="${url}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allowfullscreen></iframe></div>`
 }
 
 export const BLOCK_DEFS: BlockDef[] = [
@@ -335,18 +378,22 @@ export const BLOCK_DEFS: BlockDef[] = [
   },
   {
     type: 'video-embed',
-    label: 'Vidéo YouTube',
+    label: 'Vidéo (YouTube / Vimeo / mp4)',
     category: 'media',
     icon: '▶️',
-    defaultContent: { url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', title: 'Vidéo de présentation' },
+    defaultContent: {
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      autoplay: 'false',
+      muted: 'true',
+      loop: 'false',
+      controls: 'true',
+      ratio: '16/9',
+    },
     defaultStyle: { paddingTop: 40, paddingBottom: 40, paddingLeft: 40, paddingRight: 40 },
     render(content, style) {
       const css = styleToPartialCss(style)
-      return `<div style="${css}">
-  <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px">
-    <iframe src="${content.url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}" title="${content.title || 'Vidéo'}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:12px" allowfullscreen></iframe>
-  </div>
-</div>`
+      const embed = buildVideoEmbed(content.url || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', content)
+      return `<div style="${css}">${embed}</div>`
     },
   },
 
@@ -738,6 +785,17 @@ export const BLOCK_DEFS: BlockDef[] = [
     <div style="${idx===0?'display:block':'display:none'};padding:0 0 20px;color:#52525b;line-height:1.7;font-size:14px">${item.a || 'Réponse ici.'}</div>
   </div>`).join('')}
 </div>`
+    },
+  },
+  {
+    type: 'custom-html',
+    label: 'HTML personnalisé',
+    category: 'layout',
+    icon: '</>',
+    defaultContent: { html: '<div style="padding:48px 40px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;text-align:center;font-family:system-ui,sans-serif"><p style="color:#64748b;font-size:15px;font-weight:600;margin:0">Collez votre HTML ici via le panneau de style →</p></div>' },
+    defaultStyle: {},
+    render(content) {
+      return content.html || ''
     },
   },
   {

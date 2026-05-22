@@ -4,19 +4,72 @@ import { BLOCK_DEFS } from '@/lib/builder/blocks'
 import type { Block } from '@/lib/builder/types'
 
 const ANIMATION_CSS = `
-/* Builder Animations */
+/* ─── Keyframes ──────────────────────────────────────────────── */
+@keyframes fadeIn        { from { opacity:0 } to { opacity:1 } }
+@keyframes fadeInDown    { from { opacity:0; transform:translateY(-30px) } to { opacity:1; transform:none } }
+@keyframes fadeInLeft    { from { opacity:0; transform:translateX(-30px) } to { opacity:1; transform:none } }
+@keyframes fadeInRight   { from { opacity:0; transform:translateX(30px)  } to { opacity:1; transform:none } }
+@keyframes slideUp       { from { opacity:0; transform:translateY(40px)  } to { opacity:1; transform:none } }
+@keyframes slideLeft     { from { opacity:0; transform:translateX(40px)  } to { opacity:1; transform:none } }
+@keyframes slideRight    { from { opacity:0; transform:translateX(-40px) } to { opacity:1; transform:none } }
+@keyframes zoomIn        { from { opacity:0; transform:scale(0.85) } to { opacity:1; transform:none } }
+@keyframes zoomOut       { from { opacity:0; transform:scale(1.15) } to { opacity:1; transform:none } }
+@keyframes flipX         { from { opacity:0; transform:perspective(400px) rotateX(90deg) } to { opacity:1; transform:none } }
+@keyframes flipY         { from { opacity:0; transform:perspective(400px) rotateY(90deg) } to { opacity:1; transform:none } }
+@keyframes bounce        { 0%,100%{ transform:translateY(0) } 30%{ transform:translateY(-24px) } 60%{ transform:translateY(-12px) } }
+@keyframes swing         { 20%{ transform:rotate(12deg) } 40%{ transform:rotate(-10deg) } 60%{ transform:rotate(6deg) } 80%{ transform:rotate(-4deg) } 100%{ transform:rotate(0) } }
+@keyframes shake         { 0%,100%{ transform:translateX(0) } 20%,60%{ transform:translateX(-8px) } 40%,80%{ transform:translateX(8px) } }
+@keyframes pulse         { 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.06) } }
+@keyframes heartbeat     { 0%,100%{ transform:scale(1) } 14%{ transform:scale(1.15) } 28%{ transform:scale(1) } 42%{ transform:scale(1.15) } 70%{ transform:scale(1) } }
+@keyframes rubberBand    { 0%,100%{ transform:scale(1,1) } 30%{ transform:scale(1.25,0.75) } 40%{ transform:scale(0.75,1.25) } 60%{ transform:scale(1.15,0.85) } 80%{ transform:scale(0.95,1.05) } }
+@keyframes tada          { 0%,100%{ transform:scale(1) } 10%,20%{ transform:scale(0.9) rotate(-3deg) } 30%,50%,70%,90%{ transform:scale(1.1) rotate(3deg) } 40%,60%,80%{ transform:scale(1.1) rotate(-3deg) } }
+@keyframes float         { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-12px) } }
+@keyframes spin          { from{ transform:rotate(0deg) } to{ transform:rotate(360deg) } }
+@keyframes ping          { 0%{ transform:scale(1); opacity:1 } 75%,100%{ transform:scale(1.5); opacity:0 } }
+@keyframes shimmer       { 0%{ background-position:-200% center } 100%{ background-position:200% center } }
+
+/* ─── Entrance animation base ──────────────────────────────── */
 [data-anim] {
-  opacity: 0;
-  transition-property: opacity, transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+  animation-play-state: paused;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
-[data-anim].anim-visible { opacity: 1; transform: none !important; }
-[data-anim="fadeIn"] { opacity: 0; }
-[data-anim="slideUp"] { opacity: 0; transform: translateY(40px); }
-[data-anim="slideLeft"] { opacity: 0; transform: translateX(40px); }
-[data-anim="slideRight"] { opacity: 0; transform: translateX(-40px); }
-[data-anim="zoomIn"] { opacity: 0; transform: scale(0.9); }
-[data-anim="bounce"] { opacity: 0; transform: translateY(-20px); }
+[data-anim].anim-visible { animation-play-state: running; }
+
+[data-anim="fadeIn"].anim-visible        { animation-name: fadeIn; }
+[data-anim="fadeInDown"].anim-visible    { animation-name: fadeInDown; }
+[data-anim="fadeInLeft"].anim-visible    { animation-name: fadeInLeft; }
+[data-anim="fadeInRight"].anim-visible   { animation-name: fadeInRight; }
+[data-anim="slideUp"].anim-visible       { animation-name: slideUp; }
+[data-anim="slideLeft"].anim-visible     { animation-name: slideLeft; }
+[data-anim="slideRight"].anim-visible    { animation-name: slideRight; }
+[data-anim="zoomIn"].anim-visible        { animation-name: zoomIn; }
+[data-anim="zoomOut"].anim-visible       { animation-name: zoomOut; }
+[data-anim="flipX"].anim-visible         { animation-name: flipX; }
+[data-anim="flipY"].anim-visible         { animation-name: flipY; }
+[data-anim="bounce"].anim-visible        { animation-name: bounce; }
+[data-anim="swing"].anim-visible         { animation-name: swing; animation-transform-origin: top center; }
+[data-anim="shake"].anim-visible         { animation-name: shake; }
+[data-anim="pulse"].anim-visible         { animation-name: pulse; animation-iteration-count: infinite; }
+[data-anim="heartbeat"].anim-visible     { animation-name: heartbeat; animation-iteration-count: infinite; }
+[data-anim="rubberBand"].anim-visible    { animation-name: rubberBand; }
+[data-anim="tada"].anim-visible          { animation-name: tada; }
+
+/* Continuous: always run */
+[data-anim="float"] { animation-name: float; animation-iteration-count: infinite; animation-timing-function: ease-in-out; animation-play-state: running; }
+[data-anim="spin"]  { animation-name: spin;  animation-iteration-count: infinite; animation-timing-function: linear; animation-play-state: running; }
+[data-anim="ping"]  { animation-name: ping;  animation-iteration-count: infinite; animation-play-state: running; }
+[data-anim="shimmer"] { animation-name: shimmer; animation-iteration-count: infinite; animation-timing-function: linear; animation-play-state: running; }
+
+/* ─── Hover effects ──────────────────────────────────────────── */
+.bh-lift:hover    { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.15); transition: all 0.25s; }
+.bh-grow:hover    { transform: scale(1.05); transition: transform 0.25s; }
+.bh-shrink:hover  { transform: scale(0.95); transition: transform 0.25s; }
+.bh-glow:hover    { box-shadow: 0 0 0 3px rgba(124,58,237,0.4), 0 8px 24px rgba(124,58,237,0.2); transition: box-shadow 0.25s; }
+.bh-tilt:hover    { transform: perspective(600px) rotateX(3deg) rotateY(3deg); transition: transform 0.25s; }
+.bh-underline     { position: relative; }
+.bh-underline::after { content:''; position:absolute; bottom:0; left:0; width:0; height:2px; background:currentColor; transition: width 0.3s; }
+.bh-underline:hover::after { width: 100%; }
 `
 
 const ANIMATION_JS = `
@@ -69,12 +122,14 @@ export async function POST(request: Request) {
       if (!def) return `<!-- Unknown block: ${block.type} -->`
 
       const html = def.render(block.content, block.style)
-      const { type, duration, delay, trigger } = block.animation
+      const { type, duration, delay, trigger, hover } = block.animation
 
-      if (type === 'none') return html
+      const hoverClass = hover && hover !== 'none' ? ` bh-${hover}` : ''
 
-      // Wrap in animation div
-      return `<div data-anim="${type}" data-anim-duration="${duration}" data-anim-delay="${delay}" data-anim-trigger="${trigger}">${html}</div>`
+      if (type === 'none' && !hoverClass) return html
+      if (type === 'none') return `<div class="${hoverClass.trim()}">${html}</div>`
+
+      return `<div class="${hoverClass.trim()}" data-anim="${type}" data-anim-duration="${duration}" data-anim-delay="${delay}" data-anim-trigger="${trigger}">${html}</div>`
     }).join('\n')
 
     const fullHtml = `<!DOCTYPE html>
