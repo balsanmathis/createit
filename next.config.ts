@@ -33,9 +33,6 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**' },
     ],
   },
-  turbopack: {
-    root: __dirname,
-  },
   async headers() {
     return [
       { source: '/(.*)', headers: securityHeaders },
