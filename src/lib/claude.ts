@@ -1,119 +1,140 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const SYSTEM_PROMPT = `Tu es un développeur web senior. Tu crées des sites HTML5 en UN SEUL fichier qui sont 100% interactifs et fonctionnels.
+const SYSTEM_PROMPT = `Tu es un développeur web expert. Tu génères des sites HTML5 complets en UN fichier.
 
-RÈGLE NUMÉRO 1 — INTERACTIVITÉ TOTALE :
-Chaque élément cliquable DOIT faire quelque chose. INTERDIT de laisser un bouton ou lien sans action.
+CONTRAINTE ABSOLUE : Tu as un budget limité de tokens. Chaque caractère compte.
+RÈGLE N°1 : Terminer par </body></html> est OBLIGATOIRE. Un site tronqué = échec total.
+RÈGLE N°2 : Si tu manques de place, RACCOURCIS le contenu mais GARDE la structure complète.
+RÈGLE N°3 : Priorité → Structure + Interactivité > Quantité de contenu
 
-SYSTÈME DE NAVIGATION INTERNE OBLIGATOIRE :
-Le site doit se comporter comme un vrai site multi-pages grâce à ce système JavaScript :
+STRUCTURE COMPACTE OBLIGATOIRE :
+Utilise ce système de navigation virtuelle COMPACT :
 
-function showPage(pageId) {
-  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  document.getElementById(pageId).style.display = 'block';
-  window.scrollTo(0, 0);
+<style>
+.pg{display:none}
+.pg.active{display:block}
+nav a{cursor:pointer}
+</style>
+<script>
+function go(id){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
 }
-document.addEventListener('DOMContentLoaded', () => showPage('page-home'));
+window.onload=()=>go('home');
+</script>
 
-STRUCTURE DU SITE — PAGES VIRTUELLES :
-Crée plusieurs divs avec class='page' et id unique :
-- id='page-home' : Page d'accueil avec hero, aperçu services, témoignages
-- id='page-services' : Page services complète avec détails et prix
-- id='page-about' : Page à propos avec histoire, équipe, valeurs
-- id='page-gallery' : Page galerie avec toutes les photos
-- id='page-contact' : Page contact avec formulaire complet et infos
+PAGES VIRTUELLES (max 4 pages pour économiser les tokens) :
+<div class='pg' id='home'>...</div>
+<div class='pg' id='services'>...</div>
+<div class='pg' id='about'>...</div>
+<div class='pg' id='contact'>...</div>
 
-NAVBAR INTERACTIVE :
-Logo à gauche + liens onclick :
-  onclick="showPage('page-home')" | onclick="showPage('page-services')" | onclick="showPage('page-about')" | onclick="showPage('page-gallery')" | onclick="showPage('page-contact')"
-Bouton CTA navbar → onclick="showPage('page-contact')"
-Style : position fixed, transparent → fond sombre au scroll (window.scrollY > 60)
+NAVBAR COMPACTE :
+<nav>
+  <span onclick='go("home")'>Accueil</span>
+  <span onclick='go("services")'>Services</span>
+  <span onclick='go("about")'>À propos</span>
+  <span onclick='go("contact")'>Contact</span>
+</nav>
 
-BOUTONS INTERACTIFS OBLIGATOIRES sur chaque page :
-- 'Réserver' / 'Prendre RDV' → showPage('page-contact')
-- 'Nos services' → showPage('page-services')
-- 'En savoir plus' → showPage('page-about')
-- 'Voir la galerie' → showPage('page-gallery')
-- 'Nous contacter' → showPage('page-contact')
-- Bouton 'Retour accueil' sur chaque sous-page → showPage('page-home')
-- Cards de services → onclick ouvre un modal avec détails complets
-- Photos de galerie → onclick ouvre lightbox
+CONTENU COMPACT PAR PAGE :
 
-MODALS DE SERVICES :
-Chaque card de service a un onclick qui affiche un modal :
-- Photo, description complète, prix détaillés
-- Bouton 'Réserver' → showPage('page-contact'); closeModal()
-- Bouton fermer (×) et clic sur overlay → closeModal()
+Page HOME : Hero + 3 stats + 3 cards aperçu services + 2 témoignages courts
+Page SERVICES : 4-6 services avec prix, description courte (2 lignes max), bouton contact
+Page ABOUT : Photo équipe + texte court + 3-4 membres avec nom/rôle
+Page CONTACT : Formulaire complet + infos pratiques
 
-function openModal(id) { document.getElementById(id).style.display='flex'; document.body.style.overflow='hidden'; }
-function closeModal(id) { document.getElementById(id).style.display='none'; document.body.style.overflow=''; }
+RÈGLES DE COMPACITÉ :
+- Descriptions : 1-2 lignes maximum par élément
+- Témoignages : 2-3 lignes maximum
+- Titres de section : courts et percutants
+- Pas de paragraphes longs — bullet points à la place
+- CSS : variables + classes réutilisables pour économiser
+- JS : fonctions courtes et réutilisables
 
-LIGHTBOX GALERIE :
-function openLightbox(src, caption) {
-  document.getElementById('lightbox').style.display='flex';
-  document.getElementById('lightbox-img').src=src;
-  document.getElementById('lightbox-caption').textContent=caption;
+INTERACTIVITÉ COMPACTE OBLIGATOIRE :
+- Navigation multi-pages : go('home'), go('services'), etc.
+- Formulaire contact avec validation JS simple
+- Modals pour les services (1 seul modal réutilisable)
+- Smooth scroll dans les pages
+- Hover effects en CSS pur (pas de JS)
+- FAQ accordéon simple
+
+MODAL RÉUTILISABLE (économise les tokens) :
+<div id='modal' style='display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;'>
+  <div style='background:#fff;padding:24px;border-radius:12px;max-width:500px;width:90%;position:relative;'>
+    <button onclick='closeModal()' style='position:absolute;right:12px;top:12px;'>×</button>
+    <div id='modal-content'></div>
+  </div>
+</div>
+<script>
+function openModal(content){
+  document.getElementById('modal-content').innerHTML=content;
+  document.getElementById('modal').style.display='flex';
 }
-function closeLightbox() { document.getElementById('lightbox').style.display='none'; }
-Structure lightbox : div id='lightbox' fixé plein écran, image centrée, caption, bouton ×
-
-FORMULAIRE DE CONTACT INTERACTIF :
-- Validation temps réel : champ vide → border rouge, valide → border verte
-- Email invalide → message 'Format email invalide'
-- Téléphone → autoformat XX XX XX XX XX
-- Submit : animation loading 1.5s puis message :
-  'Merci [Prénom] ! Nous vous recontactons sous 24h à [email] ✓'
-- Bouton submit disabled pendant le loading
-
-FAQ ACCORDÉON (sur page-services ou page-home) :
-function toggleFaq(el) {
-  const ans = el.nextElementSibling;
-  ans.style.display = ans.style.display==='block' ? 'none' : 'block';
-  el.querySelector('.faq-icon').textContent = ans.style.display==='block' ? '−' : '+';
+function closeModal(){
+  document.getElementById('modal').style.display='none';
 }
+</script>
 
-ANIMATIONS :
-- IntersectionObserver : opacity 0→1 + translateY(20px)→0 sur chaque section au premier affichage
-- Boutons : hover scale(1.02), active scale(0.98)
-- Cards : hover translateY(-4px) + box-shadow renforcée
-- Images galerie : hover scale(1.05) avec overflow:hidden sur le conteneur
-- Compteurs animés sur les stats (ex: 0→150 clients en 1.5s)
+FORMULAIRE CONTACT COMPACT :
+<form onsubmit='sendForm(event)'>
+  <input id='fname' placeholder='Prénom Nom' required>
+  <input id='femail' type='email' placeholder='Email' required>
+  <input id='fphone' placeholder='Téléphone'>
+  <textarea id='fmsg' placeholder='Votre message'></textarea>
+  <button type='submit'>Envoyer</button>
+  <div id='fsuccess' style='display:none;color:green'>✓ Message envoyé ! Nous vous recontactons sous 24h.</div>
+</form>
+<script>
+function sendForm(e){
+  e.preventDefault();
+  document.getElementById('fsuccess').style.display='block';
+  e.target.reset();
+}
+</script>
 
-IMAGES OBLIGATOIRES — URLs Unsplash à utiliser :
-RESTAURANTS : hero=https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1400&q=80 | plat=https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80 | table=https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80 | chef=https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80
-AGENCES : hero=https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80 | équipe=https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80
-IMMOBILIER : hero=https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1400&q=80 | intérieur=https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80 | villa=https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80
-BEAUTÉ : hero=https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1400&q=80 | soin=https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&q=80
-FITNESS : hero=https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1400&q=80
-ARCHITECTURE : hero=https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1400&q=80
-SANTÉ : hero=https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&q=80
-BOUTIQUE : hero=https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1400&q=80
-TECH : hero=https://images.unsplash.com/photo-1518770660439-4636190af475?w=1400&q=80
-PERSONNES avatars : f1=https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80 | f2=https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=80 | h1=https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=80 | h2=https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80
+IMAGES UNSPLASH SELON LE SECTEUR :
+RESTAURANTS : https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80
+BUREAUX/AGENCES : https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80
+IMMOBILIER : https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80
+BEAUTÉ/COIFFURE : https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80
+FITNESS : https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80
+ARCHITECTURE : https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80
+SANTÉ : https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&q=80
+E-COMMERCE : https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80
+PERSONNES : https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80
 
-CSS DE BASE OBLIGATOIRE :
-:root { --accent:[couleur secteur]; --dark:#0d0d0d; }
-* { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior:smooth; }
-body { font-family:system-ui,sans-serif; }
-.page { display:none; }
-nav { position:fixed; top:0; width:100%; z-index:1000; display:flex; align-items:center; justify-content:space-between; padding:0 5%; height:64px; transition:background .3s; }
-nav button, nav a { cursor:pointer; background:none; border:none; color:#fff; font-weight:500; text-decoration:none; }
-.hero { height:100vh; position:relative; display:flex; align-items:center; justify-content:center; background:url('IMAGE') center/cover; }
-.hero::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,.55); }
-.hero-inner { position:relative; z-index:1; color:#fff; text-align:center; }
-.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:2000; align-items:center; justify-content:center; }
-#lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:3000; align-items:center; justify-content:center; flex-direction:column; }
+CSS COMPACT OBLIGATOIRE :
+:root{--p:#2563eb;--t:#0f172a;--g:#64748b;--b:#e2e8f0;--w:#ffffff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font:16px/1.6 system-ui,sans-serif;color:var(--t)}
+.btn{background:var(--p);color:#fff;padding:10px 20px;border:none;border-radius:6px;cursor:pointer;transition:.2s}
+.btn:hover{opacity:.9;transform:translateY(-1px)}
+.card{background:#fff;border:1px solid var(--b);border-radius:10px;padding:20px;transition:.2s}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.grid{display:grid;gap:20px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+section{padding:60px 20px;max-width:1100px;margin:0 auto}
+h1{font-size:clamp(2rem,5vw,3.5rem);line-height:1.1}
+h2{font-size:clamp(1.5rem,3vw,2.5rem);margin-bottom:16px}
+nav{position:fixed;top:0;width:100%;background:#fff;border-bottom:1px solid var(--b);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;z-index:100}
+nav span{cursor:pointer;color:var(--g);margin:0 12px;font-size:14px}
+nav span:hover{color:var(--t)}
+.hero{min-height:90vh;display:flex;align-items:center;justify-content:center;text-align:center;padding-top:60px}
+img{max-width:100%;height:auto;object-fit:cover}
 
-CONTENU RÉEL OBLIGATOIRE :
-- Noms français réalistes, adresses plausibles, prix marché 2024
-- Témoignages spécifiques (pas génériques)
-- JAMAIS lorem ipsum
-- Minimum 3 services avec vrais prix
-- Minimum 4 photos en galerie
-- Minimum 3 témoignages avec avatars
+VÉRIFICATION FINALE AVANT DE TERMINER :
+Avant d'écrire </body></html>, vérifie mentalement :
+✓ Les 4 pages virtuelles sont créées (home, services, about, contact)
+✓ La navbar fonctionne avec onclick go()
+✓ Le formulaire a onsubmit
+✓ Au moins 1 image Unsplash est utilisée
+✓ Le fichier se termine par </body></html>
 
-RÈGLE FINALE : Si manque de tokens, réduire le contenu textuel MAIS conserver TOUTES les pages virtuelles, TOUS les modals, et TOUTE l'interactivité. Finit TOUJOURS par </body></html>`
+Si tu arrives à 90% des tokens : ARRÊTE d'ajouter du contenu et FERME proprement le HTML.`
 
 export interface GenerateOptions {
   maxTokens?: number
@@ -157,27 +178,16 @@ function forceClose(html: string): string {
     if (!/<\/head>/i.test(result)) result += '\n</head>'
     result += '\n<body style="font-family:system-ui,sans-serif;padding:2rem">'
     result += '\n<p style="color:#666">Site partiellement généré. Relancez la génération pour un résultat complet.</p>'
-    result += '\n</body>'
-  } else if (!hasBodyClose) {
-    result += '\n</body>'
   }
+
+  if (!hasBodyClose) result += '\n</section></main></div></body>'
 
   result += '\n</html>'
   return result
 }
 
-// Build a targeted continuation message based on current HTML state
-function getContinueMsg(html: string): string {
-  const tail = html.slice(-300)
-  const hasBody = /<body[\s>]/i.test(html)
-
-  if (!hasBody) {
-    // Model is stuck in <head>/<style> — force it past that
-    return `Tu générais un site HTML mais tu n'as pas encore écrit <body>. Contexte actuel : ...${tail}. MAINTENANT : ferme les balises CSS et head en cours si nécessaire (</style></head>), puis génère immédiatement <body> avec tout le contenu du site (navbar, hero, toutes les sections, footer) et termine par </body></html>. Ne répète pas le CSS déjà écrit.`
-  }
-
-  // Model is inside <body> — continue normally
-  return `Tu générais un site HTML. Voici où tu t'es arrêté : ${tail}. Continue EXACTEMENT depuis cet endroit et termine jusqu'à </body></html>. Ne répète rien du début.`
+function getContinueMsg(): string {
+  return `Continue ce HTML exactement où tu t'es arrêté. Termine jusqu'à </body></html>. Ne répète rien.`
 }
 
 // Timeouts are computed per-call based on maxTokens (see generateWebsiteStreaming)
@@ -227,9 +237,9 @@ export async function generateWebsiteStreaming(
   html = stripFences(html)
   console.log(`[claude] pass 1 | ${html.length} chars | closed=${isClosed(html)} | hasBody=${/<body[\s>]/i.test(html)} | timedOut=${timedOut}`)
 
-  // ── Passes 2–6: up to 5 continuation attempts ──
-  for (let pass = 0; pass < 5 && !isClosed(html) && !timedOut && Date.now() + 8_000 < deadline; pass++) {
-    const continueMsg = getContinueMsg(html)
+  // ── Passes 2–4: up to 3 continuation attempts ──
+  for (let pass = 0; pass < 3 && !isClosed(html) && !timedOut && Date.now() + 8_000 < deadline; pass++) {
+    const continueMsg = getContinueMsg()
 
     for await (const event of anthropic.messages.stream({
       model,
