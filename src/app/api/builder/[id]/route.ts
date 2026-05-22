@@ -39,3 +39,32 @@ export async function GET(
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    }
+
+    const { id } = await params
+
+    const { error } = await supabase
+      .from('builder_sites')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id)
+
+    if (error) throw error
+
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('Builder delete error:', err)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
+}

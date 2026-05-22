@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { Site } from '@/types'
 import SitesGrid from '@/components/dashboard/SitesGrid'
+import BuilderSitesGrid from '@/components/dashboard/BuilderSitesGrid'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 import PaymentSuccessToast from '@/components/dashboard/PaymentSuccessToast'
 
@@ -27,16 +28,18 @@ export default async function DashboardPage({ searchParams }: Props) {
 
     const isAdmin = user.email === ADMIN_EMAIL
 
-    const [sitesResult, profileResult, subscriptionResult] = await Promise.all([
+    const [sitesResult, profileResult, subscriptionResult, builderSitesResult] = await Promise.all([
       supabase.from('sites').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
       supabase.from('users').select('*').eq('id', user.id).single(),
       supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single(),
+      supabase.from('builder_sites').select('id, name, created_at, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }),
     ])
 
     const sites = sitesResult.data as Site[] | null
     const profile = profileResult.data
     const subscription = subscriptionResult.data
     const canGenerate = isAdmin || !!subscription
+    const builderSites = builderSitesResult.data ?? []
 
     const tokensUsed = profile?.tokens_used ?? 0
     const tokensLimit = profile?.tokens_limit ?? 8_000
@@ -139,17 +142,40 @@ export default async function DashboardPage({ searchParams }: Props) {
               </div>
             )}
 
-            {/* Site grid */}
+            {/* Builder sites section */}
+            {builderSites.length > 0 && (
+              <div className="mb-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold" style={{ color: 'var(--fg)' }}>Sites Builder</h2>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>
+                      🎨 Builder
+                    </span>
+                  </div>
+                  <Link href="/builder" className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
+                    + Nouveau →
+                  </Link>
+                </div>
+                <BuilderSitesGrid sites={builderSites} />
+              </div>
+            )}
+
+            {/* AI site grid */}
             {sites && sites.length > 0 ? (
-              <SitesGrid
-                sites={sites.map((site) => ({
-                  id: site.id,
-                  name: site.name,
-                  title: extractTitle(site.html_content),
-                  created_at: site.created_at,
-                }))}
-              />
-            ) : (
+              <>
+                {builderSites.length > 0 && (
+                  <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--fg)' }}>Sites IA</h2>
+                )}
+                <SitesGrid
+                  sites={sites.map((site) => ({
+                    id: site.id,
+                    name: site.name,
+                    title: extractTitle(site.html_content),
+                    created_at: site.created_at,
+                  }))}
+                />
+              </>
+            ) : builderSites.length === 0 ? (
               <div className="text-center py-16 md:py-24">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
                   style={{ background: 'var(--accent-light)' }}>
@@ -172,7 +198,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                   </Link>
                 )}
               </div>
-            )}
+            ) : null}
           </div>
         </main>
       </div>
