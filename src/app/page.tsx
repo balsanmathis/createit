@@ -361,6 +361,95 @@ export default function HomePage() {
       </AuroraBackground>
 
       {/* ══════════════════════════════════════════════════════════
+          2b. PRODUCT PREVIEW
+      ══════════════════════════════════════════════════════════ */}
+      <section className="relative z-10 px-5 pb-0" style={{ background: 'var(--bg)', marginTop: -48 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 32 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.5 }}
+          className="max-w-5xl mx-auto"
+          style={{
+            borderRadius: 16,
+            overflow: 'hidden',
+            border: '1px solid var(--border)',
+            boxShadow: '0 32px 80px rgba(0,0,0,0.22)',
+          }}
+        >
+          {/* Browser chrome */}
+          <div
+            style={{
+              background: 'var(--surface-2)',
+              padding: '10px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              borderBottom: '1px solid var(--border)',
+            }}
+          >
+            <div style={{ display: 'flex', gap: 5 }}>
+              {['#ff5f56', '#ffbd2e', '#27c93f'].map(c => (
+                <div key={c} style={{ width: 11, height: 11, borderRadius: '50%', background: c }} />
+              ))}
+            </div>
+            <div
+              style={{
+                flex: 1,
+                background: 'var(--surface)',
+                borderRadius: 6,
+                padding: '3px 10px',
+                fontSize: 11,
+                color: 'var(--fg-subtle)',
+                border: '1px solid var(--border)',
+                textAlign: 'center',
+                fontFamily: 'monospace',
+              }}
+            >
+              le-jardin-secret.vercel.app
+            </div>
+          </div>
+          {/* Three-panel preview */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', height: 340, overflow: 'hidden' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=85"
+              alt="Restaurant"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', display: 'block' }}
+              loading="eager"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=85"
+              alt="Agence"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)', display: 'block' }}
+              loading="eager"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=85"
+              alt="Boutique"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              loading="eager"
+            />
+          </div>
+          {/* Bottom bar */}
+          <div
+            style={{
+              background: 'var(--surface)',
+              padding: '10px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderTop: '1px solid var(--border)',
+            }}
+          >
+            <span style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>Restaurant · Agence · Boutique — générés en &lt; 30 s</span>
+            <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>✦ Exportable HTML/CSS/JS</span>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
           3. STATS MARQUEE
       ══════════════════════════════════════════════════════════ */}
       <section
@@ -706,25 +795,71 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════
           11. CTA FINAL
       ══════════════════════════════════════════════════════════ */}
-      <AuroraBackground intensity="strong" className="py-28 px-5">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-4xl font-bold tracking-tight mb-4" style={{ color: 'var(--fg)' }}>
-            {T.cta_final.heading}
-          </h2>
-          <p className="text-lg mb-10" style={{ color: 'var(--fg-muted)' }}>
-            {T.cta_final.subtitle}
-          </p>
-          <Link
-            href="/auth/signup"
-            className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-white font-bold text-base transition-all"
-            style={{ background: 'var(--accent)', textDecoration: 'none', boxShadow: '0 0 40px rgba(124,58,237,0.45)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 56px rgba(124,58,237,0.55)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 0 40px rgba(124,58,237,0.45)' }}
-          >
-            {T.cta_final.button} <ArrowRight size={16} />
-          </Link>
+      <section
+        className="reveal py-24 px-5"
+        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #1e1b4b 100%)' }}
+      >
+        <div className="max-w-5xl mx-auto">
+          {/* Mini site previews */}
+          <div className="grid grid-cols-3 gap-3 mb-14 max-w-xl mx-auto">
+            {[
+              { src: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80', label: 'Beauté' },
+              { src: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&q=80', label: 'Immobilier' },
+              { src: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&q=80', label: 'Fitness' },
+            ].map((ex, i) => (
+              <div
+                key={i}
+                style={{
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  transform: i === 1 ? 'translateY(-8px) scale(1.04)' : 'scale(0.96)',
+                  boxShadow: i === 1 ? '0 20px 40px rgba(0,0,0,0.4)' : '0 8px 20px rgba(0,0,0,0.3)',
+                  transition: 'transform 0.3s',
+                }}
+              >
+                <div style={{ background: 'rgba(255,255,255,0.08)', padding: '6px 8px', display: 'flex', gap: 4 }}>
+                  {[0, 1, 2].map(j => (
+                    <div key={j} style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }} />
+                  ))}
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={ex.src}
+                  alt={ex.label}
+                  style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }}
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Text + CTA */}
+          <div className="text-center">
+            <h2
+              className="font-bold tracking-tight mb-4"
+              style={{ color: '#fff', fontSize: 'clamp(2rem,4vw,3rem)', lineHeight: 1.1 }}
+            >
+              {T.cta_final.heading}
+            </h2>
+            <p className="text-lg mb-9" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              {T.cta_final.subtitle}
+            </p>
+            <Link
+              href="/auth/signup"
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl font-bold text-base transition-all"
+              style={{ background: '#fff', color: '#312e81', textDecoration: 'none' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.35)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
+            >
+              {T.cta_final.button} <ArrowRight size={16} />
+            </Link>
+            <p className="mt-5 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Gratuit · Sans carte bancaire · Exportable
+            </p>
+          </div>
         </div>
-      </AuroraBackground>
+      </section>
 
       {/* ══════════════════════════════════════════════════════════
           12. FOOTER
