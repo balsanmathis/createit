@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 
 export async function POST(req: NextRequest) {
   try {

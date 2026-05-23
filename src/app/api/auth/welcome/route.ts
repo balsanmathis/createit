@@ -79,7 +79,8 @@ export async function POST(request: Request) {
       })
     } catch (stripeErr) {
       console.error('[welcome] Stripe promo code creation failed:', stripeErr)
-      // Don't block the welcome email if Stripe fails
+      // Don't send an invalid code — let the next trigger retry
+      return NextResponse.json({ ok: true })
     }
 
     // Save code in Supabase

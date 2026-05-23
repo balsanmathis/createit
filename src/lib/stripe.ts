@@ -25,19 +25,16 @@ export const PLANS = {
   starter: {
     name: 'Starter',
     price: 20,
-    tokens: 160_000,
     priceId: process.env.STRIPE_STARTER_PRICE_ID!,
   },
   pro: {
     name: 'Pro',
     price: 45,
-    tokens: 480_000,
     priceId: process.env.STRIPE_PRO_PRICE_ID!,
   },
   agency: {
     name: 'Agency',
     price: 250,
-    tokens: 3_200_000,
     priceId: process.env.STRIPE_AGENCY_PRICE_ID!,
   },
 } as const
