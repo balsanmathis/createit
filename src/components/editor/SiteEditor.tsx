@@ -244,7 +244,13 @@ document.addEventListener('click',function(e){
   if(!link)return;
   var href=link.getAttribute('href');
   if(!href){e.preventDefault();return;}
-  if(href.startsWith('#'))return;
+  if(href.startsWith('tel:')||href.startsWith('mailto:'))return;
+  if(href.startsWith('#')){
+    e.preventDefault();
+    var t=document.querySelector(href);
+    if(t)t.scrollIntoView({behavior:'smooth'});
+    return;
+  }
   if(href.startsWith('http')||href.startsWith('//')||href==='/'){e.preventDefault();return;}
   e.preventDefault();
   var t=document.querySelector(href);
@@ -254,11 +260,15 @@ document.addEventListener('submit',function(e){
   e.preventDefault();
   var form=e.target;
   var btn=form.querySelector('button[type="submit"],input[type="submit"],button:not([type])');
+  var nameEl=form.querySelector('[id*=name],[id*=nom],[placeholder*=nom],[placeholder*=Nom],[id*=f-name]');
+  var name=nameEl?nameEl.value:'';
+  var firstName=name?name.split(' ')[0]:'';
   if(!btn)return;
   var orig=btn.tagName==='INPUT'?btn.value:(btn.textContent||'');
-  if(btn.tagName==='INPUT')btn.value='✓ Envoy\xe9 !';
-  else btn.textContent='✓ Envoy\xe9 !';
-  setTimeout(function(){if(btn.tagName==='INPUT')btn.value=orig;else btn.textContent=orig;},3000);
+  var msg='✓ Envoy\xe9 !'+(firstName?' Merci '+firstName+' !':'');
+  if(btn.tagName==='INPUT')btn.value=msg;
+  else btn.textContent=msg;
+  setTimeout(function(){if(btn.tagName==='INPUT')btn.value=orig;else btn.textContent=orig;},4000);
 });
 })();`
 
