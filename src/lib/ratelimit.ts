@@ -25,21 +25,24 @@ function getLimiter(id: string, requests: number, window: `${number} ${'s' | 'm'
   return limiters[id]
 }
 
-// Returns true = allowed, false = rate-limited
-// Fails open if Upstash env vars not configured
+/**
+ * Returns true = allowed, false = rate-limited.
+ * failOpen: if true, allows when Upstash is unreachable (default false = fail-closed).
+ */
 export async function checkRateLimit(
   id: string,
   identifier: string,
   requests: number,
   window: `${number} ${'s' | 'm' | 'h' | 'd'}`,
+  failOpen = false,
 ): Promise<boolean> {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    return true
+    return failOpen
   }
   try {
     const { success } = await getLimiter(id, requests, window).limit(identifier)
     return success
   } catch {
-    return true
+    return failOpen
   }
 }

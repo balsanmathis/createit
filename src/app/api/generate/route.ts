@@ -1,20 +1,14 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWebsiteStreaming } from '@/lib/claude'
-import { TOKEN_COST_GENERATE, PLAN_TOKEN_LIMITS } from '@/types'
+import { TOKEN_COST_GENERATE } from '@/types'
 import { checkRateLimit } from '@/lib/ratelimit'
 
 export const maxDuration = 300
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
-
 const HAIKU = 'claude-haiku-4-5-20251001'
 
-// Haiku output: $4/1M tokens. Budget per tier (max $0.20/site):
-//   rapide  : 10k tokens → ~$0.04   (fast, landing page)
-//   standard: 20k tokens → ~$0.08   (site complet)
-//   premium : 32k tokens → ~$0.13   (site riche + galerie)
-//   ultra   : 46k tokens → ~$0.19   (site de qualité agence)
 const QUALITY_CONFIG: Record<string, { maxTokens: number; tokenCost: number; model: string }> = {
   rapide:   { maxTokens: 10_000, tokenCost: 1 * TOKEN_COST_GENERATE, model: HAIKU },
   standard: { maxTokens: 20_000, tokenCost: 2 * TOKEN_COST_GENERATE, model: HAIKU },
@@ -22,34 +16,59 @@ const QUALITY_CONFIG: Record<string, { maxTokens: number; tokenCost: number; mod
   ultra:    { maxTokens: 46_000, tokenCost: 8 * TOKEN_COST_GENERATE, model: HAIKU },
 }
 
+// Refund tokens after a failed generation
+async function refundTokens(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  amount: number,
+) {
+  try {
+    await supabase.rpc('increment_tokens_used', { p_user_id: userId, p_amount: -amount })
+  } catch (err) {
+    console.error('[generate] refund failed:', err)
+  }
+}
+
 export async function POST(request: Request) {
-  // Honeypot: silently absorb bot requests
+  // Honeypot: silently absorb known bot headers
   if (request.headers.get('x-honeypot')) {
     return NextResponse.json({ ok: true })
   }
 
-  // Parse + validate body early (before auth, so clients get meaningful errors)
-  const body = await request.json()
+  // Parse + validate body
+  let body: Record<string, unknown>
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 })
+  }
+
   const { prompt, name, quality = 'standard' } = body
 
-  if (!prompt?.trim()) {
+  if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
     return NextResponse.json({ error: 'Le prompt est requis' }, { status: 400 })
   }
-  if (typeof prompt !== 'string' || prompt.trim().length > 5000) {
+  if (prompt.trim().length > 5000) {
     return NextResponse.json({ error: 'Le prompt ne peut pas dépasser 5000 caractères' }, { status: 400 })
   }
-  if (name && typeof name !== 'string') {
+  if (name !== undefined && (typeof name !== 'string' || name.length > 200)) {
     return NextResponse.json({ error: 'Nom invalide' }, { status: 400 })
   }
 
-  // Rate limiting
-  const ip = (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
-  const allowed = await checkRateLimit('generate', ip, 5, '1 m')
-  if (!allowed) {
-    return NextResponse.json({ error: 'Trop de tentatives, réessayez dans 1 minute' }, { status: 429 })
+  const qualityConfig = QUALITY_CONFIG[quality as string] ?? QUALITY_CONFIG['standard']
+
+  // ── Rate limit by IP (fail-closed) ────────────────────────────────────────
+  // Prefer x-real-ip (set by Vercel edge, not spoofable) over x-forwarded-for
+  const ip =
+    request.headers.get('x-real-ip') ??
+    (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+
+  const ipAllowed = await checkRateLimit('generate:ip', ip, 5, '1 m', false)
+  if (!ipAllowed) {
+    return NextResponse.json({ error: 'Trop de tentatives, réessayez dans 1 minute.' }, { status: 429 })
   }
 
-  // Auth check
+  // ── Auth ───────────────────────────────────────────────────────────────────
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -57,35 +76,55 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
 
-  const sanitizedPrompt = prompt.trim()
-  const sanitizedName = (name ?? '').trim().slice(0, 200)
+  // ── Email verification required ────────────────────────────────────────────
+  if (!user.email_confirmed_at) {
+    return NextResponse.json(
+      { error: 'Veuillez vérifier votre adresse email avant de générer un site.' },
+      { status: 403 },
+    )
+  }
 
-  const qualityConfig = QUALITY_CONFIG[quality] ?? QUALITY_CONFIG['standard']
+  // ── Rate limit by user ID (fail-closed, stricter than IP) ─────────────────
+  const userAllowed = await checkRateLimit('generate:user', user.id, 3, '1 m', false)
+  if (!userAllowed) {
+    return NextResponse.json({ error: 'Trop de générations simultanées. Réessayez dans 1 minute.' }, { status: 429 })
+  }
+
   const isAdmin = user.email === ADMIN_EMAIL
+  const userId  = user.id
+  const siteName = ((name as string | undefined) ?? '').trim().slice(0, 200) || `Site ${new Date().toLocaleDateString('fr-FR')}`
+  const sanitizedPrompt = (prompt as string).trim()
 
+  // ── Atomic token deduction (BEFORE generation to prevent race conditions) ──
+  // The SQL function does check+deduct in a single UPDATE statement.
+  // If insufficient tokens → returns success=false → reject immediately.
   if (!isAdmin) {
-    const { data: profile } = await supabase
-      .from('users')
-      .select('tokens_used, tokens_limit, plan')
-      .eq('id', user.id)
-      .single()
+    const { data: deductRows, error: deductError } = await supabase.rpc('increment_tokens_used', {
+      p_user_id: userId,
+      p_amount: qualityConfig.tokenCost,
+    })
 
-    const tokensUsed  = profile?.tokens_used  ?? 0
-    const tokensLimit = profile?.tokens_limit ?? PLAN_TOKEN_LIMITS.free
-    const plan        = profile?.plan         ?? 'free'
+    if (deductError) {
+      console.error('[generate] token deduction error:', deductError)
+      return NextResponse.json(
+        { error: 'Erreur lors de la vérification des tokens. Réessayez.' },
+        { status: 500 },
+      )
+    }
 
-    if (tokensUsed + qualityConfig.tokenCost > tokensLimit) {
-      const isPaidPlan = plan !== 'free' && plan !== null
-      const error = isPaidPlan
-        ? `Tokens insuffisants. Vous avez utilisé ${tokensUsed.toLocaleString()}/${tokensLimit.toLocaleString()} tokens ce mois.`
-        : 'Vous avez épuisé vos tokens gratuits. Choisissez un plan pour continuer.'
-      return NextResponse.json({ error, needsUpgrade: true }, { status: 403 })
+    const result = Array.isArray(deductRows) ? deductRows[0] : deductRows
+    if (!result?.success) {
+      return NextResponse.json(
+        {
+          error: 'Tokens insuffisants. Choisissez un plan pour continuer à créer des sites.',
+          needsUpgrade: true,
+        },
+        { status: 403 },
+      )
     }
   }
 
-  const userId   = user.id
-  const siteName = sanitizedName || `Site ${new Date().toLocaleDateString('fr-FR')}`
-
+  // ── Stream generation ──────────────────────────────────────────────────────
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
@@ -105,7 +144,7 @@ export async function POST(request: Request) {
           model: qualityConfig.model,
         })
 
-        console.log(`[generate] HTML ready — ${htmlContent.length} chars, quality=${quality}, saving…`)
+        console.log(`[generate] HTML ready — ${htmlContent.length} chars, quality=${quality}`)
 
         // 2. Save to Supabase
         const { data: site, error: siteError } = await supabase
@@ -113,7 +152,7 @@ export async function POST(request: Request) {
           .insert({
             user_id: userId,
             name: siteName,
-            prompt: prompt.trim(),
+            prompt: sanitizedPrompt,
             html_content: htmlContent,
           })
           .select('id')
@@ -121,36 +160,20 @@ export async function POST(request: Request) {
 
         if (siteError) {
           console.error('[generate] Supabase insert error:', siteError)
+          // Refund tokens since the site was never saved
+          if (!isAdmin) await refundTokens(supabase, userId, qualityConfig.tokenCost)
           emit({ type: 'error', message: 'Erreur lors de la sauvegarde du site.' })
           controller.close()
           return
         }
 
         console.log(`[generate] Site saved — id=${site.id}`)
-
-        // 3. Deduct tokens
-        if (!isAdmin) {
-          const { error: rpcError } = await supabase.rpc('increment_tokens_used', {
-            user_id: userId,
-            amount: qualityConfig.tokenCost,
-          })
-          if (rpcError) {
-            const { data: current } = await supabase
-              .from('users')
-              .select('tokens_used')
-              .eq('id', userId)
-              .single()
-            await supabase
-              .from('users')
-              .update({ tokens_used: (current?.tokens_used ?? 0) + qualityConfig.tokenCost })
-              .eq('id', userId)
-          }
-        }
-
         emit({ type: 'done', siteId: site.id })
         controller.close()
       } catch (err) {
         console.error('[generate] Unexpected error:', err)
+        // Refund tokens on unexpected failure
+        if (!isAdmin) await refundTokens(supabase, userId, qualityConfig.tokenCost)
         emit({ type: 'error', message: 'Erreur lors de la génération.' })
         controller.close()
       }
