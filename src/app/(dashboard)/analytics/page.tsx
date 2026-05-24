@@ -69,6 +69,46 @@ async function getRecentSites() {
   }))
 }
 
+const PAGE_SIZE = 30
+
+async function getAllUsers(page: number) {
+  const from = (page - 1) * PAGE_SIZE
+  const db = serviceClient()
+  const { data, count } = await db
+    .from('users')
+    .select('id, email, plan, created_at, tokens_used, tokens_limit', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, from + PAGE_SIZE - 1)
+  return {
+    users: (data ?? []) as { id: string; email: string; plan: string; created_at: string; tokens_used: number; tokens_limit: number }[],
+    total: count ?? 0,
+  }
+}
+
+async function getAllSites(page: number) {
+  const from = (page - 1) * PAGE_SIZE
+  const db = serviceClient()
+  const { data: sites, count } = await db
+    .from('sites')
+    .select('id, name, user_id, created_at', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, from + PAGE_SIZE - 1)
+
+  if (!sites?.length) return { sites: [], total: count ?? 0 }
+
+  const userIds = [...new Set(sites.map((s: { user_id: string }) => s.user_id))]
+  const { data: users } = await db.from('users').select('id, email').in('id', userIds)
+  const emailMap = new Map((users ?? []).map((u: { id: string; email: string }) => [u.id, u.email]))
+
+  return {
+    sites: sites.map((s: { id: string; name: string; user_id: string; created_at: string }) => ({
+      ...s,
+      userEmail: emailMap.get(s.user_id) as string | undefined,
+    })),
+    total: count ?? 0,
+  }
+}
+
 async function getStripeRevenue() {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   const now = new Date()
@@ -114,7 +154,7 @@ function PlanBadge({ plan }: { plan: string }) {
 }
 
 interface Props {
-  searchParams: Promise<{ tab?: string }>
+  searchParams: Promise<{ tab?: string; page?: string }>
 }
 
 export default async function AnalyticsPage({ searchParams }: Props) {
@@ -123,14 +163,17 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
   if (!user || user.email !== ADMIN_EMAIL) redirect('/dashboard')
 
-  const { tab } = await searchParams
-  const activeTab = tab === 'promo' ? 'promo' : tab === 'landing' ? 'landing' : 'overview'
+  const { tab, page: pageParam } = await searchParams
+  const activeTab = tab === 'promo' ? 'promo' : tab === 'landing' ? 'landing' : tab === 'sites' ? 'sites' : tab === 'users' ? 'users' : 'overview'
+  const currentPage = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
 
-  const [stats, recentUsers, recentSites, revenue] = await Promise.all([
+  const [stats, recentUsers, recentSites, revenue, allUsersData, allSitesData] = await Promise.all([
     getStats(),
     getRecentUsers(),
     getRecentSites(),
     getStripeRevenue(),
+    activeTab === 'users' ? getAllUsers(currentPage) : Promise.resolve({ users: [], total: 0 }),
+    activeTab === 'sites' ? getAllSites(currentPage) : Promise.resolve({ sites: [], total: 0 }),
   ])
 
   const monthLabel = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -168,9 +211,11 @@ export default async function AnalyticsPage({ searchParams }: Props) {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="flex gap-1 mb-6 p-1 rounded-xl flex-wrap" style={{ background: 'var(--surface)', border: '1px solid var(--border)', width: 'fit-content' }}>
             {[
               { key: 'overview', label: 'Vue d\'ensemble', href: '/analytics' },
+              { key: 'sites',    label: `Sites (${stats.totalSites})`,  href: '/analytics?tab=sites' },
+              { key: 'users',    label: `Utilisateurs (${stats.totalUsers})`, href: '/analytics?tab=users' },
               { key: 'promo',    label: 'Codes promo',    href: '/analytics?tab=promo' },
               { key: 'landing',  label: 'Landing Page',   href: '/analytics?tab=landing' },
             ].map((t) => (
@@ -270,6 +315,132 @@ export default async function AnalyticsPage({ searchParams }: Props) {
               </div>
             </>
           )}
+
+          {activeTab === 'sites' && (() => {
+            const { sites, total } = allSitesData
+            const totalPages = Math.ceil(total / PAGE_SIZE)
+            return (
+              <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }}></span>
+                    <h2 className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>Tous les sites générés</h2>
+                  </div>
+                  <span className="text-xs" style={{ color: 'var(--fg-muted)' }}>{total.toLocaleString('fr-FR')} sites</span>
+                </div>
+                {sites.length === 0 ? (
+                  <p className="px-5 py-5 text-sm" style={{ color: 'var(--fg-muted)' }}>Aucun site généré</p>
+                ) : (
+                  <>
+                    <div style={{ overflowY: 'auto', maxHeight: '65vh' }}>
+                      {sites.map((s, i) => (
+                        <div key={s.id} className="flex items-center gap-3 px-5 py-3.5" style={i > 0 ? { borderTop: '1px solid var(--border)' } : {}}>
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ background: 'var(--accent-light)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--accent)' }}>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm truncate" style={{ color: 'var(--fg)' }}>{s.name || 'Sans titre'}</p>
+                            <p className="text-xs truncate" style={{ color: 'var(--fg-subtle)' }}>
+                              {s.userEmail ?? `${s.user_id.slice(0, 8)}…`}
+                            </p>
+                          </div>
+                          <p className="text-xs shrink-0" style={{ color: 'var(--fg-subtle)' }}>{fmt(s.created_at)}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {totalPages > 1 && (
+                      <div className="px-5 py-4 flex items-center justify-between" style={{ borderTop: '1px solid var(--border)' }}>
+                        <span className="text-xs" style={{ color: 'var(--fg-muted)' }}>Page {currentPage} / {totalPages}</span>
+                        <div className="flex gap-2">
+                          {currentPage > 1 && (
+                            <Link href={`/analytics?tab=sites&page=${currentPage - 1}`}
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                              style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
+                              ← Précédent
+                            </Link>
+                          )}
+                          {currentPage < totalPages && (
+                            <Link href={`/analytics?tab=sites&page=${currentPage + 1}`}
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                              style={{ background: 'var(--accent-light)', border: '1px solid rgba(124,58,237,0.2)', color: 'var(--accent)' }}>
+                              Suivant →
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )
+          })()}
+
+          {activeTab === 'users' && (() => {
+            const { users, total } = allUsersData
+            const totalPages = Math.ceil(total / PAGE_SIZE)
+            return (
+              <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }}></span>
+                    <h2 className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>Tous les utilisateurs</h2>
+                  </div>
+                  <span className="text-xs" style={{ color: 'var(--fg-muted)' }}>{total.toLocaleString('fr-FR')} utilisateurs</span>
+                </div>
+                {users.length === 0 ? (
+                  <p className="px-5 py-5 text-sm" style={{ color: 'var(--fg-muted)' }}>Aucun utilisateur</p>
+                ) : (
+                  <>
+                    <div style={{ overflowY: 'auto', maxHeight: '65vh' }}>
+                      {users.map((u, i) => (
+                        <div key={u.id} className="flex items-center gap-3 px-5 py-3.5" style={i > 0 ? { borderTop: '1px solid var(--border)' } : {}}>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0"
+                            style={{ background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                            {u.email?.[0]?.toUpperCase() ?? '?'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm truncate" style={{ color: 'var(--fg)' }}>{u.email}</p>
+                            <p className="text-xs" style={{ color: 'var(--fg-subtle)' }}>{fmt(u.created_at)}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs" style={{ color: 'var(--fg-muted)' }}>
+                              {u.tokens_used ?? 0}/{u.tokens_limit ?? '∞'}
+                            </span>
+                            <PlanBadge plan={u.plan} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {totalPages > 1 && (
+                      <div className="px-5 py-4 flex items-center justify-between" style={{ borderTop: '1px solid var(--border)' }}>
+                        <span className="text-xs" style={{ color: 'var(--fg-muted)' }}>Page {currentPage} / {totalPages}</span>
+                        <div className="flex gap-2">
+                          {currentPage > 1 && (
+                            <Link href={`/analytics?tab=users&page=${currentPage - 1}`}
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                              style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
+                              ← Précédent
+                            </Link>
+                          )}
+                          {currentPage < totalPages && (
+                            <Link href={`/analytics?tab=users&page=${currentPage + 1}`}
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                              style={{ background: 'var(--accent-light)', border: '1px solid rgba(124,58,237,0.2)', color: 'var(--accent)' }}>
+                              Suivant →
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )
+          })()}
 
           {activeTab === 'promo' && <PromoCodesManager />}
           {activeTab === 'landing' && <LandingContentEditor />}
