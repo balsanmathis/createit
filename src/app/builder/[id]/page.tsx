@@ -15,7 +15,10 @@ import type { Block } from '@/lib/builder/types'
 function generatePreviewHtml(blocks: Block[], name: string): string {
   const bodyHtml = blocks.map(block => {
     const def = BLOCK_DEFS.find(d => d.type === block.type)
-    return def ? def.render(block.content, block.style) : ''
+    if (!def) return ''
+    const html = def.render(block.content, block.style)
+    if (block.style.anchor) return html.replace(/^(<\w+)/, `$1 id="${block.style.anchor}"`)
+    return html
   }).join('\n')
 
   return `<!DOCTYPE html>

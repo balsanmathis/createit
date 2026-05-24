@@ -155,6 +155,27 @@ function _showSel(el){
   });
   _tb.appendChild(del);
 
+  _tb.appendChild(_sep());
+
+  // Link button
+  var lnk=_btn('🔗','Modifier le lien');
+  lnk.addEventListener('click',function(e){
+    e.stopPropagation();
+    var a=el.tagName==='A'?el:(el.closest?el.closest('a'):null);
+    var hr=a?(a.getAttribute('href')||''):'';
+    var tg=a?(a.getAttribute('target')||'_self'):'_self';
+    window.parent.postMessage({type:'ve-link-click',href:hr,target:tg,hasLink:!!a},'*');
+  });
+  _tb.appendChild(lnk);
+
+  // Anchor button
+  var anc=_btn('#','Définir l\\'ID (ancre)','rgba(16,185,129,0.8)');
+  anc.addEventListener('click',function(e){
+    e.stopPropagation();
+    window.parent.postMessage({type:'ve-anchor-click',currentId:el.id||''},'*');
+  });
+  _tb.appendChild(anc);
+
   document.body.appendChild(_tb);
   if(el.tagName==='IMG')_showRB(el);
   _rePos();
@@ -345,6 +366,48 @@ window.addEventListener('message',function(e){
   if(e.data.type==='ve-add-image'){
     _addImg=true;
     window.parent.postMessage({type:'ve-img-click',src:'',isPlaceholder:false},'*');
+  }
+
+  if(e.data.type==='ve-link-confirm'){
+    var hr2=e.data.href||'';var tg2=e.data.target||'_self';var rm=e.data.remove;
+    if(_sel){
+      var existA=_sel.tagName==='A'?_sel:(_sel.closest?_sel.closest('a'):null);
+      if(rm){
+        if(existA&&existA.parentNode){
+          while(existA.firstChild)existA.parentNode.insertBefore(existA.firstChild,existA);
+          existA.parentNode.removeChild(existA);
+          _clear();
+        } else { _sel.removeAttribute('href'); }
+      } else if(existA){
+        existA.setAttribute('href',hr2);
+        if(tg2==='_blank'){existA.setAttribute('target','_blank');existA.setAttribute('rel','noopener noreferrer');}
+        else{existA.removeAttribute('target');existA.removeAttribute('rel');}
+      } else {
+        var newA2=document.createElement('a');
+        newA2.setAttribute('href',hr2);
+        if(tg2==='_blank'){newA2.setAttribute('target','_blank');newA2.setAttribute('rel','noopener noreferrer');}
+        newA2.style.textDecoration='none';newA2.style.color='inherit';
+        newA2.dataset.veId=String(++_idc);
+        _sel.parentNode.insertBefore(newA2,_sel);newA2.appendChild(_sel);
+        _showSel(newA2);
+      }
+      _notify();
+    }
+  }
+
+  if(e.data.type==='ve-anchor-confirm'){
+    if(_sel){
+      if(e.data.id){_sel.id=e.data.id;}else{_sel.removeAttribute('id');}
+      _notify();
+    }
+  }
+
+  if(e.data.type==='ve-get-anchors'){
+    var anchors2=[];
+    document.querySelectorAll('[id]').forEach(function(ae){
+      if(ae.id&&!ae.id.startsWith('__'))anchors2.push({id:ae.id,tag:ae.tagName.toLowerCase()});
+    });
+    window.parent.postMessage({type:'ve-anchors',anchors:anchors2},'*');
   }
 });
 
@@ -683,6 +746,152 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
   )
 }
 
+// ─── Link popup ───────────────────────────────────────────────────────────────
+
+interface LinkPopupProps {
+  href: string
+  target: string
+  hasLink: boolean
+  anchors: { id: string; tag: string }[]
+  onConfirm: (href: string, target: string) => void
+  onRemove: () => void
+  onClose: () => void
+}
+
+function LinkPopup({ href: initHref, target: initTarget, hasLink, anchors, onConfirm, onRemove, onClose }: LinkPopupProps) {
+  const [href, setHref] = useState(initHref)
+  const [newTab, setNewTab] = useState(initTarget === '_blank')
+
+  const inputBase: React.CSSProperties = {
+    background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg)',
+    borderRadius: 8, padding: '10px 14px', fontSize: 14, outline: 'none', width: '100%',
+  }
+
+  const prefixes = ['https://', '#', 'mailto:', 'tel:']
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={onClose} />
+      <div className="relative rounded-xl p-6 w-full max-w-md space-y-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-xl)' }}>
+        <button onClick={onClose} className="absolute top-4 right-4" style={{ color: 'var(--fg-subtle)' }}>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+
+        <h3 className="text-base font-semibold" style={{ color: 'var(--fg)' }}>🔗 Modifier le lien</h3>
+
+        {/* Prefix shortcuts */}
+        <div className="flex gap-1.5 flex-wrap">
+          {prefixes.map(p => (
+            <button key={p} onClick={() => setHref(p)}
+              className="px-2.5 py-1 rounded-lg text-xs font-mono transition-all"
+              style={href.startsWith(p) ? { background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid rgba(124,58,237,0.3)' } : { background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}
+            >{p}</button>
+          ))}
+        </div>
+
+        {/* URL input */}
+        <input
+          type="text"
+          value={href}
+          onChange={e => setHref(e.target.value)}
+          placeholder="https://exemple.com ou #section-id"
+          style={inputBase}
+          autoFocus
+          onFocus={e => { e.target.style.borderColor = 'var(--accent)' }}
+          onBlur={e => { e.target.style.borderColor = 'var(--border)' }}
+        />
+
+        {/* Page anchors */}
+        {anchors.length > 0 && (
+          <div>
+            <p className="text-xs font-medium mb-2" style={{ color: 'var(--fg-muted)' }}>Sections de cette page :</p>
+            <div className="flex flex-wrap gap-1.5">
+              {anchors.map(a => (
+                <button key={a.id} onClick={() => setHref('#' + a.id)}
+                  className="px-2 py-1 rounded-md text-xs font-mono transition-all"
+                  style={href === '#' + a.id ? { background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid rgba(124,58,237,0.3)' } : { background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}
+                >#{a.id}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Target toggle */}
+        <label className="flex items-center gap-2.5 cursor-pointer">
+          <input type="checkbox" checked={newTab} onChange={e => setNewTab(e.target.checked)} style={{ accentColor: 'var(--accent)', width: 14, height: 14 }} />
+          <span className="text-sm" style={{ color: 'var(--fg-muted)' }}>Ouvrir dans un nouvel onglet</span>
+        </label>
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-1">
+          {hasLink && (
+            <button onClick={onRemove} className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', color: '#dc2626' }}>
+              Supprimer le lien
+            </button>
+          )}
+          <div className="flex-1" />
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
+            Annuler
+          </button>
+          <button onClick={() => href && onConfirm(href, newTab ? '_blank' : '_self')}
+            disabled={!href}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-opacity disabled:opacity-40"
+            style={{ background: 'var(--accent)' }}>
+            Confirmer
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Anchor popup ─────────────────────────────────────────────────────────────
+
+interface AnchorPopupProps {
+  currentId: string
+  onConfirm: (id: string) => void
+  onClose: () => void
+}
+
+function AnchorPopup({ currentId, onConfirm, onClose }: AnchorPopupProps) {
+  const [id, setId] = useState(currentId)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={onClose} />
+      <div className="relative rounded-xl p-6 w-full max-w-sm space-y-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-xl)' }}>
+        <h3 className="text-base font-semibold" style={{ color: 'var(--fg)' }}>⚓ Ancre de section</h3>
+        <p className="text-xs" style={{ color: 'var(--fg-muted)' }}>
+          Définissez un identifiant unique sur cet élément. Les boutons pourront pointer vers lui avec <code style={{ background: 'var(--bg)', padding: '1px 4px', borderRadius: 4 }}>#identifiant</code>.
+        </p>
+        <input
+          type="text"
+          value={id}
+          onChange={e => setId(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '-'))}
+          placeholder="ex: contact, services, tarifs…"
+          autoFocus
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg)', borderRadius: 8, padding: '10px 14px', fontSize: 14, outline: 'none', width: '100%' }}
+          onFocus={e => { e.target.style.borderColor = 'var(--accent)' }}
+          onBlur={e => { e.target.style.borderColor = 'var(--border)' }}
+        />
+        {id && <p className="text-xs font-mono" style={{ color: 'var(--accent)' }}>Lien : #{id}</p>}
+        <div className="flex gap-2 pt-1">
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm font-medium"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
+            Annuler
+          </button>
+          <button onClick={() => onConfirm(id)} className="flex-1 py-2 rounded-lg text-sm font-medium text-white"
+            style={{ background: 'var(--accent)' }}>
+            {id ? 'Confirmer' : 'Supprimer l\'ancre'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
@@ -691,6 +900,9 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
   const [saving, setSaving] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [imgPopup, setImgPopup] = useState<{ src: string } | null>(null)
+  const [linkPopup, setLinkPopup] = useState<{ href: string; target: string; hasLink: boolean } | null>(null)
+  const [anchorPopup, setAnchorPopup] = useState<{ currentId: string } | null>(null)
+  const [pageAnchors, setPageAnchors] = useState<{ id: string; tag: string }[]>([])
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const [aiPanelOpen, setAiPanelOpen] = useState(false)
@@ -755,6 +967,12 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
       }
       if (e.data.type === 've-img-click') setImgPopup({ src: e.data.src as string })
       if (e.data.type === 've-mode') setEditMode(e.data.on as boolean)
+      if (e.data.type === 've-link-click') {
+        setLinkPopup({ href: e.data.href as string, target: e.data.target as string, hasLink: e.data.hasLink as boolean })
+        iframeRef.current?.contentWindow?.postMessage({ type: 've-get-anchors' }, '*')
+      }
+      if (e.data.type === 've-anchors') setPageAnchors(e.data.anchors as { id: string; tag: string }[])
+      if (e.data.type === 've-anchor-click') setAnchorPopup({ currentId: e.data.currentId as string })
     }
     window.addEventListener('message', handle)
     return () => window.removeEventListener('message', handle)
@@ -789,6 +1007,21 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
   const handleImgConfirm = useCallback((url: string) => {
     setImgPopup(null)
     iframeRef.current?.contentWindow?.postMessage({ type: 've-img-confirm', url }, '*')
+  }, [])
+
+  const handleLinkConfirm = useCallback((href: string, target: string) => {
+    setLinkPopup(null)
+    iframeRef.current?.contentWindow?.postMessage({ type: 've-link-confirm', href, target, remove: false }, '*')
+  }, [])
+
+  const handleLinkRemove = useCallback(() => {
+    setLinkPopup(null)
+    iframeRef.current?.contentWindow?.postMessage({ type: 've-link-confirm', href: '', target: '', remove: true }, '*')
+  }, [])
+
+  const handleAnchorConfirm = useCallback((id: string) => {
+    setAnchorPopup(null)
+    iframeRef.current?.contentWindow?.postMessage({ type: 've-anchor-confirm', id }, '*')
   }, [])
 
   const handleSave = async () => {
@@ -1015,6 +1248,8 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
               </svg>
               Image
             </button>
+            <div style={{ width: 1, height: 14, background: 'rgba(124,58,237,0.3)', margin: '0 2px' }} />
+            <span className="text-xs hidden sm:inline" style={{ color: 'rgba(124,58,237,0.7)' }}>Sélectionner → 🔗 ou #</span>
           </div>
         </div>
       )}
@@ -1192,6 +1427,28 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
           currentSrc={imgPopup.src}
           onConfirm={handleImgConfirm}
           onClose={() => setImgPopup(null)}
+        />
+      )}
+
+      {/* ── Link popup ── */}
+      {linkPopup && (
+        <LinkPopup
+          href={linkPopup.href}
+          target={linkPopup.target}
+          hasLink={linkPopup.hasLink}
+          anchors={pageAnchors}
+          onConfirm={handleLinkConfirm}
+          onRemove={handleLinkRemove}
+          onClose={() => setLinkPopup(null)}
+        />
+      )}
+
+      {/* ── Anchor popup ── */}
+      {anchorPopup && (
+        <AnchorPopup
+          currentId={anchorPopup.currentId}
+          onConfirm={handleAnchorConfirm}
+          onClose={() => setAnchorPopup(null)}
         />
       )}
     </div>

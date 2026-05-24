@@ -152,16 +152,16 @@ export const BLOCK_DEFS: BlockDef[] = [
     label: 'Navbar simple',
     category: 'navigation',
     icon: '🔝',
-    defaultContent: { logo: 'MonSite', link1: 'Accueil', link2: 'Services', link3: 'Contact', cta: 'Commencer' },
+    defaultContent: { logo: 'MonSite', link1: 'Accueil', link1Href: '#', link2: 'Services', link2Href: '#services', link3: 'Contact', link3Href: '#contact', cta: 'Commencer', ctaHref: '#' },
     defaultStyle: {},
     render(content) {
       return `<nav style="position:sticky;top:0;z-index:100;background:#ffffff;border-bottom:1px solid #e4e4e7;padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;font-family:system-ui,sans-serif">
   <span style="font-size:20px;font-weight:700;color:#7c3aed">${content.logo || 'MonSite'}</span>
   <div style="display:flex;gap:32px;align-items:center">
-    <a href="#" style="color:#52525b;text-decoration:none;font-size:14px;font-weight:500">${content.link1 || 'Accueil'}</a>
-    <a href="#" style="color:#52525b;text-decoration:none;font-size:14px;font-weight:500">${content.link2 || 'Services'}</a>
-    <a href="#" style="color:#52525b;text-decoration:none;font-size:14px;font-weight:500">${content.link3 || 'Contact'}</a>
-    <a href="#" style="background:#7c3aed;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:8px 20px;border-radius:8px">${content.cta || 'Commencer'}</a>
+    <a href="${content.link1Href || '#'}" style="color:#52525b;text-decoration:none;font-size:14px;font-weight:500">${content.link1 || 'Accueil'}</a>
+    <a href="${content.link2Href || '#'}" style="color:#52525b;text-decoration:none;font-size:14px;font-weight:500">${content.link2 || 'Services'}</a>
+    <a href="${content.link3Href || '#'}" style="color:#52525b;text-decoration:none;font-size:14px;font-weight:500">${content.link3 || 'Contact'}</a>
+    <a href="${content.ctaHref || '#'}" style="background:#7c3aed;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:8px 20px;border-radius:8px">${content.cta || 'Commencer'}</a>
   </div>
 </nav>`
     },
@@ -191,6 +191,7 @@ export const BLOCK_DEFS: BlockDef[] = [
       title: 'Bienvenue sur notre site',
       subtitle: 'Nous créons des expériences digitales exceptionnelles pour votre entreprise.',
       cta: 'Commencer maintenant',
+      ctaHref: '#contact',
     },
     defaultStyle: {},
     render(content) {
@@ -198,7 +199,7 @@ export const BLOCK_DEFS: BlockDef[] = [
   <div style="max-width:720px">
     <h1 style="color:#ffffff;font-size:clamp(2rem,5vw,3.5rem);font-weight:800;line-height:1.15;margin:0 0 24px">${content.title || 'Bienvenue sur notre site'}</h1>
     <p style="color:rgba(255,255,255,0.8);font-size:clamp(1rem,2vw,1.25rem);line-height:1.6;margin:0 0 40px">${content.subtitle || 'Une description convaincante de votre offre.'}</p>
-    <a href="#" style="display:inline-block;background:#ffffff;color:#7c3aed;font-weight:700;font-size:16px;padding:16px 40px;border-radius:12px;text-decoration:none">${content.cta || 'Commencer maintenant'}</a>
+    <a href="${content.ctaHref || '#'}" style="display:inline-block;background:#ffffff;color:#7c3aed;font-weight:700;font-size:16px;padding:16px 40px;border-radius:12px;text-decoration:none">${content.cta || 'Commencer maintenant'}</a>
   </div>
 </section>`
     },
@@ -212,6 +213,7 @@ export const BLOCK_DEFS: BlockDef[] = [
       title: 'Solutions innovantes pour votre entreprise',
       subtitle: 'Transformez votre vision en réalité avec nos services experts.',
       cta: 'Découvrir',
+      ctaHref: '#services',
       image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=700&auto=format&fit=crop',
     },
     defaultStyle: {},
@@ -220,7 +222,7 @@ export const BLOCK_DEFS: BlockDef[] = [
   <div>
     <h1 style="color:#ffffff;font-size:clamp(1.8rem,3.5vw,3rem);font-weight:800;line-height:1.2;margin:0 0 20px">${content.title || 'Solutions innovantes'}</h1>
     <p style="color:rgba(255,255,255,0.75);font-size:1.1rem;line-height:1.7;margin:0 0 36px">${content.subtitle || 'Description de votre offre.'}</p>
-    <a href="#" style="display:inline-block;background:#7c3aed;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none">${content.cta || 'Découvrir'}</a>
+    <a href="${content.ctaHref || '#'}" style="display:inline-block;background:#7c3aed;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none">${content.cta || 'Découvrir'}</a>
   </div>
   <div>
     <img src="${content.image || 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=700&auto=format&fit=crop'}" alt="Hero" style="width:100%;border-radius:16px;object-fit:cover;height:400px" />
@@ -237,6 +239,7 @@ export const BLOCK_DEFS: BlockDef[] = [
       title: 'Découvrez une expérience unique',
       subtitle: 'Une cuisine authentique dans un cadre exceptionnel',
       cta: 'Réserver une table',
+      ctaHref: '#contact',
       image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&auto=format&fit=crop',
     },
     defaultStyle: {},
@@ -247,7 +250,7 @@ export const BLOCK_DEFS: BlockDef[] = [
   <div style="position:relative;z-index:1;max-width:800px;padding:40px">
     <h1 style="color:#ffffff;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:800;line-height:1.1;margin:0 0 20px;text-shadow:0 2px 20px rgba(0,0,0,0.5)">${content.title || 'Découvrez une expérience unique'}</h1>
     <p style="color:rgba(255,255,255,0.9);font-size:clamp(1.1rem,2.5vw,1.4rem);margin:0 0 40px">${content.subtitle || 'Une cuisine authentique dans un cadre exceptionnel'}</p>
-    <a href="#" style="display:inline-block;background:#7c3aed;color:#fff;font-weight:700;font-size:16px;padding:18px 48px;border-radius:12px;text-decoration:none">${content.cta || 'Réserver une table'}</a>
+    <a href="${content.ctaHref || '#'}" style="display:inline-block;background:#7c3aed;color:#fff;font-weight:700;font-size:16px;padding:18px 48px;border-radius:12px;text-decoration:none">${content.cta || 'Réserver une table'}</a>
   </div>
 </section>`
     },
@@ -684,13 +687,13 @@ export const BLOCK_DEFS: BlockDef[] = [
     label: 'Section CTA',
     category: 'sections',
     icon: '🚀',
-    defaultContent: { title: 'Prêt à démarrer votre projet ?', subtitle: 'Rejoignez des milliers de clients satisfaits.', cta: 'Commencer gratuitement' },
+    defaultContent: { title: 'Prêt à démarrer votre projet ?', subtitle: 'Rejoignez des milliers de clients satisfaits.', cta: 'Commencer gratuitement', ctaHref: '#' },
     defaultStyle: {},
     render(content) {
       return `<section style="padding:100px 40px;background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%);text-align:center;font-family:system-ui,sans-serif">
   <h2 style="font-size:2.5rem;font-weight:800;color:#fff;margin:0 0 16px">${content.title || 'Prêt à démarrer ?'}</h2>
   <p style="font-size:1.2rem;color:rgba(255,255,255,0.85);margin:0 0 40px">${content.subtitle || 'Rejoignez-nous dès aujourd\'hui.'}</p>
-  <a href="#" style="display:inline-block;background:#fff;color:#7c3aed;font-weight:800;font-size:16px;padding:18px 48px;border-radius:12px;text-decoration:none">${content.cta || 'Commencer'}</a>
+  <a href="${content.ctaHref || '#'}" style="display:inline-block;background:#fff;color:#7c3aed;font-weight:800;font-size:16px;padding:18px 48px;border-radius:12px;text-decoration:none">${content.cta || 'Commencer'}</a>
 </section>`
     },
   },

@@ -8,10 +8,21 @@ import type { BlockStyle, BlockAnimation, AnimationType, HoverEffect } from '@/l
 
 const IMAGE_KEYS = new Set(['image', 'src', 'photo', 'avatar'])
 const BOOL_KEYS = new Set(['autoplay', 'muted', 'loop', 'controls'])
+const URL_KEYS = new Set(['href', 'href1', 'href2', 'url', 'ctaHref', 'link1Href', 'link2Href', 'link3Href'])
+
+function isUrlKey(key: string) {
+  return URL_KEYS.has(key) || key.endsWith('Href') || key.endsWith('href')
+}
+function isTargetKey(key: string) {
+  return key.endsWith('Target') && isUrlKey(key.slice(0, -6))
+}
 
 const CONTENT_LABEL_MAP: Record<string, string> = {
   title: 'Titre', subtitle: 'Sous-titre', text: 'Texte', cta: 'Bouton CTA',
-  href: 'Lien URL', logo: 'Logo', link1: 'Lien 1', link2: 'Lien 2', link3: 'Lien 3',
+  href: 'Lien URL', href1: 'Bouton 1 — Lien', href2: 'Bouton 2 — Lien',
+  ctaHref: 'Bouton CTA — Lien',
+  logo: 'Logo', link1: 'Lien 1', link2: 'Lien 2', link3: 'Lien 3',
+  link1Href: 'Lien 1 — URL', link2Href: 'Lien 2 — URL', link3Href: 'Lien 3 — URL',
   copyright: 'Copyright', image: 'Image', src: 'Image', alt: 'Texte alternatif',
   author: 'Auteur', name: 'Nom', role: 'Rôle', photo: 'Photo', avatar: 'Avatar',
   url: 'URL', height: 'Hauteur (px)', bg: 'Couleur fond', color: 'Couleur texte',
@@ -138,7 +149,7 @@ function ContentTab({ content, onChange }: {
   content: Record<string, string>
   onChange: (key: string, val: string) => void
 }) {
-  const entries = Object.entries(content)
+  const entries = Object.entries(content).filter(([key]) => !isTargetKey(key))
   if (entries.length === 0) {
     return <div style={{ padding: 16 }}><p style={{ color: '#94a3b8', fontSize: 12, margin: 0 }}>Aucun contenu configurable.</p></div>
   }
@@ -175,6 +186,37 @@ function ContentTab({ content, onChange }: {
               rows={8}
               style={{ ...textareaSt, fontFamily: 'monospace', fontSize: 11 }}
             />
+          ) : isUrlKey(key) ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <span style={{ display: 'flex', alignItems: 'center', fontSize: 14, paddingLeft: 8, color: '#7c3aed', flexShrink: 0 }}>🔗</span>
+                <input
+                  type="text"
+                  value={value}
+                  onChange={e => onChange(key, e.target.value)}
+                  placeholder="https://… ou #section-id"
+                  style={{ ...inputSt, flex: 1 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', fontSize: 11, color: '#64748b' }}>
+                  <input
+                    type="checkbox"
+                    checked={content[key + 'Target'] === '_blank'}
+                    onChange={e => onChange(key + 'Target', e.target.checked ? '_blank' : '')}
+                    style={{ accentColor: '#7c3aed', width: 12, height: 12 }}
+                  />
+                  Nouvel onglet
+                </label>
+                {['#', 'https://', 'mailto:', 'tel:'].map(pfx => (
+                  <button
+                    key={pfx}
+                    onClick={() => { if (!value || value === '#') onChange(key, pfx) }}
+                    style={{ fontSize: 10, padding: '2px 6px', border: '1px solid #e2e8f0', borderRadius: 4, cursor: 'pointer', background: value.startsWith(pfx) ? '#eff6ff' : '#fff', color: value.startsWith(pfx) ? '#2563eb' : '#64748b' }}
+                  >{pfx}</button>
+                ))}
+              </div>
+            </div>
           ) : isLongText(key, value) ? (
             <textarea value={value} onChange={e => onChange(key, e.target.value)} rows={3} style={textareaSt} />
           ) : (
@@ -261,6 +303,27 @@ function StyleTab({ style: s, onChange }: { style: BlockStyle; onChange: (p: Blo
             <option value="0 10px 15px rgba(0,0,0,0.1),0 4px 6px rgba(0,0,0,0.05)">Grande</option>
             <option value="0 25px 50px rgba(0,0,0,0.15)">XL</option>
           </select>
+        </div>
+      </Section>
+
+      <Section title="Lien interne (ancre)">
+        <div>
+          <label style={labelSt}>ID de section</label>
+          <input
+            type="text"
+            value={s.anchor || ''}
+            onChange={e => onChange({ anchor: e.target.value.replace(/[^a-z0-9_-]/gi, '-').toLowerCase() || undefined })}
+            placeholder="ex: services, contact…"
+            style={inputSt}
+          />
+          {s.anchor && (
+            <p style={{ fontSize: 11, color: '#7c3aed', marginTop: 4 }}>
+              Lien : <code style={{ background: '#eff6ff', padding: '1px 4px', borderRadius: 3 }}>#{s.anchor}</code>
+            </p>
+          )}
+          <p style={{ fontSize: 10, color: '#94a3b8', marginTop: 4, lineHeight: 1.4 }}>
+            Permet à un bouton de navigation de pointer vers cette section avec <code>#identifiant</code>.
+          </p>
         </div>
       </Section>
     </div>

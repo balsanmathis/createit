@@ -123,13 +123,16 @@ export async function POST(request: Request) {
 
       const html = def.render(block.content, block.style)
       const { type, duration, delay, trigger, hover } = block.animation
+      const anchor = block.style.anchor
 
       const hoverClass = hover && hover !== 'none' ? ` bh-${hover}` : ''
+      const idAttr = anchor ? ` id="${anchor}"` : ''
 
-      if (type === 'none' && !hoverClass) return html
-      if (type === 'none') return `<div class="${hoverClass.trim()}">${html}</div>`
+      if (type === 'none' && !hoverClass && !anchor) return html
+      if (type === 'none' && !hoverClass) return html.replace(/^(<\w+)/, `$1${idAttr}`)
+      if (type === 'none') return `<div${idAttr} class="${hoverClass.trim()}">${html}</div>`
 
-      return `<div class="${hoverClass.trim()}" data-anim="${type}" data-anim-duration="${duration}" data-anim-delay="${delay}" data-anim-trigger="${trigger}">${html}</div>`
+      return `<div${idAttr} class="${hoverClass.trim()}" data-anim="${type}" data-anim-duration="${duration}" data-anim-delay="${delay}" data-anim-trigger="${trigger}">${html}</div>`
     }).join('\n')
 
     const fullHtml = `<!DOCTYPE html>

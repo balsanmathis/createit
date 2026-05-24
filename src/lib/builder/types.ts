@@ -32,6 +32,7 @@ export interface BlockStyle {
   width?: string
   minHeight?: string
   height?: string
+  anchor?: string  // section id for internal links (#anchor)
 }
 
 export interface BlockAnimation {

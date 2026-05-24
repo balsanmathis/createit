@@ -98,6 +98,7 @@ function SortableBlock({
   return (
     <div
       ref={setNodeRef}
+      id={block.style.anchor || undefined}
       style={wrapperStyle}
       onClick={e => { e.stopPropagation(); onSelect() }}
       onMouseEnter={e => {
