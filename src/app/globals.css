@@ -258,6 +258,19 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Theme-aware utilities (light + dark) ───────────────────── */
+.t-border  { border-color: var(--border); }
+.t-text    { color: var(--fg); }
+.t-muted   { color: var(--fg-muted); }
+.t-subtle  { color: var(--fg-subtle); }
+.t-surface { background: var(--surface); }
+
+.t-hover-border:hover { border-color: var(--border-hover); }
+.t-hover-text:hover   { color: var(--fg); }
+.t-hover-bg:hover     { background: var(--surface-2); }
+
+.t-placeholder::placeholder { color: var(--fg-subtle); }
+
 /* ─── Misc animations ─────────────────────────────────────────── */
 @keyframes pulse-dot {
   0%,100% { transform: scale(1); opacity: 1; }

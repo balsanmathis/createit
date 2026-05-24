@@ -41,9 +41,9 @@ const SECTIONS_OPTIONS = [
 ]
 
 const ANIM_LEVELS = [
-  { label: 'Simple',     desc: 'Transitions douces sur hover et apparition',                                                                   icon: '🌿' },
-  { label: 'Avancé',     desc: 'Scroll animations, cards 3D, navigation sticky',                                                               icon: '⚡' },
-  { label: 'Wow effect', desc: 'Particules CSS, flip 3D, typewriter, parallaxe',                                                               icon: '🎆' },
+  { label: 'Simple',     desc: 'Transitions douces sur hover et apparition',                              icon: '🌿' },
+  { label: 'Avancé',     desc: 'Scroll animations, cards 3D, navigation sticky',                          icon: '⚡' },
+  { label: 'Wow effect', desc: 'Particules CSS, flip 3D, typewriter, parallaxe',                          icon: '🎆' },
 ]
 
 const COLOR_PRESETS = [
@@ -93,13 +93,13 @@ function StepCard({ n, title, children }: { n: number; title: string; children: 
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: n * 0.05 }}
-      className="glass rounded-2xl p-5 md:p-6 border border-white/5"
+      className="glass rounded-2xl p-5 md:p-6 border t-border"
     >
       <div className="flex items-center gap-3 mb-5">
         <span className="w-7 h-7 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-400 text-xs font-bold flex items-center justify-center flex-shrink-0">
           {n}
         </span>
-        <h2 className="text-sm font-bold text-white">{title}</h2>
+        <h2 className="text-sm font-bold t-text">{title}</h2>
       </div>
       {children}
     </motion.div>
@@ -113,9 +113,10 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
       onClick={onClick}
       className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
         active
-          ? 'bg-violet-500/20 border-violet-500/50 text-violet-300'
-          : 'border-white/10 text-white/50 hover:border-white/20 hover:text-white/70'
+          ? 'bg-violet-500/20 border-violet-500/50'
+          : 't-border t-muted t-hover-border t-hover-text'
       }`}
+      style={active ? { color: 'var(--accent)' } : undefined}
     >
       {children}
     </button>
@@ -171,10 +172,10 @@ export default function PromptBuilderPage() {
       <main className="md:ml-64 p-4 md:p-8 pb-24 pt-16 md:pt-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8 md:mb-10">
-            <h1 className="text-2xl md:text-3xl font-black text-white mb-2">
+            <h1 className="text-2xl md:text-3xl font-black t-text mb-2">
               🪄 Créer un <span className="gradient-text">prompt</span>
             </h1>
-            <p className="text-white/40 text-sm">
+            <p className="t-subtle text-sm">
               Configure ton site étape par étape pour obtenir un prompt optimisé.
             </p>
           </div>
@@ -191,9 +192,10 @@ export default function PromptBuilderPage() {
                     onClick={() => setSiteType(label === siteType ? '' : label)}
                     className={`flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border text-center transition-all ${
                       siteType === label
-                        ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
-                        : 'border-white/5 text-white/40 hover:border-white/15 hover:text-white/70'
+                        ? 'bg-violet-500/20 border-violet-500/40'
+                        : 't-border t-subtle t-hover-border t-hover-text'
                     }`}
+                    style={siteType === label ? { color: 'var(--accent)' } : undefined}
                   >
                     <span className="text-xl leading-none">{icon}</span>
                     <span className="text-[10px] md:text-[11px] font-medium leading-tight">{label}</span>
@@ -211,14 +213,19 @@ export default function PromptBuilderPage() {
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
                     placeholder="Nom du projet"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:border-violet-500/40 focus:outline-none transition-colors"
+                    className="w-full t-surface border t-border rounded-xl px-4 py-2.5 text-sm t-text t-placeholder focus:outline-none transition-colors"
+                    style={{ outline: 'none' }}
+                    onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124,58,237,0.4)' }}
+                    onBlur={e => { e.currentTarget.style.borderColor = '' }}
                   />
                   <input
                     type="text"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Ville (optionnel)"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:border-violet-500/40 focus:outline-none transition-colors"
+                    className="w-full t-surface border t-border rounded-xl px-4 py-2.5 text-sm t-text t-placeholder focus:outline-none transition-colors"
+                    onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124,58,237,0.4)' }}
+                    onBlur={e => { e.currentTarget.style.borderColor = '' }}
                   />
                 </div>
                 <textarea
@@ -226,7 +233,9 @@ export default function PromptBuilderPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Décris ton activité, ton style, ce qui te rend unique…"
                   rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:border-violet-500/40 focus:outline-none transition-colors resize-none"
+                  className="w-full t-surface border t-border rounded-xl px-4 py-2.5 text-sm t-text t-placeholder focus:outline-none transition-colors resize-none"
+                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124,58,237,0.4)' }}
+                  onBlur={e => { e.currentTarget.style.borderColor = '' }}
                 />
               </div>
             </StepCard>
@@ -235,7 +244,7 @@ export default function PromptBuilderPage() {
             <StepCard n={3} title="Style visuel">
               <div className="space-y-5">
                 <div>
-                  <p className="text-xs text-white/40 mb-2.5 font-medium">Thème</p>
+                  <p className="text-xs t-subtle mb-2.5 font-medium">Thème</p>
                   <div className="grid grid-cols-3 gap-2">
                     {THEMES.map(({ label, desc }) => (
                       <button
@@ -244,19 +253,20 @@ export default function PromptBuilderPage() {
                         onClick={() => setTheme(label)}
                         className={`flex flex-col items-center gap-1 py-3 rounded-xl border text-center transition-all ${
                           theme === label
-                            ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
-                            : 'border-white/5 text-white/40 hover:border-white/15 hover:text-white/70'
+                            ? 'bg-violet-500/20 border-violet-500/40'
+                            : 't-border t-subtle t-hover-border t-hover-text'
                         }`}
+                        style={theme === label ? { color: 'var(--accent)' } : undefined}
                       >
                         <span className="text-sm font-semibold">{label}</span>
-                        <span className={`text-[10px] ${theme === label ? 'text-violet-400/70' : 'text-white/25'}`}>{desc}</span>
+                        <span className={`text-[10px] ${theme === label ? 'text-violet-400/70' : 't-subtle'}`}>{desc}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-xs text-white/40 mb-2.5 font-medium">Couleur principale</p>
+                  <p className="text-xs t-subtle mb-2.5 font-medium">Couleur principale</p>
                   <div className="flex items-center gap-3 flex-wrap">
                     {COLOR_PRESETS.map(({ color, name }) => (
                       <button
@@ -275,16 +285,16 @@ export default function PromptBuilderPage() {
                         type="color"
                         value={primaryColor}
                         onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="w-7 h-7 rounded-lg cursor-pointer border border-white/10 bg-transparent"
+                        className="w-7 h-7 rounded-lg cursor-pointer border t-border bg-transparent"
                         title="Couleur personnalisée"
                       />
-                      <span className="text-xs font-mono text-white/40">{primaryColor}</span>
+                      <span className="text-xs font-mono t-subtle">{primaryColor}</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-xs text-white/40 mb-2.5 font-medium">Ambiance</p>
+                  <p className="text-xs t-subtle mb-2.5 font-medium">Ambiance</p>
                   <div className="flex flex-wrap gap-2">
                     {AMBIANCES.map((a) => (
                       <Pill key={a} active={ambiance === a} onClick={() => setAmbiance(a)}>{a}</Pill>
@@ -303,10 +313,10 @@ export default function PromptBuilderPage() {
                     <label
                       key={label}
                       onClick={() => toggleSection(label)}
-                      className="flex items-center gap-2.5 cursor-pointer group py-1.5 px-2.5 rounded-lg hover:bg-white/5 transition-colors"
+                      className="flex items-center gap-2.5 cursor-pointer group py-1.5 px-2.5 rounded-lg t-hover-bg transition-colors"
                     >
                       <span className={`w-4 h-4 rounded flex-shrink-0 border flex items-center justify-center transition-all ${
-                        checked ? 'bg-violet-500 border-violet-500' : 'border-white/20 group-hover:border-white/40'
+                        checked ? 'bg-violet-500 border-violet-500' : 't-border'
                       }`}>
                         {checked && (
                           <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
@@ -314,7 +324,7 @@ export default function PromptBuilderPage() {
                           </svg>
                         )}
                       </span>
-                      <span className={`text-xs transition-colors ${checked ? 'text-white' : 'text-white/50 group-hover:text-white/70'}`}>
+                      <span className={`text-xs transition-colors ${checked ? 't-text' : 't-muted'}`}>
                         {label}
                       </span>
                     </label>
@@ -334,16 +344,20 @@ export default function PromptBuilderPage() {
                     className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border text-left transition-all ${
                       animLevel === label
                         ? 'bg-violet-500/15 border-violet-500/40'
-                        : 'border-white/5 hover:border-white/15'
+                        : 't-border t-hover-border'
                     }`}
                   >
                     <span className="text-xl leading-none">{icon}</span>
                     <div>
-                      <p className={`text-sm font-semibold ${animLevel === label ? 'text-white' : 'text-white/60'}`}>{label}</p>
-                      <p className={`text-xs mt-0.5 ${animLevel === label ? 'text-violet-400/70' : 'text-white/30'}`}>{desc}</p>
+                      <p className={`text-sm font-semibold ${animLevel === label ? '' : 't-muted'}`}
+                         style={animLevel === label ? { color: 'var(--fg)' } : undefined}>
+                        {label}
+                      </p>
+                      <p className={`text-xs mt-0.5 ${animLevel === label ? 'text-violet-400/70' : 't-subtle'}`}>{desc}</p>
                     </div>
                     {animLevel === label && (
-                      <svg className="w-4 h-4 text-violet-400 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-4 h-4 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                           style={{ color: 'var(--accent)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
                       </svg>
                     )}
@@ -369,13 +383,14 @@ export default function PromptBuilderPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="glass rounded-2xl p-5 md:p-6 border border-violet-500/20"
+                  className="glass rounded-2xl p-5 md:p-6 border"
+                  style={{ borderColor: 'rgba(124,58,237,0.2)' }}
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
-                      <span className="text-sm font-bold text-white">Ton prompt</span>
-                      <span className="text-xs text-white/30">{prompt.length} car.</span>
+                      <span className="text-sm font-bold t-text">Ton prompt</span>
+                      <span className="text-xs t-subtle">{prompt.length} car.</span>
                     </div>
                   </div>
 
@@ -383,7 +398,7 @@ export default function PromptBuilderPage() {
                     value={prompt}
                     readOnly
                     rows={8}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 font-mono leading-relaxed resize-none focus:outline-none mb-4"
+                    className="w-full t-surface border t-border rounded-xl px-4 py-3 text-sm t-muted font-mono leading-relaxed resize-none focus:outline-none mb-4"
                   />
 
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -392,7 +407,7 @@ export default function PromptBuilderPage() {
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
                         copied
                           ? 'bg-green-500/15 border-green-500/40 text-green-400'
-                          : 'border-white/10 text-white/70 hover:border-white/20 hover:text-white'
+                          : 't-border t-muted t-hover-border t-hover-text'
                       }`}
                     >
                       {copied ? '✓ Copié !' : 'Copier le prompt'}
