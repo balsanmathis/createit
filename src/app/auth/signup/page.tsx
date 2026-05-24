@@ -93,6 +93,12 @@ function SignupForm() {
       }).catch(() => {})
     }
 
+    // If Supabase requires email verification, redirect to the waiting page
+    if (json.needsVerification) {
+      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
+      return
+    }
+
     if (plan) {
       try {
         const checkoutRes = await fetch('/api/stripe/create-checkout', {

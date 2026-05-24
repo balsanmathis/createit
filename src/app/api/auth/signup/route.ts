@@ -86,7 +86,13 @@ export async function POST(request: NextRequest) {
     }
   )
 
-  const { data, error } = await supabase.auth.signUp({ email, password })
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.create-it.app'}/auth/callback`,
+    },
+  })
 
   if (error) {
     return NextResponse.json(
@@ -100,7 +106,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const response = NextResponse.json({ user: { id: data.user?.id, email: data.user?.email } })
+  // If email_confirmed_at is null, Supabase requires email verification
+  const needsVerification = !data.user?.email_confirmed_at
+
+  const response = NextResponse.json({
+    user: { id: data.user?.id, email: data.user?.email },
+    needsVerification,
+  })
   cookiesToSet.forEach(({ name, value, options }) =>
     response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
   )
