@@ -189,6 +189,35 @@ function EmptyDropZone() {
   )
 }
 
+// ─── Add Section Button ────────────────────────────────────────────────────────
+function AddSectionButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', padding: '18px 0', background: 'transparent',
+        border: '2px dashed #c4b5fd', borderRadius: 10, cursor: 'pointer',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+        color: '#7c3aed', transition: 'all 0.2s', marginTop: 8,
+      }}
+      onMouseEnter={e => {
+        const el = e.currentTarget
+        el.style.background = '#f3e8ff'
+        el.style.borderColor = '#7c3aed'
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget
+        el.style.background = 'transparent'
+        el.style.borderColor = '#c4b5fd'
+      }}
+    >
+      <div style={{ width: 32, height: 32, background: '#7c3aed', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20, lineHeight: 1 }}>+</div>
+      <span style={{ fontSize: 13, fontWeight: 600 }}>Ajouter une section</span>
+      <span style={{ fontSize: 11, color: '#9ca3af' }}>ou glissez un bloc depuis le panneau gauche</span>
+    </button>
+  )
+}
+
 // ─── Canvas ────────────────────────────────────────────────────────────────────
 export default function BuilderCanvas() {
   const { state, dispatch, removeBlock, moveBlock, selectBlock, addBlock, updateStyle } = useBuilder()
@@ -220,6 +249,10 @@ export default function BuilderCanvas() {
     }
   }
 
+  function scrollToBottom() {
+    containerRef.current?.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' })
+  }
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       {/* Inject hover CSS globally */}
@@ -234,14 +267,15 @@ export default function BuilderCanvas() {
             'repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(0,0,0,0.04) 19px,rgba(0,0,0,0.04) 20px)',
             'repeating-linear-gradient(90deg,transparent,transparent 19px,rgba(0,0,0,0.04) 19px,rgba(0,0,0,0.04) 20px)',
           ].join(','),
-          display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0 60px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0 80px',
+          scrollBehavior: 'smooth',
         }}
       >
         <div style={{
           width: '100%', maxWidth, background: '#fff', minHeight: 600,
           boxShadow: maxWidth ? '0 0 0 1px rgba(0,0,0,0.1),0 8px 32px rgba(0,0,0,0.12)' : 'none',
           borderRadius: maxWidth ? 12 : 0,
-          overflow: 'hidden', margin: maxWidth ? '0 auto' : 0, transition: 'max-width 0.3s ease',
+          margin: maxWidth ? '0 auto' : 0, transition: 'max-width 0.3s ease',
         }}>
           {state.blocks.length === 0 ? (
             <EmptyDropZone />
@@ -264,6 +298,35 @@ export default function BuilderCanvas() {
             </SortableContext>
           )}
         </div>
+
+        {/* Add section button + scroll-down hint — always visible below the page */}
+        {state.blocks.length > 0 && (
+          <div style={{ width: '100%', maxWidth, margin: maxWidth ? '12px auto 0' : '12px 0 0', padding: '0 16px' }}>
+            <AddSectionButton onClick={() => { addBlock('hero'); scrollToBottom(); }} />
+          </div>
+        )}
+
+        {/* Sticky scroll-down button inside the scrollable main */}
+        {state.blocks.length > 0 && (
+          <div style={{ position: 'sticky', bottom: 16, width: '100%', display: 'flex', justifyContent: 'flex-end', paddingRight: 16, pointerEvents: 'none', marginTop: 16 }}>
+            <button
+              onClick={e => { e.stopPropagation(); scrollToBottom(); }}
+              title="Défiler vers le bas pour ajouter du contenu"
+              style={{
+                pointerEvents: 'all',
+                width: 38, height: 38, borderRadius: '50%',
+                background: '#7c3aed', color: '#fff', border: 'none',
+                boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 16, transition: 'transform 0.15s, box-shadow 0.15s',
+              }}
+              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.transform = 'translateY(2px)'; b.style.boxShadow = '0 2px 8px rgba(124,58,237,0.3)' }}
+              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.transform = ''; b.style.boxShadow = '0 4px 16px rgba(124,58,237,0.35)' }}
+            >
+              ↓
+            </button>
+          </div>
+        )}
       </main>
     </DndContext>
   )
