@@ -6,12 +6,29 @@ import SitesGrid from '@/components/dashboard/SitesGrid'
 import BuilderSitesGrid from '@/components/dashboard/BuilderSitesGrid'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 import PaymentSuccessToast from '@/components/dashboard/PaymentSuccessToast'
+import { BLOCK_DEFS } from '@/lib/builder/blocks'
+import type { Block } from '@/lib/builder/types'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 
 function extractTitle(html: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i)
   return m?.[1]?.trim() ?? ''
+}
+
+function generateBuilderPreview(blocks: Block[], name: string): string {
+  if (!blocks.length) {
+    return `<!DOCTYPE html><html><body style="margin:0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#f4f4f5"><p style="color:#a1a1aa;font-size:18px;font-weight:600">${name}</p></body></html>`
+  }
+  const body = blocks.map(block => {
+    const def = BLOCK_DEFS.find(d => d.type === block.type)
+    if (!def) return ''
+    const style = block.style ?? {}
+    const html = def.render(block.content, style)
+    if (style.anchor) return html.replace(/^(<\w+)/, `$1 id="${style.anchor}"`)
+    return html
+  }).join('\n')
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif}img{max-width:100%}</style></head><body>${body}</body></html>`
 }
 
 interface Props {
@@ -32,14 +49,17 @@ export default async function DashboardPage({ searchParams }: Props) {
       supabase.from('sites').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
       supabase.from('users').select('*').eq('id', user.id).single(),
       supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single(),
-      supabase.from('builder_sites').select('id, name, created_at, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }),
+      supabase.from('builder_sites').select('id, name, blocks, created_at, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }),
     ])
 
     const sites = sitesResult.data as Site[] | null
     const profile = profileResult.data
     const subscription = subscriptionResult.data
     const canGenerate = isAdmin || !!subscription
-    const builderSites = builderSitesResult.data ?? []
+    const builderSites = (builderSitesResult.data ?? []).map(s => ({
+      ...s,
+      previewHtml: generateBuilderPreview(Array.isArray(s.blocks) ? s.blocks as Block[] : [], s.name),
+    }))
 
     const tokensUsed = profile?.tokens_used ?? 0
     const tokensLimit = profile?.tokens_limit ?? 8_000

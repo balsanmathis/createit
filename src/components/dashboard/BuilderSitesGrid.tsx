@@ -12,6 +12,7 @@ interface BuilderSite {
   name: string
   created_at: string
   updated_at: string
+  previewHtml?: string
 }
 
 interface Props {
@@ -70,20 +71,25 @@ function BuilderSiteCard({ site, onDelete }: { site: BuilderSite; onDelete: (id:
           <div className="flex-1 mx-2 h-5 rounded" style={{ background: 'var(--surface-2)' }} />
         </div>
 
-        {/* Preview iframe */}
+        {/* Preview iframe — srcdoc avoids auth/network issues */}
         <div className="absolute inset-0 top-8 overflow-hidden">
-          <iframe
-            src={`/api/builder/${site.id}/preview`}
-            title={site.name}
-            sandbox="allow-scripts allow-same-origin"
-            loading="lazy"
-            style={{
-              position: 'absolute', top: 0, left: 0,
-              width: '1024px', height: '576px',
-              transform: 'scale(0.34)', transformOrigin: 'top left',
-              border: 'none', pointerEvents: 'none',
-            }}
-          />
+          {site.previewHtml ? (
+            <iframe
+              srcDoc={site.previewHtml}
+              title={site.name}
+              sandbox="allow-scripts"
+              style={{
+                position: 'absolute', top: 0, left: 0,
+                width: '1024px', height: '576px',
+                transform: 'scale(0.34)', transformOrigin: 'top left',
+                border: 'none', pointerEvents: 'none',
+              }}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span style={{ fontSize: 28 }}>🎨</span>
+            </div>
+          )}
         </div>
 
         {/* Hover overlay */}
