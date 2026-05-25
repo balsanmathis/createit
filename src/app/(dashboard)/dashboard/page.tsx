@@ -192,6 +192,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                     name: site.name,
                     title: extractTitle(site.html_content),
                     created_at: site.created_at,
+                    previewHtml: site.html_content ?? undefined,
                   }))}
                 />
               </>

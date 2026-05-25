@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
 import { Edit2, Download, Copy, Trash2, Globe } from 'lucide-react'
 import GlassCard from '@/components/ui/GlassCard'
 
@@ -11,6 +10,7 @@ export interface Site {
   title?: string
   created_at: string
   status?: 'brouillon' | 'publié'
+  previewHtml?: string
 }
 
 interface Props {
@@ -20,25 +20,11 @@ interface Props {
 }
 
 export default function SiteCard({ site, onDuplicate, onDelete }: Props) {
-  const [iframeVisible, setIframeVisible] = useState(false)
-  const wrapRef = useRef<HTMLDivElement>(null)
   const displayTitle = site.title || site.name
   const status = site.status ?? 'brouillon'
 
-  useEffect(() => {
-    const el = wrapRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIframeVisible(true) },
-      { threshold: 0.05, rootMargin: '150px' },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
   return (
-    <div ref={wrapRef}>
-      <GlassCard hover className="group flex flex-col overflow-hidden">
+    <GlassCard hover className="group flex flex-col overflow-hidden">
 
         {/* Browser chrome + preview */}
         <Link
@@ -64,12 +50,11 @@ export default function SiteCard({ site, onDuplicate, onDelete }: Props) {
 
           {/* Preview iframe */}
           <div className="absolute inset-0 top-8 overflow-hidden">
-            {iframeVisible ? (
+            {site.previewHtml ? (
               <iframe
-                src={`/api/sites/${site.id}/preview`}
+                srcDoc={site.previewHtml}
                 title={displayTitle}
                 sandbox="allow-scripts"
-                loading="lazy"
                 style={{
                   position: 'absolute', top: 0, left: 0,
                   width: '1024px', height: '576px',
@@ -169,6 +154,5 @@ export default function SiteCard({ site, onDuplicate, onDelete }: Props) {
           </div>
         </div>
       </GlassCard>
-    </div>
   )
 }
