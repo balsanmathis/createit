@@ -34,15 +34,16 @@ export async function checkRateLimit(
   identifier: string,
   requests: number,
   window: `${number} ${'s' | 'm' | 'h' | 'd'}`,
-  failOpen = false,
+  failOpen = true,
 ): Promise<boolean> {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    return failOpen
+    return true // no Redis configured — allow all
   }
   try {
     const { success } = await getLimiter(id, requests, window).limit(identifier)
     return success
   } catch {
-    return failOpen
+    console.error('[ratelimit] Redis unreachable, failing open')
+    return true // Redis down — allow rather than lock out all users
   }
 }
