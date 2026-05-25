@@ -28,12 +28,13 @@ export async function GET(
       return new NextResponse('Site introuvable', { status: 404 })
     }
 
-    const blocks: Block[] = data.blocks || []
+    const blocks: Block[] = Array.isArray(data.blocks) ? data.blocks : []
     const bodyParts = blocks.map(block => {
       const def = BLOCK_DEFS.find(d => d.type === block.type)
       if (!def) return ''
-      const html = def.render(block.content, block.style)
-      if (block.style.anchor) return html.replace(/^(<\w+)/, `$1 id="${block.style.anchor}"`)
+      const style = block.style ?? {}
+      const html = def.render(block.content, style)
+      if (style.anchor) return html.replace(/^(<\w+)/, `$1 id="${style.anchor}"`)
       return html
     }).join('\n')
 

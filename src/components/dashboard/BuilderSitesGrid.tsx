@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -20,19 +20,6 @@ interface Props {
 
 function BuilderSiteCard({ site, onDelete }: { site: BuilderSite; onDelete: (id: string) => void }) {
   const [exporting, setExporting] = useState(false)
-  const [iframeVisible, setIframeVisible] = useState(false)
-  const wrapRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = wrapRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIframeVisible(true) },
-      { threshold: 0.05, rootMargin: '150px' },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
 
   async function handleExport() {
     if (exporting) return
@@ -63,7 +50,6 @@ function BuilderSiteCard({ site, onDelete }: { site: BuilderSite; onDelete: (id:
   }
 
   return (
-    <div ref={wrapRef}>
     <GlassCard hover className="group flex flex-col overflow-hidden">
       {/* Preview */}
       <Link
@@ -86,24 +72,18 @@ function BuilderSiteCard({ site, onDelete }: { site: BuilderSite; onDelete: (id:
 
         {/* Preview iframe */}
         <div className="absolute inset-0 top-8 overflow-hidden">
-          {iframeVisible ? (
-            <iframe
-              src={`/api/builder/${site.id}/preview`}
-              title={site.name}
-              sandbox="allow-scripts"
-              loading="lazy"
-              style={{
-                position: 'absolute', top: 0, left: 0,
-                width: '1024px', height: '576px',
-                transform: 'scale(0.34)', transformOrigin: 'top left',
-                border: 'none', pointerEvents: 'none',
-              }}
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center flex-col gap-2">
-              <div style={{ fontSize: 28, color: 'var(--fg-subtle)' }}>🎨</div>
-            </div>
-          )}
+          <iframe
+            src={`/api/builder/${site.id}/preview`}
+            title={site.name}
+            sandbox="allow-scripts allow-same-origin"
+            loading="lazy"
+            style={{
+              position: 'absolute', top: 0, left: 0,
+              width: '1024px', height: '576px',
+              transform: 'scale(0.34)', transformOrigin: 'top left',
+              border: 'none', pointerEvents: 'none',
+            }}
+          />
         </div>
 
         {/* Hover overlay */}
@@ -170,7 +150,6 @@ function BuilderSiteCard({ site, onDelete }: { site: BuilderSite; onDelete: (id:
         </div>
       </div>
     </GlassCard>
-    </div>
   )
 }
 
