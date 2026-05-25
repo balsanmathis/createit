@@ -1,7 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { Edit2, Download, Copy, Trash2, Globe } from 'lucide-react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { Edit2, Download, Copy, Trash2, Globe, Layers } from 'lucide-react'
 import GlassCard from '@/components/ui/GlassCard'
 
 export interface Site {
@@ -20,8 +23,30 @@ interface Props {
 }
 
 export default function SiteCard({ site, onDuplicate, onDelete }: Props) {
+  const [importing, setImporting] = useState(false)
+  const router = useRouter()
   const displayTitle = site.title || site.name
   const status = site.status ?? 'brouillon'
+
+  async function handleImportToBuilder() {
+    if (importing) return
+    setImporting(true)
+    try {
+      const res = await fetch('/api/builder/import-from-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siteId: site.id }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      toast.success('Site importé dans le Builder !')
+      router.push(`/builder/${json.id}`)
+    } catch {
+      toast.error('Erreur lors de l\'import.')
+    } finally {
+      setImporting(false)
+    }
+  }
 
   return (
     <GlassCard hover className="group flex flex-col overflow-hidden">
@@ -114,8 +139,19 @@ export default function SiteCard({ site, onDuplicate, onDelete }: Props) {
             </span>
           </div>
 
+          {/* Import to Builder */}
+          <button
+            onClick={handleImportToBuilder}
+            disabled={importing}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all duration-150"
+            style={{ background: 'var(--accent-light)', color: 'var(--accent)', opacity: importing ? 0.6 : 1 }}
+          >
+            <Layers size={11} />
+            {importing ? 'Import en cours…' : 'Importer dans le Builder'}
+          </button>
+
           {/* Actions 2×2 */}
-          <div className="grid grid-cols-2 gap-1.5 mt-auto">
+          <div className="grid grid-cols-2 gap-1.5">
             <Link
               href={`/dashboard/sites/${site.id}`}
               className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all duration-150 text-white"

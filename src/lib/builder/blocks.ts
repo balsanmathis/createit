@@ -848,4 +848,17 @@ export const BLOCK_DEFS: BlockDef[] = [
 </section>`
     },
   },
+
+  // ─── HTML BRUT ───────────────────────────────────────────────────────────────
+  {
+    type: 'html-embed',
+    label: 'HTML importé',
+    category: 'layout',
+    icon: '📄',
+    defaultContent: { html: '<section style="padding:60px 40px;font-family:system-ui,sans-serif"><p>Collez votre HTML ici</p></section>' },
+    defaultStyle: {},
+    render(content) {
+      return content.html || '<div style="padding:40px;color:#a1a1aa;text-align:center;font-family:system-ui">Section vide</div>'
+    },
+  },
 ]
