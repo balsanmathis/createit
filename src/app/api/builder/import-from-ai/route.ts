@@ -11,9 +11,15 @@ function defaultAnimation() {
 }
 
 function splitIntoSections(html: string): { sections: string[]; css: string } {
-  // Extract CSS from <head>
-  const cssMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/i)
-  const css = cssMatch?.[1]?.trim() ?? ''
+  // Extract ALL <style> blocks (not just the first one)
+  const cssBlocks = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
+  const rawCss = cssBlocks.map(m => m[1]?.trim()).filter(Boolean).join('\n')
+
+  // Override JS-dependent styles so content is visible without scripts
+  const css = rawCss
+    + '\n.reveal{opacity:1!important;transform:none!important;transition:none!important}'
+    + '\n.page{display:block!important}'
+    + '\nnav{position:sticky!important}'
 
   // Extract body content
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
