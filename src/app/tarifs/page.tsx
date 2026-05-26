@@ -3,13 +3,17 @@ import AuroraBackground from '@/components/ui/AuroraBackground'
 import PublicNav from '@/components/public/PublicNav'
 import PublicFooter from '@/components/public/PublicFooter'
 import TarifsClient from './TarifsClient'
+import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: 'Tarifs — CreateIt',
   description: 'Gratuit, Starter 20 €/mois, Pro 45 €/mois, Agency 250 €/mois. Comparez les plans CreateIt et choisissez celui qui correspond à vos besoins.',
 }
 
-export default function TarifsPage() {
+export default async function TarifsPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--fg)' }}>
       <PublicNav />
@@ -29,7 +33,7 @@ export default function TarifsPage() {
         </section>
       </AuroraBackground>
 
-      <TarifsClient />
+      <TarifsClient isLoggedIn={!!user} />
 
       <PublicFooter />
     </div>

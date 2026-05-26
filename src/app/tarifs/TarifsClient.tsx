@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Check, X, ChevronDown } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -8,49 +9,6 @@ import GlassCard from '@/components/ui/GlassCard'
 import PricingCard, { type PricingPlan } from '@/components/ui/PricingCard'
 import AuroraBackground from '@/components/ui/AuroraBackground'
 import { cn } from '@/lib/utils'
-
-const PLANS: PricingPlan[] = [
-  {
-    key: 'free',
-    name: 'Gratuit',
-    desc: 'Pour explorer les exemples',
-    monthlyPrice: 0,
-    tokens: '',
-    features: ['Accès aux exemples', 'Voir les sites générés', 'Inspiration gratuite'],
-    cta: 'Créer un compte',
-    href: '/auth/signup',
-  },
-  {
-    key: 'starter',
-    name: 'Starter',
-    desc: 'Pour les indépendants',
-    monthlyPrice: 20,
-    tokens: '800 000 tokens',
-    features: ['Générations illimitées', 'Éditeur visuel', 'Export ZIP', 'Support email'],
-    cta: 'Choisir Starter',
-    href: '/auth/signup?plan=starter',
-  },
-  {
-    key: 'pro',
-    name: 'Pro',
-    desc: 'Pour les professionnels',
-    monthlyPrice: 45,
-    tokens: '2 400 000 tokens',
-    features: ['Éditeur visuel avancé', 'Export ZIP', 'Support prioritaire', 'Historique illimité'],
-    cta: 'Choisir Pro',
-    href: '/auth/signup?plan=pro',
-  },
-  {
-    key: 'agency',
-    name: 'Agency',
-    desc: 'Pour les agences',
-    monthlyPrice: 250,
-    tokens: '16 000 000 tokens',
-    features: ['Tout le Pro', 'Support dédié 24/7', 'API access', 'Revente autorisée', 'White label'],
-    cta: 'Choisir Agency',
-    href: '/auth/signup?plan=agency',
-  },
-]
 
 type Row = { label: string; free: boolean | string; starter: boolean | string; pro: boolean | string; agency: boolean | string }
 
@@ -115,9 +73,72 @@ function Cell({ value }: { value: boolean | string }) {
   return <span className="text-sm font-medium" style={{ color: 'var(--fg)' }}>{value}</span>
 }
 
-export default function TarifsClient() {
+export default function TarifsClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const router = useRouter()
+
+  async function handleSelectPlan(planKey: string) {
+    if (!isLoggedIn) {
+      router.push(`/auth/signup?plan=${planKey}`)
+      return
+    }
+    const res = await fetch('/api/stripe/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: planKey }),
+    })
+    const json = await res.json()
+    if (json?.url) {
+      window.location.href = json.url
+    }
+  }
+
+  const PLANS: PricingPlan[] = [
+    {
+      key: 'free',
+      name: 'Gratuit',
+      desc: 'Pour explorer les exemples',
+      monthlyPrice: 0,
+      tokens: '',
+      features: ['Accès aux exemples', 'Voir les sites générés', 'Inspiration gratuite'],
+      cta: 'Créer un compte',
+      href: '/auth/signup',
+    },
+    {
+      key: 'starter',
+      name: 'Starter',
+      desc: 'Pour les indépendants',
+      monthlyPrice: 20,
+      tokens: '800 000 tokens',
+      features: ['Générations illimitées', 'Éditeur visuel', 'Export ZIP', 'Support email'],
+      cta: 'Choisir Starter',
+      href: '/auth/signup?plan=starter',
+      onSelect: () => handleSelectPlan('starter'),
+    },
+    {
+      key: 'pro',
+      name: 'Pro',
+      desc: 'Pour les professionnels',
+      monthlyPrice: 45,
+      tokens: '2 400 000 tokens',
+      features: ['Éditeur visuel avancé', 'Export ZIP', 'Support prioritaire', 'Historique illimité'],
+      cta: 'Choisir Pro',
+      href: '/auth/signup?plan=pro',
+      onSelect: () => handleSelectPlan('pro'),
+    },
+    {
+      key: 'agency',
+      name: 'Agency',
+      desc: 'Pour les agences',
+      monthlyPrice: 250,
+      tokens: '16 000 000 tokens',
+      features: ['Tout le Pro', 'Support dédié 24/7', 'API access', 'Revente autorisée', 'White label'],
+      cta: 'Choisir Agency',
+      href: '/auth/signup?plan=agency',
+      onSelect: () => handleSelectPlan('agency'),
+    },
+  ]
 
   return (
     <>
