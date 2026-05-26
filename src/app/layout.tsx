@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next'
 import SessionRefresher from '@/components/SessionRefresher'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { LanguageProvider } from '@/contexts/language'
+import HomeButton from '@/components/ui/HomeButton'
 import './globals.css'
 
 const inter = Inter({
@@ -60,6 +61,7 @@ export default function RootLayout({
           <LanguageProvider>
           <Analytics />
           <SessionRefresher />
+          <HomeButton />
           <ErrorBoundary>{children}</ErrorBoundary>
           <Toaster
             theme="system"
