@@ -16,6 +16,56 @@ export function generateWelcomeCode(): string {
   return `WELCOME20-${code}`
 }
 
+export async function sendVerificationEmail(to: string, verifyUrl: string): Promise<void> {
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Vérifiez votre email</title></head>
+<body style="margin:0;padding:0;background:#04040f;font-family:Arial,Helvetica,sans-serif;color:#e2e8f0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#04040f;min-height:100vh;">
+    <tr><td align="center" style="padding:40px 20px;">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+        <tr><td align="center" style="padding-bottom:32px;">
+          <table cellpadding="0" cellspacing="0"><tr>
+            <td style="background:linear-gradient(135deg,#5b21b6,#1d4ed8);border-radius:12px;width:40px;height:40px;text-align:center;vertical-align:middle;">
+              <span style="color:white;font-size:18px;font-weight:bold;">✦</span>
+            </td>
+            <td style="padding-left:10px;"><span style="font-size:22px;font-weight:bold;color:#e2e8f0;">Create<span style="color:#7c3aed;">It</span></span></td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="background:#080820;border:1px solid #1e1b4b;border-radius:20px;padding:40px;">
+          <p style="text-align:center;font-size:48px;margin:0 0 20px;">✉️</p>
+          <h1 style="margin:0 0 12px;font-size:26px;font-weight:900;text-align:center;color:#e2e8f0;">Vérifiez votre email</h1>
+          <p style="margin:0 0 28px;font-size:15px;color:#94a3b8;text-align:center;line-height:1.6;">
+            Cliquez sur le bouton ci-dessous pour confirmer votre adresse et activer votre compte CreateIt.
+          </p>
+          <div style="text-align:center;margin-bottom:28px;">
+            <a href="${verifyUrl}" style="display:inline-block;background:#5b21b6;color:white;text-decoration:none;font-weight:700;font-size:16px;padding:16px 40px;border-radius:50px;">
+              Confirmer mon email →
+            </a>
+          </div>
+          <p style="margin:0;font-size:12px;color:#475569;text-align:center;line-height:1.6;">
+            Ce lien expire dans 24h. Si vous n'avez pas créé de compte, ignorez cet email.<br>
+            En cas de problème, copiez ce lien dans votre navigateur :<br>
+            <span style="color:#7c3aed;word-break:break-all;">${verifyUrl}</span>
+          </p>
+        </td></tr>
+        <tr><td align="center" style="padding-top:24px;">
+          <p style="margin:0;font-size:12px;color:#334155;">© 2025 CreateIt · <a href="https://create-it.app" style="color:#5b21b6;text-decoration:none;">create-it.app</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`
+
+  const resend = getResend()
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: 'Confirmez votre email — CreateIt',
+    html,
+  })
+}
+
 export async function sendWelcomeEmail(to: string, promoCode: string): Promise<void> {
   const pricingUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://create-it.app'}/pricing?promo=${encodeURIComponent(promoCode)}`
 
