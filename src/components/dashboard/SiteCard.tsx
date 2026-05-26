@@ -152,14 +152,16 @@ export default function SiteCard({ site, onDuplicate, onDelete }: Props) {
 
           {/* Actions 2×2 */}
           <div className="grid grid-cols-2 gap-1.5">
-            <Link
-              href={`/dashboard/sites/${site.id}`}
+            <a
+              href={`/editor/${site.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all duration-150 text-white"
-              style={{ background: 'var(--accent)' }}
+              style={{ background: 'var(--accent)', textDecoration: 'none' }}
             >
               <Edit2 size={11} />
               Éditer
-            </Link>
+            </a>
 
             <Link
               href={`/dashboard/sites/${site.id}/export`}

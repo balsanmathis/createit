@@ -265,15 +265,13 @@ export default function DashboardSidebar() {
               <p className="text-xs" style={{ color: 'var(--fg-subtle)' }}>
                 {tokens.used.toLocaleString('fr-FR')} / {tokens.limit.toLocaleString('fr-FR')} utilisés
               </p>
-              {remaining === 0 && (
-                <Link
-                  href="/tarifs"
-                  className="mt-2 flex items-center justify-center text-xs font-semibold py-2 rounded-lg transition-colors"
-                  style={{ background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid rgba(124,58,237,0.2)' }}
-                >
-                  Obtenir plus de tokens →
-                </Link>
-              )}
+              <Link
+                href="/tarifs"
+                className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-lg transition-all"
+                style={{ background: pct > 60 ? 'var(--accent)' : 'var(--accent-light)', color: pct > 60 ? '#fff' : 'var(--accent)', border: pct > 60 ? 'none' : '1px solid rgba(124,58,237,0.2)' }}
+              >
+                ⚡ {remaining === 0 ? 'Augmenter mon plan' : 'Passer à la version Pro'}
+              </Link>
             </div>
           )
         })()}
