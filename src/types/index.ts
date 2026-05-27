@@ -39,7 +39,7 @@ export const PLAN_LIMITS: Record<string, number> = {
 }
 
 export const PLAN_TOKEN_LIMITS: Record<Plan, number> = {
-  free:    8_000,
+  free:    0,
   starter: 800_000,
   pro:     2_400_000,
   agency:  16_000_000,

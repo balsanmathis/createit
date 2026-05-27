@@ -88,6 +88,14 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Ensure free plan user has 0 tokens (overrides DB trigger which may set 8000)
+  if (data.user?.id) {
+    await supabase
+      .from('users')
+      .upsert({ id: data.user.id, email, plan: 'free', tokens_used: 0, tokens_limit: 0 })
+      .eq('id', data.user.id)
+  }
+
   // Generate a verification link and send it via Resend (no Supabase SMTP involved)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.create-it.app'
   const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
