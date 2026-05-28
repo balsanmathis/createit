@@ -32,7 +32,17 @@ export interface BlockStyle {
   width?: string
   minHeight?: string
   height?: string
-  anchor?: string  // section id for internal links (#anchor)
+  anchor?: string
+  // Gradient
+  gradientEnabled?: boolean
+  gradientColor1?: string
+  gradientColor2?: string
+  gradientAngle?: number
+  // Image overlay
+  overlayColor?: string
+  overlayOpacity?: number
+  // Text highlight
+  textHighlight?: boolean
 }
 
 export interface BlockAnimation {

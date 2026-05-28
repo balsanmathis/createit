@@ -18,10 +18,10 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useBuilder } from '@/lib/builder/context'
+import { useMobile } from '@/lib/builder/use-mobile'
 import { BLOCK_DEFS } from '@/lib/builder/blocks'
 import type { Block } from '@/lib/builder/types'
 
-// ─── Hover CSS injected into canvas ──────────────────────────────────────────
 const HOVER_CSS = `
 .bh-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.15); transition: all 0.25s; }
 .bh-grow:hover { transform: scale(1.05); transition: transform 0.25s; }
@@ -33,6 +33,10 @@ const HOVER_CSS = `
 .bh-underline:hover::after { width: 100%; }
 `
 
+interface BuilderCanvasProps {
+  onMobileOpenBlocks?: () => void
+}
+
 // ─── SortableBlock ─────────────────────────────────────────────────────────────
 function SortableBlock({
   block,
@@ -42,6 +46,7 @@ function SortableBlock({
   onMoveUp,
   onMoveDown,
   onResize,
+  isMobile,
 }: {
   block: Block
   isSelected: boolean
@@ -50,6 +55,7 @@ function SortableBlock({
   onMoveUp: () => void
   onMoveDown: () => void
   onResize: (minHeight: string) => void
+  isMobile: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id })
   const blockElRef = useRef<HTMLDivElement>(null)
@@ -62,6 +68,9 @@ function SortableBlock({
   const hoverClass = block.animation.hover && block.animation.hover !== 'none'
     ? `bh-${block.animation.hover}`
     : ''
+
+  // On mobile, toolbar is always visible; on desktop only on hover/select
+  const toolbarOpacity = isMobile || isSelected ? 1 : 0
 
   const wrapperStyle: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -79,11 +88,7 @@ function SortableBlock({
     e.stopPropagation()
     const startY = e.clientY
     const startH = blockElRef.current?.getBoundingClientRect().height ?? 200
-
-    function onMove(ev: MouseEvent) {
-      const h = Math.max(40, startH + (ev.clientY - startY))
-      setResizeHeight(h)
-    }
+    function onMove(ev: MouseEvent) { setResizeHeight(Math.max(40, startH + (ev.clientY - startY))) }
     function onUp(ev: MouseEvent) {
       const h = Math.max(40, startH + (ev.clientY - startY))
       setResizeHeight(null)
@@ -102,11 +107,13 @@ function SortableBlock({
       style={wrapperStyle}
       onClick={e => { e.stopPropagation(); onSelect() }}
       onMouseEnter={e => {
-        const toolbar = e.currentTarget.querySelector<HTMLElement>('.block-toolbar')
-        if (toolbar) toolbar.style.opacity = '1'
+        if (!isMobile) {
+          const toolbar = e.currentTarget.querySelector<HTMLElement>('.block-toolbar')
+          if (toolbar) toolbar.style.opacity = '1'
+        }
       }}
       onMouseLeave={e => {
-        if (!isSelected) {
+        if (!isMobile && !isSelected) {
           const toolbar = e.currentTarget.querySelector<HTMLElement>('.block-toolbar')
           if (toolbar) toolbar.style.opacity = '0'
         }
@@ -115,17 +122,25 @@ function SortableBlock({
       {/* Toolbar */}
       <div
         className="block-toolbar"
-        style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 4, zIndex: 20, opacity: isSelected ? 1 : 0, transition: 'opacity 0.15s' }}
+        style={{
+          position: 'absolute', top: isMobile ? 4 : 6, right: isMobile ? 4 : 6,
+          display: 'flex', gap: isMobile ? 6 : 4, zIndex: 20,
+          opacity: toolbarOpacity,
+          transition: 'opacity 0.15s',
+        }}
       >
-        <button title="Déplacer" {...listeners} {...attributes} style={{ ...toolbarBtn, cursor: 'grab' }} onClick={e => e.stopPropagation()}>⠿</button>
-        <button title="Monter" style={toolbarBtn} onClick={e => { e.stopPropagation(); onMoveUp() }}>↑</button>
-        <button title="Descendre" style={toolbarBtn} onClick={e => { e.stopPropagation(); onMoveDown() }}>↓</button>
-        <button title="Supprimer" style={{ ...toolbarBtn, background: '#fee2e2', borderColor: '#fca5a5', color: '#dc2626' }} onClick={e => { e.stopPropagation(); onRemove() }}>🗑</button>
+        {/* Drag handle — desktop only */}
+        {!isMobile && (
+          <button title="Déplacer" {...listeners} {...attributes} style={{ ...toolbarBtn(isMobile), cursor: 'grab' }} onClick={e => e.stopPropagation()}>⠿</button>
+        )}
+        <button title="Monter" style={toolbarBtn(isMobile)} onClick={e => { e.stopPropagation(); onMoveUp() }}>↑</button>
+        <button title="Descendre" style={toolbarBtn(isMobile)} onClick={e => { e.stopPropagation(); onMoveDown() }}>↓</button>
+        <button title="Supprimer" style={{ ...toolbarBtn(isMobile), background: '#fee2e2', borderColor: '#fca5a5', color: '#dc2626' }} onClick={e => { e.stopPropagation(); onRemove() }}>🗑</button>
       </div>
 
       {/* Block label badge */}
       {isSelected && (
-        <div style={{ position: 'absolute', top: 6, left: 6, background: '#7c3aed', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 4, zIndex: 20, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: isMobile ? 4 : 6, left: isMobile ? 4 : 6, background: '#7c3aed', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 4, zIndex: 20, pointerEvents: 'none' }}>
           {def?.label || block.type}
         </div>
       )}
@@ -138,8 +153,19 @@ function SortableBlock({
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
-      {/* Resize handle — only when selected */}
-      {isSelected && (
+      {/* Image / color overlay — visible in canvas */}
+      {block.style.overlayColor && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: block.style.overlayColor,
+          opacity: (block.style.overlayOpacity ?? 50) / 100,
+          pointerEvents: 'none',
+          zIndex: 10,
+        }} />
+      )}
+
+      {/* Resize handle — desktop only when selected */}
+      {isSelected && !isMobile && (
         <div
           onMouseDown={startResize}
           style={{
@@ -161,14 +187,23 @@ function SortableBlock({
   )
 }
 
-const toolbarBtn: React.CSSProperties = {
-  width: 28, height: 28, background: '#fff', border: '1px solid #e4e4e7', borderRadius: 6,
-  cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  color: '#18181b', boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-}
+const toolbarBtn = (isMobile: boolean): React.CSSProperties => ({
+  width: isMobile ? 40 : 28,
+  height: isMobile ? 40 : 28,
+  background: '#fff',
+  border: '1px solid #e4e4e7',
+  borderRadius: 6,
+  cursor: 'pointer',
+  fontSize: isMobile ? 16 : 13,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: '#18181b',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+})
 
 // ─── Empty drop zone ───────────────────────────────────────────────────────────
-function EmptyDropZone() {
+function EmptyDropZone({ isMobile, onOpenBlocks }: { isMobile: boolean; onOpenBlocks?: () => void }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'canvas-empty' })
   return (
     <div
@@ -181,11 +216,18 @@ function EmptyDropZone() {
     >
       <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>
       <p style={{ fontSize: 15, color: isOver ? '#7c3aed' : '#6b7280', fontWeight: 600, margin: 0 }}>
-        {isOver ? 'Déposez ici !' : 'Glissez votre premier bloc ici'}
+        {isOver ? 'Déposez ici !' : isMobile ? 'Appuyez sur "＋ Blocs" pour commencer' : 'Glissez votre premier bloc ici'}
       </p>
-      <p style={{ fontSize: 13, color: '#9ca3af', margin: '8px 0 0' }}>
-        ou cliquez sur un bloc dans le panneau gauche
-      </p>
+      {isMobile && (
+        <button onClick={onOpenBlocks} style={{ marginTop: 16, background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          ＋ Ajouter un bloc
+        </button>
+      )}
+      {!isMobile && (
+        <p style={{ fontSize: 13, color: '#9ca3af', margin: '8px 0 0' }}>
+          ou cliquez sur un bloc dans le panneau gauche
+        </p>
+      )}
     </div>
   )
 }
@@ -201,16 +243,8 @@ function AddSectionButton({ onClick }: { onClick: () => void }) {
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
         color: '#7c3aed', transition: 'all 0.2s', marginTop: 8,
       }}
-      onMouseEnter={e => {
-        const el = e.currentTarget
-        el.style.background = '#f3e8ff'
-        el.style.borderColor = '#7c3aed'
-      }}
-      onMouseLeave={e => {
-        const el = e.currentTarget
-        el.style.background = 'transparent'
-        el.style.borderColor = '#c4b5fd'
-      }}
+      onMouseEnter={e => { e.currentTarget.style.background = '#f3e8ff'; e.currentTarget.style.borderColor = '#7c3aed' }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#c4b5fd' }}
     >
       <div style={{ width: 32, height: 32, background: '#7c3aed', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20, lineHeight: 1 }}>+</div>
       <span style={{ fontSize: 13, fontWeight: 600 }}>Ajouter une section</span>
@@ -220,11 +254,15 @@ function AddSectionButton({ onClick }: { onClick: () => void }) {
 }
 
 // ─── Canvas ────────────────────────────────────────────────────────────────────
-export default function BuilderCanvas() {
+export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps) {
   const { state, dispatch, removeBlock, moveBlock, selectBlock, addBlock, updateStyle } = useBuilder()
+  const isMobile = useMobile()
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+  // On mobile, disable drag (use very high activation threshold)
+  const sensors = useSensors(useSensor(PointerSensor, {
+    activationConstraint: { distance: isMobile ? 999999 : 8 },
+  }))
 
   const maxWidth = state.viewport === 'tablet' ? 768 : state.viewport === 'mobile' ? 375 : undefined
 
@@ -233,6 +271,7 @@ export default function BuilderCanvas() {
   }, [updateStyle])
 
   function handleDragEnd(event: DragEndEvent) {
+    if (isMobile) return
     const { active, over } = event
     if (!over) return
     const activeId = String(active.id)
@@ -256,7 +295,6 @@ export default function BuilderCanvas() {
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      {/* Inject hover CSS globally */}
       <style>{HOVER_CSS}</style>
 
       <main
@@ -268,7 +306,8 @@ export default function BuilderCanvas() {
             'repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(0,0,0,0.04) 19px,rgba(0,0,0,0.04) 20px)',
             'repeating-linear-gradient(90deg,transparent,transparent 19px,rgba(0,0,0,0.04) 19px,rgba(0,0,0,0.04) 20px)',
           ].join(','),
-          display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0 80px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          padding: isMobile ? '8px 0 120px' : '20px 0 80px',
           scrollBehavior: 'smooth',
         }}
       >
@@ -279,7 +318,7 @@ export default function BuilderCanvas() {
           margin: maxWidth ? '0 auto' : 0, transition: 'max-width 0.3s ease',
         }}>
           {state.blocks.length === 0 ? (
-            <EmptyDropZone />
+            <EmptyDropZone isMobile={isMobile} onOpenBlocks={onMobileOpenBlocks} />
           ) : (
             <SortableContext items={state.blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
               <div>
@@ -293,6 +332,7 @@ export default function BuilderCanvas() {
                     onMoveUp={() => moveBlock(block.id, 'up')}
                     onMoveDown={() => moveBlock(block.id, 'down')}
                     onResize={(minHeight) => handleResize(block.id, minHeight)}
+                    isMobile={isMobile}
                   />
                 ))}
               </div>
@@ -300,35 +340,50 @@ export default function BuilderCanvas() {
           )}
         </div>
 
-        {/* Add section button + scroll-down hint — always visible below the page */}
-        {state.blocks.length > 0 && (
+        {state.blocks.length > 0 && !isMobile && (
           <div style={{ width: '100%', maxWidth, margin: maxWidth ? '12px auto 0' : '12px 0 0', padding: '0 16px' }}>
             <AddSectionButton onClick={() => { addBlock('hero'); scrollToBottom(); }} />
           </div>
         )}
 
-        {/* Sticky scroll-down button inside the scrollable main */}
-        {state.blocks.length > 0 && (
+        {/* Desktop scroll-down hint */}
+        {state.blocks.length > 0 && !isMobile && (
           <div style={{ position: 'sticky', bottom: 16, width: '100%', display: 'flex', justifyContent: 'flex-end', paddingRight: 16, pointerEvents: 'none', marginTop: 16 }}>
             <button
               onClick={e => { e.stopPropagation(); scrollToBottom(); }}
-              title="Défiler vers le bas pour ajouter du contenu"
               style={{
-                pointerEvents: 'all',
-                width: 38, height: 38, borderRadius: '50%',
+                pointerEvents: 'all', width: 38, height: 38, borderRadius: '50%',
                 background: '#7c3aed', color: '#fff', border: 'none',
                 boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 16, transition: 'transform 0.15s, box-shadow 0.15s',
               }}
-              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.transform = 'translateY(2px)'; b.style.boxShadow = '0 2px 8px rgba(124,58,237,0.3)' }}
-              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.transform = ''; b.style.boxShadow = '0 4px 16px rgba(124,58,237,0.35)' }}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.transform = 'translateY(2px)'; b.style.boxShadow = '0 2px 8px rgba(124,58,237,0.3)' }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.transform = ''; b.style.boxShadow = '0 4px 16px rgba(124,58,237,0.35)' }}
             >
               ↓
             </button>
           </div>
         )}
       </main>
+
+      {/* Mobile FAB — "＋ Blocs" */}
+      {isMobile && (
+        <button
+          onClick={e => { e.stopPropagation(); onMobileOpenBlocks?.() }}
+          style={{
+            position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+            background: '#7c3aed', color: '#fff', border: 'none',
+            borderRadius: 28, padding: '14px 28px',
+            fontSize: 15, fontWeight: 700, cursor: 'pointer',
+            zIndex: 90, boxShadow: '0 4px 20px rgba(124,58,237,0.45)',
+            display: 'flex', alignItems: 'center', gap: 8,
+            minHeight: 52,
+          }}
+        >
+          ＋ Blocs
+        </button>
+      )}
     </DndContext>
   )
 }

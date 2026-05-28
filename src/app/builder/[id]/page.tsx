@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { BuilderProvider, useBuilder } from '@/lib/builder/context'
+import { useMobile } from '@/lib/builder/use-mobile'
 import BuilderHeader from '@/components/builder/BuilderHeader'
 import BlockPanel from '@/components/builder/BlockPanel'
 import BuilderCanvas from '@/components/builder/BuilderCanvas'
@@ -39,9 +40,20 @@ ${bodyHtml}
 function BuilderEditor({ siteId }: { siteId: string }) {
   const { state, dispatch, undo, redo } = useBuilder()
   const router = useRouter()
+  const isMobile = useMobile()
+  const [mobilePanel, setMobilePanel] = useState<'blocks' | 'style' | null>(null)
   const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const stateRef = useRef(state)
   stateRef.current = state
+
+  // Auto-open style panel on mobile when a block is selected
+  const prevSelectedRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (isMobile && state.selectedId && state.selectedId !== prevSelectedRef.current) {
+      setMobilePanel('style')
+    }
+    prevSelectedRef.current = state.selectedId
+  }, [state.selectedId, isMobile])
 
   // Load site on mount
   useEffect(() => {
@@ -139,11 +151,29 @@ function BuilderEditor({ siteId }: { siteId: string }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <BuilderHeader onSave={performSave} onExport={handleExport} onPreview={handlePreview} />
+      <BuilderHeader
+        onSave={performSave}
+        onExport={handleExport}
+        onPreview={handlePreview}
+        mobilePanel={mobilePanel}
+        onToggleMobilePanel={p => setMobilePanel(prev => prev === p ? null : p)}
+      />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <BlockPanel />
-        <BuilderCanvas />
-        <StylePanel />
+        {!isMobile && <BlockPanel />}
+        {isMobile && (
+          <BlockPanel
+            mobileOpen={mobilePanel === 'blocks'}
+            onMobileClose={() => setMobilePanel(null)}
+          />
+        )}
+        <BuilderCanvas onMobileOpenBlocks={() => setMobilePanel('blocks')} />
+        {!isMobile && <StylePanel />}
+        {isMobile && (
+          <StylePanel
+            mobileOpen={mobilePanel === 'style'}
+            onMobileClose={() => setMobilePanel(null)}
+          />
+        )}
       </div>
       <AIAssistant />
     </div>

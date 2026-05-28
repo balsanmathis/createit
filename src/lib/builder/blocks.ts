@@ -2,7 +2,12 @@ import type { BlockDef, BlockStyle } from './types'
 
 function styleToPartialCss(style: BlockStyle): string {
   const parts: string[] = []
-  if (style.background) parts.push(`background:${style.background}`)
+  // Gradient takes priority over flat background
+  if (style.gradientEnabled && style.gradientColor1 && style.gradientColor2) {
+    parts.push(`background:linear-gradient(${style.gradientAngle ?? 135}deg,${style.gradientColor1},${style.gradientColor2})`)
+  } else if (style.background) {
+    parts.push(`background:${style.background}`)
+  }
   if (style.color) parts.push(`color:${style.color}`)
   if (style.paddingTop !== undefined) parts.push(`padding-top:${style.paddingTop}px`)
   if (style.paddingRight !== undefined) parts.push(`padding-right:${style.paddingRight}px`)
@@ -19,6 +24,13 @@ function styleToPartialCss(style: BlockStyle): string {
   if (style.minHeight) parts.push(`min-height:${style.minHeight}`)
   if (style.height) parts.push(`height:${style.height}`)
   return parts.join(';')
+}
+
+function normalizeHref(href: string): string {
+  if (!href) return '#'
+  if (href.startsWith('#') || href.startsWith('/') || href.startsWith('http') ||
+      href.startsWith('mailto:') || href.startsWith('tel:')) return href
+  return `https://${href}`
 }
 
 function buildVideoEmbed(
@@ -410,7 +422,12 @@ export const BLOCK_DEFS: BlockDef[] = [
     defaultStyle: { paddingTop: 24, paddingBottom: 24, paddingLeft: 40, paddingRight: 40, textAlign: 'center' },
     render(content, style) {
       const css = styleToPartialCss(style)
-      return `<div style="${css}"><a href="${content.href || '#'}" style="display:inline-block;background:#7c3aed;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none;font-family:system-ui,sans-serif">${content.text || 'Cliquez ici'}</a></div>`
+      const href = normalizeHref(content.href || '#')
+      const isExternal = href.startsWith('http://') || href.startsWith('https://')
+      const target = content.hrefTarget || (isExternal ? '_blank' : '')
+      const targetAttr = target ? ` target="${target}"` : ''
+      const relAttr = (target === '_blank' || isExternal) ? ' rel="noopener noreferrer"' : ''
+      return `<div style="${css}"><a href="${href}"${targetAttr}${relAttr} style="display:inline-block;background:#7c3aed;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none;font-family:system-ui,sans-serif">${content.text || 'Cliquez ici'}</a></div>`
     },
   },
   {
@@ -422,7 +439,12 @@ export const BLOCK_DEFS: BlockDef[] = [
     defaultStyle: { paddingTop: 24, paddingBottom: 24, paddingLeft: 40, paddingRight: 40, textAlign: 'center' },
     render(content, style) {
       const css = styleToPartialCss(style)
-      return `<div style="${css}"><a href="${content.href || '#'}" style="display:inline-block;background:transparent;color:#7c3aed;font-weight:700;font-size:15px;padding:13px 35px;border-radius:10px;text-decoration:none;border:2px solid #7c3aed;font-family:system-ui,sans-serif">${content.text || 'En savoir plus'}</a></div>`
+      const href = normalizeHref(content.href || '#')
+      const isExternal = href.startsWith('http://') || href.startsWith('https://')
+      const target = content.hrefTarget || (isExternal ? '_blank' : '')
+      const targetAttr = target ? ` target="${target}"` : ''
+      const relAttr = (target === '_blank' || isExternal) ? ' rel="noopener noreferrer"' : ''
+      return `<div style="${css}"><a href="${href}"${targetAttr}${relAttr} style="display:inline-block;background:transparent;color:#7c3aed;font-weight:700;font-size:15px;padding:13px 35px;border-radius:10px;text-decoration:none;border:2px solid #7c3aed;font-family:system-ui,sans-serif">${content.text || 'En savoir plus'}</a></div>`
     },
   },
   {
@@ -434,9 +456,19 @@ export const BLOCK_DEFS: BlockDef[] = [
     defaultStyle: { paddingTop: 24, paddingBottom: 24, paddingLeft: 40, paddingRight: 40, textAlign: 'center' },
     render(content, style) {
       const css = styleToPartialCss(style)
+      const href1 = normalizeHref(content.href1 || '#')
+      const href2 = normalizeHref(content.href2 || '#')
+      const isExt1 = href1.startsWith('http://') || href1.startsWith('https://')
+      const isExt2 = href2.startsWith('http://') || href2.startsWith('https://')
+      const t1 = content.href1Target || (isExt1 ? '_blank' : '')
+      const t2 = content.href2Target || (isExt2 ? '_blank' : '')
+      const ta1 = t1 ? ` target="${t1}"` : ''
+      const ta2 = t2 ? ` target="${t2}"` : ''
+      const r1 = (t1 === '_blank' || isExt1) ? ' rel="noopener noreferrer"' : ''
+      const r2 = (t2 === '_blank' || isExt2) ? ' rel="noopener noreferrer"' : ''
       return `<div style="${css};display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
-  <a href="${content.href1 || '#'}" style="display:inline-block;background:#7c3aed;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none;font-family:system-ui,sans-serif">${content.text1 || 'Commencer'}</a>
-  <a href="${content.href2 || '#'}" style="display:inline-block;background:transparent;color:#7c3aed;font-weight:700;font-size:15px;padding:13px 35px;border-radius:10px;text-decoration:none;border:2px solid #7c3aed;font-family:system-ui,sans-serif">${content.text2 || 'En savoir plus'}</a>
+  <a href="${href1}"${ta1}${r1} style="display:inline-block;background:#7c3aed;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none;font-family:system-ui,sans-serif">${content.text1 || 'Commencer'}</a>
+  <a href="${href2}"${ta2}${r2} style="display:inline-block;background:transparent;color:#7c3aed;font-weight:700;font-size:15px;padding:13px 35px;border-radius:10px;text-decoration:none;border:2px solid #7c3aed;font-family:system-ui,sans-serif">${content.text2 || 'En savoir plus'}</a>
 </div>`
     },
   },

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useBuilder } from '@/lib/builder/context'
+import { useMobile } from '@/lib/builder/use-mobile'
 import { BLOCK_DEFS } from '@/lib/builder/blocks'
 import ImageUploader from './ImageUploader'
 import type { BlockStyle, BlockAnimation, AnimationType, HoverEffect } from '@/lib/builder/types'
@@ -83,32 +84,44 @@ const HOVER_OPTIONS: { value: HoverEffect; label: string }[] = [
 
 type Tab = 'content' | 'style' | 'animation'
 
-export default function StylePanel() {
+const TEXT_TYPES = new Set(['heading-h1', 'heading-h2', 'paragraph', 'quote', 'badge'])
+const IMAGE_TYPES = new Set(['image-simple', 'gallery-2col', 'gallery-3col'])
+
+// ─── StylePanel ───────────────────────────────────────────────────────────────
+export default function StylePanel({ mobileOpen = false, onMobileClose }: { mobileOpen?: boolean; onMobileClose?: () => void }) {
   const { state, updateContent, updateStyle, updateAnimation } = useBuilder()
+  const isMobile = useMobile()
   const [tab, setTab] = useState<Tab>('content')
+
+  // Auto-open on mobile when block is selected
+  const prevSelectedRef = useRef<string | null>(null)
+  useEffect(() => {
+    prevSelectedRef.current = state.selectedId
+  })
 
   const selectedBlock = state.blocks.find(b => b.id === state.selectedId)
   const def = selectedBlock ? BLOCK_DEFS.find(d => d.type === selectedBlock.type) : null
 
-  if (!selectedBlock) {
-    return (
-      <aside style={{ width: 300, flexShrink: 0, background: '#fff', borderLeft: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, height: '100%' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>🎨</div>
-          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>Sélectionnez un bloc<br />pour éditer ses propriétés</p>
-        </div>
-      </aside>
-    )
-  }
+  const emptyState = (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: 24 }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>🎨</div>
+        <p style={{ fontSize: 12, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>Sélectionnez un bloc<br />pour éditer ses propriétés</p>
+      </div>
+    </div>
+  )
 
-  const { id, content, style, animation } = selectedBlock
-
-  return (
-    <aside style={{ width: 300, flexShrink: 0, background: '#fff', borderLeft: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+  const panelContent = selectedBlock ? (
+    <>
       {/* Block name + tabs */}
       <div style={{ flexShrink: 0, borderBottom: '1px solid #e2e8f0', padding: '12px 16px 0' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#18181b', marginBottom: 10 }}>
-          {def?.icon} {def?.label || selectedBlock.type}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#18181b' }}>
+            {def?.icon} {def?.label || selectedBlock.type}
+          </div>
+          {isMobile && (
+            <button onClick={onMobileClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#94a3b8', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          )}
         </div>
         <div style={{ display: 'flex' }}>
           {(['content', 'style', 'animation'] as Tab[]).map(t => (
@@ -129,17 +142,59 @@ export default function StylePanel() {
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {tab === 'content' && (
           <ContentTab
-            content={content}
-            onChange={(key, val) => updateContent(id, { [key]: val })}
+            content={selectedBlock.content}
+            onChange={(key, val) => updateContent(selectedBlock.id, { [key]: val })}
           />
         )}
         {tab === 'style' && (
-          <StyleTab style={style} onChange={(patch) => updateStyle(id, patch)} />
+          <StyleTab
+            style={selectedBlock.style}
+            blockType={selectedBlock.type}
+            onChange={(patch) => updateStyle(selectedBlock.id, patch)}
+          />
         )}
         {tab === 'animation' && (
-          <AnimationTab animation={animation} onChange={(patch) => updateAnimation(id, patch)} />
+          <AnimationTab animation={selectedBlock.animation} onChange={(patch) => updateAnimation(selectedBlock.id, patch)} />
         )}
       </div>
+    </>
+  ) : emptyState
+
+  // ── Mobile bottom sheet ────────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <>
+        {mobileOpen && (
+          <div
+            onClick={onMobileClose}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 99, touchAction: 'none' }}
+          />
+        )}
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0,
+          height: '78vh',
+          background: '#fff',
+          borderTopLeftRadius: 20, borderTopRightRadius: 20,
+          zIndex: 100,
+          transform: mobileOpen ? 'translateY(0)' : 'translateY(105%)',
+          transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+          display: 'flex', flexDirection: 'column',
+          overflow: 'hidden',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.15)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px', flexShrink: 0 }}>
+            <div style={{ width: 40, height: 4, background: '#d1d5db', borderRadius: 2 }} />
+          </div>
+          {panelContent}
+        </div>
+      </>
+    )
+  }
+
+  // ── Desktop ────────────────────────────────────────────────────────────────
+  return (
+    <aside style={{ width: 300, flexShrink: 0, background: '#fff', borderLeft: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {panelContent}
     </aside>
   )
 }
@@ -152,6 +207,12 @@ function ContentTab({ content, onChange }: {
   const entries = Object.entries(content).filter(([key]) => !isTargetKey(key))
   if (entries.length === 0) {
     return <div style={{ padding: 16 }}><p style={{ color: '#94a3b8', fontSize: 12, margin: 0 }}>Aucun contenu configurable.</p></div>
+  }
+
+  function normalizeUrl(val: string): string {
+    const v = val.trim()
+    if (!v || v.startsWith('#') || v.startsWith('/') || v.startsWith('http') || v.startsWith('mailto:') || v.startsWith('tel:')) return v
+    return `https://${v}`
   }
 
   return (
@@ -194,11 +255,29 @@ function ContentTab({ content, onChange }: {
                   type="text"
                   value={value}
                   onChange={e => onChange(key, e.target.value)}
+                  onBlur={e => {
+                    const normalized = normalizeUrl(e.target.value)
+                    if (normalized !== e.target.value) onChange(key, normalized)
+                  }}
                   placeholder="https://… ou #section-id"
                   style={{ ...inputSt, flex: 1 }}
                 />
               </div>
-              <div style={{ display: 'flex', gap: 6 }}>
+              {/* URL preview + test link */}
+              {value && value !== '#' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <p style={{ fontSize: 10, color: '#7c3aed', margin: 0, flex: 1, wordBreak: 'break-all', lineHeight: 1.4 }}>
+                    → {value}
+                  </p>
+                  <button
+                    onClick={() => window.open(value, '_blank', 'noopener')}
+                    style={{ fontSize: 10, padding: '3px 8px', border: '1px solid #7c3aed', borderRadius: 4, cursor: 'pointer', background: '#faf5ff', color: '#7c3aed', fontWeight: 600, flexShrink: 0 }}
+                  >
+                    Tester →
+                  </button>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', fontSize: 11, color: '#64748b' }}>
                   <input
                     type="checkbox"
@@ -229,13 +308,59 @@ function ContentTab({ content, onChange }: {
 }
 
 // ─── Style Tab ────────────────────────────────────────────────────────────────
-function StyleTab({ style: s, onChange }: { style: BlockStyle; onChange: (p: BlockStyle) => void }) {
+function StyleTab({ style: s, blockType, onChange }: { style: BlockStyle; blockType: string; onChange: (p: BlockStyle) => void }) {
+  const isImageBlock = IMAGE_TYPES.has(blockType)
+  const isTextBlock = TEXT_TYPES.has(blockType)
+
   return (
     <div>
-      <Section title="Couleurs">
-        <ColorRow label="Fond" value={s.background || ''} onChange={v => onChange({ background: v })} />
-        <ColorRow label="Texte" value={s.color || ''} onChange={v => onChange({ color: v })} />
+      <Section title="Couleurs de fond">
+        {!s.gradientEnabled && (
+          <ColorRow label="Couleur de fond" value={s.background || ''} onChange={v => onChange({ background: v })} />
+        )}
+        <div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 8 }}>
+            <input
+              type="checkbox"
+              checked={!!s.gradientEnabled}
+              onChange={e => onChange({ gradientEnabled: e.target.checked })}
+              style={{ accentColor: '#7c3aed', width: 14, height: 14 }}
+            />
+            <span style={{ fontSize: 12, color: '#374151', fontWeight: 500 }}>Dégradé</span>
+          </label>
+          {s.gradientEnabled && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 22 }}>
+              <ColorRow label="Couleur 1" value={s.gradientColor1 || '#7c3aed'} onChange={v => onChange({ gradientColor1: v })} />
+              <ColorRow label="Couleur 2" value={s.gradientColor2 || '#4f46e5'} onChange={v => onChange({ gradientColor2: v })} />
+              <SliderRow label={`Angle : ${s.gradientAngle ?? 135}°`} value={s.gradientAngle ?? 135} min={0} max={360} onChange={v => onChange({ gradientAngle: v })} />
+            </div>
+          )}
+        </div>
       </Section>
+
+      <Section title="Couleur du texte">
+        <ColorRow label="Texte" value={s.color || ''} onChange={v => onChange({ color: v })} />
+        {isTextBlock && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={!!s.textHighlight}
+              onChange={e => onChange({ textHighlight: e.target.checked, background: e.target.checked ? (s.background || '#fef3c7') : s.background })}
+              style={{ accentColor: '#7c3aed', width: 14, height: 14 }}
+            />
+            <span style={{ fontSize: 12, color: '#374151' }}>Texte sur fond coloré (highlight)</span>
+          </label>
+        )}
+      </Section>
+
+      {isImageBlock && (
+        <Section title="Superposition image">
+          <ColorRow label="Couleur overlay" value={s.overlayColor || ''} onChange={v => onChange({ overlayColor: v || undefined })} />
+          {s.overlayColor && (
+            <SliderRow label={`Opacité overlay : ${s.overlayOpacity ?? 50}%`} value={s.overlayOpacity ?? 50} min={0} max={80} onChange={v => onChange({ overlayOpacity: v })} />
+          )}
+        </Section>
+      )}
 
       <Section title="Dimensions">
         <div>
@@ -322,7 +447,7 @@ function StyleTab({ style: s, onChange }: { style: BlockStyle; onChange: (p: Blo
             </p>
           )}
           <p style={{ fontSize: 10, color: '#94a3b8', marginTop: 4, lineHeight: 1.4 }}>
-            Permet à un bouton de navigation de pointer vers cette section avec <code>#identifiant</code>.
+            Permet à un bouton de pointer vers cette section avec <code>#identifiant</code>.
           </p>
         </div>
       </Section>
@@ -359,21 +484,10 @@ function AnimationTab({ animation, onChange }: {
             </optgroup>
           </select>
         </div>
-
         {animation.type !== 'none' && (
           <>
-            <SliderRow
-              label={`Durée : ${animation.duration.toFixed(1)}s`}
-              value={Math.round(animation.duration * 10)}
-              min={2} max={20}
-              onChange={v => onChange({ duration: v / 10 })}
-            />
-            <SliderRow
-              label={`Délai : ${animation.delay.toFixed(1)}s`}
-              value={Math.round(animation.delay * 10)}
-              min={0} max={10}
-              onChange={v => onChange({ delay: v / 10 })}
-            />
+            <SliderRow label={`Durée : ${animation.duration.toFixed(1)}s`} value={Math.round(animation.duration * 10)} min={2} max={20} onChange={v => onChange({ duration: v / 10 })} />
+            <SliderRow label={`Délai : ${animation.delay.toFixed(1)}s`} value={Math.round(animation.delay * 10)} min={0} max={10} onChange={v => onChange({ delay: v / 10 })} />
             <div>
               <label style={labelSt}>Déclencheur</label>
               <div style={{ display: 'flex', gap: 4 }}>
@@ -463,12 +577,7 @@ function SliderRow({ label, value, min, max, step = 1, onChange }: {
         <span style={{ fontSize: 11, color: '#64748b' }}>{label}</span>
         <span style={{ fontSize: 11, fontWeight: 600, color: '#18181b' }}>{value}</span>
       </div>
-      <input
-        type="range"
-        min={min} max={max} step={step} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: '#2563eb' }}
-      />
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} style={{ width: '100%', accentColor: '#2563eb' }} />
     </div>
   )
 }

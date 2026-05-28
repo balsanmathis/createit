@@ -121,9 +121,15 @@ export async function POST(request: Request) {
       const def = BLOCK_DEFS.find(d => d.type === block.type)
       if (!def) return `<!-- Unknown block: ${block.type} -->`
 
-      const html = def.render(block.content, block.style)
+      let html = def.render(block.content, block.style)
       const { type, duration, delay, trigger, hover } = block.animation
       const anchor = block.style.anchor
+
+      // Inject overlay div if configured
+      if (block.style.overlayColor) {
+        const opacity = ((block.style.overlayOpacity ?? 50) / 100).toFixed(2)
+        html = `<div style="position:relative">${html}<div style="position:absolute;inset:0;background:${block.style.overlayColor};opacity:${opacity};pointer-events:none"></div></div>`
+      }
 
       const hoverClass = hover && hover !== 'none' ? ` bh-${hover}` : ''
       const idAttr = anchor ? ` id="${anchor}"` : ''
