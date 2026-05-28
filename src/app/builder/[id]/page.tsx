@@ -49,7 +49,7 @@ function BuilderEditor({ siteId }: { siteId: string }) {
   // Auto-open style panel on mobile when a block is selected
   const prevSelectedRef = useRef<string | null>(null)
   useEffect(() => {
-    if (isMobile && state.selectedId && state.selectedId !== prevSelectedRef.current) {
+    if (isMobile === true && state.selectedId && state.selectedId !== prevSelectedRef.current) {
       setMobilePanel('style')
     }
     prevSelectedRef.current = state.selectedId
@@ -159,16 +159,16 @@ function BuilderEditor({ siteId }: { siteId: string }) {
         onToggleMobilePanel={p => setMobilePanel(prev => prev === p ? null : p)}
       />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {!isMobile && <BlockPanel />}
-        {isMobile && (
+        {isMobile !== true && <BlockPanel />}
+        {isMobile === true && (
           <BlockPanel
             mobileOpen={mobilePanel === 'blocks'}
             onMobileClose={() => setMobilePanel(null)}
           />
         )}
         <BuilderCanvas onMobileOpenBlocks={() => setMobilePanel('blocks')} />
-        {!isMobile && <StylePanel />}
-        {isMobile && (
+        {isMobile !== true && <StylePanel />}
+        {isMobile === true && (
           <StylePanel
             mobileOpen={mobilePanel === 'style'}
             onMobileClose={() => setMobilePanel(null)}

@@ -434,7 +434,7 @@ function BlockPanelContent({ onAddClose, disableDrag }: { onAddClose?: () => voi
 export default function BlockPanel({ mobileOpen = false, onMobileClose }: { mobileOpen?: boolean; onMobileClose?: () => void }) {
   const isMobile = useMobile()
 
-  if (isMobile) {
+  if (isMobile === true) {
     return (
       <>
         {/* Backdrop */}

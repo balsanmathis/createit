@@ -40,7 +40,7 @@ export default function BuilderHeader({ onSave, onExport, onPreview, mobilePanel
   ]
 
   // ── Mobile compact header ──────────────────────────────────────────────────
-  if (isMobile) {
+  if (isMobile === true) {
     return (
       <header style={{
         height: 48,

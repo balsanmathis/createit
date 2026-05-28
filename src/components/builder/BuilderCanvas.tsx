@@ -70,7 +70,7 @@ function SortableBlock({
     : ''
 
   // On mobile, toolbar is always visible; on desktop only on hover/select
-  const toolbarOpacity = isMobile || isSelected ? 1 : 0
+  const toolbarOpacity = isMobile === true || isSelected ? 1 : 0
 
   const wrapperStyle: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -107,13 +107,13 @@ function SortableBlock({
       style={wrapperStyle}
       onClick={e => { e.stopPropagation(); onSelect() }}
       onMouseEnter={e => {
-        if (!isMobile) {
+        if (isMobile !== true) {
           const toolbar = e.currentTarget.querySelector<HTMLElement>('.block-toolbar')
           if (toolbar) toolbar.style.opacity = '1'
         }
       }}
       onMouseLeave={e => {
-        if (!isMobile && !isSelected) {
+        if (isMobile !== true && !isSelected) {
           const toolbar = e.currentTarget.querySelector<HTMLElement>('.block-toolbar')
           if (toolbar) toolbar.style.opacity = '0'
         }
@@ -130,7 +130,7 @@ function SortableBlock({
         }}
       >
         {/* Drag handle — desktop only */}
-        {!isMobile && (
+        {isMobile !== true && (
           <button title="Déplacer" {...listeners} {...attributes} style={{ ...toolbarBtn(isMobile), cursor: 'grab' }} onClick={e => e.stopPropagation()}>⠿</button>
         )}
         <button title="Monter" style={toolbarBtn(isMobile)} onClick={e => { e.stopPropagation(); onMoveUp() }}>↑</button>
@@ -165,7 +165,7 @@ function SortableBlock({
       )}
 
       {/* Resize handle — desktop only when selected */}
-      {isSelected && !isMobile && (
+      {isSelected && isMobile !== true && (
         <div
           onMouseDown={startResize}
           style={{
@@ -261,7 +261,7 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
 
   // On mobile, disable drag (use very high activation threshold)
   const sensors = useSensors(useSensor(PointerSensor, {
-    activationConstraint: { distance: isMobile ? 999999 : 8 },
+    activationConstraint: { distance: isMobile === true ? 999999 : 8 },
   }))
 
   const maxWidth = state.viewport === 'tablet' ? 768 : state.viewport === 'mobile' ? 375 : undefined
@@ -271,7 +271,7 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
   }, [updateStyle])
 
   function handleDragEnd(event: DragEndEvent) {
-    if (isMobile) return
+    if (isMobile === true) return
     const { active, over } = event
     if (!over) return
     const activeId = String(active.id)
@@ -307,7 +307,7 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
             'repeating-linear-gradient(90deg,transparent,transparent 19px,rgba(0,0,0,0.04) 19px,rgba(0,0,0,0.04) 20px)',
           ].join(','),
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          padding: isMobile ? '8px 0 120px' : '20px 0 80px',
+          padding: isMobile === true ? '8px 0 120px' : '20px 0 80px',
           scrollBehavior: 'smooth',
         }}
       >
@@ -318,7 +318,7 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
           margin: maxWidth ? '0 auto' : 0, transition: 'max-width 0.3s ease',
         }}>
           {state.blocks.length === 0 ? (
-            <EmptyDropZone isMobile={isMobile} onOpenBlocks={onMobileOpenBlocks} />
+            <EmptyDropZone isMobile={isMobile === true} onOpenBlocks={onMobileOpenBlocks} />
           ) : (
             <SortableContext items={state.blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
               <div>
@@ -332,7 +332,7 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
                     onMoveUp={() => moveBlock(block.id, 'up')}
                     onMoveDown={() => moveBlock(block.id, 'down')}
                     onResize={(minHeight) => handleResize(block.id, minHeight)}
-                    isMobile={isMobile}
+                    isMobile={isMobile === true}
                   />
                 ))}
               </div>
@@ -340,14 +340,14 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
           )}
         </div>
 
-        {state.blocks.length > 0 && !isMobile && (
+        {state.blocks.length > 0 && isMobile !== true && (
           <div style={{ width: '100%', maxWidth, margin: maxWidth ? '12px auto 0' : '12px 0 0', padding: '0 16px' }}>
             <AddSectionButton onClick={() => { addBlock('hero'); scrollToBottom(); }} />
           </div>
         )}
 
         {/* Desktop scroll-down hint */}
-        {state.blocks.length > 0 && !isMobile && (
+        {state.blocks.length > 0 && isMobile !== true && (
           <div style={{ position: 'sticky', bottom: 16, width: '100%', display: 'flex', justifyContent: 'flex-end', paddingRight: 16, pointerEvents: 'none', marginTop: 16 }}>
             <button
               onClick={e => { e.stopPropagation(); scrollToBottom(); }}
@@ -368,7 +368,7 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
       </main>
 
       {/* Mobile FAB — "＋ Blocs" */}
-      {isMobile && (
+      {isMobile === true && (
         <button
           onClick={e => { e.stopPropagation(); onMobileOpenBlocks?.() }}
           style={{

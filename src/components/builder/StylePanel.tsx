@@ -119,7 +119,7 @@ export default function StylePanel({ mobileOpen = false, onMobileClose }: { mobi
           <div style={{ fontSize: 13, fontWeight: 600, color: '#18181b' }}>
             {def?.icon} {def?.label || selectedBlock.type}
           </div>
-          {isMobile && (
+          {isMobile === true && (
             <button onClick={onMobileClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#94a3b8', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
           )}
         </div>
@@ -161,7 +161,7 @@ export default function StylePanel({ mobileOpen = false, onMobileClose }: { mobi
   ) : emptyState
 
   // ── Mobile bottom sheet ────────────────────────────────────────────────────
-  if (isMobile) {
+  if (isMobile === true) {
     return (
       <>
         {mobileOpen && (
