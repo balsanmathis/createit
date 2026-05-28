@@ -174,7 +174,7 @@ function sanitizeImportedHtml(raw: string): string {
   return reset + '\n' + html
 }
 
-// ─── Draggable block item ──────────────────────────────────────────────────────
+// ─── Draggable block card (grid) ───────────────────────────────────────────────
 function DraggableBlockItem({ type, icon, label, onAdd, disableDrag }: { type: string; icon: string; label: string; onAdd: () => void; disableDrag?: boolean }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `palette-${type}`,
@@ -186,20 +186,22 @@ function DraggableBlockItem({ type, icon, label, onAdd, disableDrag }: { type: s
       ref={setNodeRef}
       {...(disableDrag ? {} : { ...listeners, ...attributes })}
       onClick={onAdd}
-      title={`Ajouter : ${label}`}
+      title={label}
       style={{
-        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-        height: 40, padding: '0 10px',
-        background: isDragging ? '#eff6ff' : 'transparent',
-        border: '1px solid transparent', borderRadius: 6,
-        cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s',
-        opacity: isDragging ? 0.5 : 1,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 6, padding: '12px 6px',
+        background: isDragging ? '#f3e8ff' : '#fff',
+        border: `1px solid ${isDragging ? '#7c3aed' : '#e2e8f0'}`,
+        borderRadius: 10,
+        cursor: 'pointer', textAlign: 'center', transition: 'all 0.12s',
+        opacity: isDragging ? 0.6 : 1,
+        width: '100%',
       }}
-      onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#e2e8f0' }}
-      onMouseLeave={e => { if (!isDragging) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent' } }}
+      onMouseEnter={e => { e.currentTarget.style.background = '#f3e8ff'; e.currentTarget.style.borderColor = '#7c3aed' }}
+      onMouseLeave={e => { if (!isDragging) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0' } }}
     >
-      <span style={{ fontSize: 14, width: 20, textAlign: 'center', flexShrink: 0, color: '#64748b' }}>{icon}</span>
-      <span style={{ fontSize: 13, color: '#374151', fontWeight: 500, flex: 1 }}>{label}</span>
+      <span style={{ fontSize: 22, lineHeight: 1 }}>{icon}</span>
+      <span style={{ fontSize: 11, color: '#374151', fontWeight: 600, lineHeight: 1.2 }}>{label}</span>
     </button>
   )
 }
@@ -324,18 +326,18 @@ function BlockPanelContent({ onAddClose, disableDrag }: { onAddClose?: () => voi
             if (items.length === 0) return null
             const isOpen = expanded.has(cat) || search.length > 0
             return (
-              <div key={cat}>
+              <div key={cat} style={{ marginBottom: 4 }}>
                 <button
                   onClick={() => toggleCategory(cat)}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '12px 8px 4px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: 4 }}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '10px 4px 4px', background: 'none', border: 'none', cursor: 'pointer' }}
                 >
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     {CATEGORY_LABELS[cat]}
                   </span>
-                  <span style={{ fontSize: 10, color: '#cbd5e1', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', lineHeight: 1 }}>▼</span>
+                  <span style={{ fontSize: 10, color: '#c4b5fd', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', lineHeight: 1 }}>▼</span>
                 </button>
                 {isOpen && (
-                  <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, paddingBottom: 4 }}>
                     {items.map(def => (
                       <DraggableBlockItem key={def.type} type={def.type} icon={def.icon} label={def.label} onAdd={() => handleAddBlock(def.type)} disableDrag={disableDrag} />
                     ))}

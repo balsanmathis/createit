@@ -34,6 +34,7 @@ const initialState: BuilderState = {
 // ─── Actions ─────────────────────────────────────────────────────────────────
 type Action =
   | { type: 'ADD_BLOCK'; payload: { block: Block; insertIndex?: number } }
+  | { type: 'DUPLICATE_BLOCK'; payload: string }
   | { type: 'REMOVE_BLOCK'; payload: string }
   | { type: 'MOVE_BLOCK'; payload: { id: string; direction: 'up' | 'down' } }
   | { type: 'REORDER_BLOCKS'; payload: Block[] }
@@ -70,6 +71,15 @@ function reducer(state: BuilderState, action: Action): BuilderState {
         newBlocks.push(block)
       }
       return { ...state, blocks: newBlocks, selectedId: block.id, ...pushHistory(state, newBlocks) }
+    }
+
+    case 'DUPLICATE_BLOCK': {
+      const idx = state.blocks.findIndex(b => b.id === action.payload)
+      if (idx < 0) return state
+      const original = state.blocks[idx]
+      const copy: Block = { ...original, id: genId(), style: { ...original.style, anchor: undefined }, content: { ...original.content } }
+      const newBlocks = [...state.blocks.slice(0, idx + 1), copy, ...state.blocks.slice(idx + 1)]
+      return { ...state, blocks: newBlocks, selectedId: copy.id, ...pushHistory(state, newBlocks) }
     }
 
     case 'REMOVE_BLOCK': {
@@ -169,6 +179,7 @@ interface BuilderContextValue {
   state: BuilderState
   dispatch: Dispatch<Action>
   addBlock: (type: string, insertIndex?: number) => void
+  duplicateBlock: (id: string) => void
   removeBlock: (id: string) => void
   moveBlock: (id: string, direction: 'up' | 'down') => void
   updateContent: (id: string, content: Record<string, string>) => void
@@ -201,6 +212,10 @@ export function BuilderProvider({ children }: { children: React.ReactNode }) {
       animation: { type: 'none', duration: 0.6, delay: 0, trigger: 'scroll' },
     }
     dispatch({ type: 'ADD_BLOCK', payload: { block, insertIndex } })
+  }, [])
+
+  const duplicateBlock = useCallback((id: string) => {
+    dispatch({ type: 'DUPLICATE_BLOCK', payload: id })
   }, [])
 
   const removeBlock = useCallback((id: string) => {
@@ -237,6 +252,7 @@ export function BuilderProvider({ children }: { children: React.ReactNode }) {
     state,
     dispatch,
     addBlock,
+    duplicateBlock,
     removeBlock,
     moveBlock,
     updateContent,
