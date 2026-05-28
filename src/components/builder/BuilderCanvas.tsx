@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, Fragment } from 'react'
 import {
   DndContext,
   DragEndEvent,
@@ -188,12 +188,7 @@ function SortableBlock({
       {/* HTML Preview */}
       <div
         ref={blockElRef}
-        style={{
-          pointerEvents: 'none', userSelect: 'none',
-          minHeight: resizeHeight ?? undefined,
-          paddingTop: isSelected || isMobile ? 40 : 0,
-          transition: 'padding-top 0.1s',
-        }}
+        style={{ pointerEvents: 'none', userSelect: 'none', minHeight: resizeHeight ?? undefined }}
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
@@ -238,10 +233,9 @@ const barBtn: React.CSSProperties = {
   flexShrink: 0,
 }
 
-// Hover on non-selected blocks
+// Show action bar on hover for non-selected blocks (CSS can't read React state)
 const HOVER_STYLE = `
 .block-wrap:hover .block-actionbar { opacity: 1 !important; pointer-events: all !important; }
-.block-wrap:hover .block-actionbar { background: rgba(0,0,0,0.55) !important; }
 `
 
 // ─── Empty drop zone ───────────────────────────────────────────────────────────
@@ -361,22 +355,24 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
                   <AddBetween index={0} onAdd={handleAddBetween} />
                 )}
                 {state.blocks.map((block, i) => (
-                  <div key={block.id} className="block-wrap">
-                    <SortableBlock
-                      block={block}
-                      isSelected={state.selectedId === block.id}
-                      onSelect={() => selectBlock(block.id)}
-                      onRemove={() => removeBlock(block.id)}
-                      onMoveUp={() => moveBlock(block.id, 'up')}
-                      onMoveDown={() => moveBlock(block.id, 'down')}
-                      onDuplicate={() => duplicateBlock(block.id)}
-                      onResize={(minHeight) => handleResize(block.id, minHeight)}
-                      isMobile={isMobile === true}
-                    />
+                  <Fragment key={block.id}>
+                    <div className="block-wrap">
+                      <SortableBlock
+                        block={block}
+                        isSelected={state.selectedId === block.id}
+                        onSelect={() => selectBlock(block.id)}
+                        onRemove={() => removeBlock(block.id)}
+                        onMoveUp={() => moveBlock(block.id, 'up')}
+                        onMoveDown={() => moveBlock(block.id, 'down')}
+                        onDuplicate={() => duplicateBlock(block.id)}
+                        onResize={(minHeight) => handleResize(block.id, minHeight)}
+                        isMobile={isMobile === true}
+                      />
+                    </div>
                     {isMobile !== true && (
                       <AddBetween index={i + 1} onAdd={handleAddBetween} />
                     )}
-                  </div>
+                  </Fragment>
                 ))}
               </div>
             </SortableContext>
