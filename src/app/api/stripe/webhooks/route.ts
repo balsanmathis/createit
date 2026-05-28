@@ -24,6 +24,47 @@ function getSubscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
   return typeof sub === 'string' ? sub : sub?.id ?? null
 }
 
+// Resolve user_id from metadata, falling back to customer email lookup
+async function resolveUserId(
+  supabaseAdmin: ReturnType<typeof getSupabaseAdmin>,
+  metadataUserId: string | undefined,
+  customerEmail: string | null | undefined,
+  customerId: string | null | undefined,
+  context: string
+): Promise<string | null> {
+  if (metadataUserId) return metadataUserId
+
+  // Fallback 1: look up by customer_email directly on the event
+  if (customerEmail) {
+    const { data } = await supabaseAdmin.from('users').select('id').eq('email', customerEmail).single()
+    if (data?.id) {
+      console.warn(`[webhook:${context}] no user_id in metadata — resolved via email ${customerEmail}`)
+      return data.id
+    }
+  }
+
+  // Fallback 2: fetch email from Stripe customer object
+  if (customerId) {
+    try {
+      const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer
+      if (!customer.deleted && customer.email) {
+        const { data } = await supabaseAdmin.from('users').select('id').eq('email', customer.email).single()
+        if (data?.id) {
+          console.warn(`[webhook:${context}] no user_id in metadata — resolved via Stripe customer email ${customer.email}`)
+          return data.id
+        }
+      }
+    } catch (e) {
+      console.error(`[webhook:${context}] failed to fetch Stripe customer ${customerId}:`, e)
+    }
+  }
+
+  console.error(`[webhook:${context}] could not resolve user_id — metadata missing and no email match`, {
+    metadataUserId, customerEmail, customerId,
+  })
+  return null
+}
+
 export async function POST(request: Request) {
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')!
@@ -44,15 +85,34 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session
         if (session.mode !== 'subscription') break
 
-        const userId = session.metadata?.user_id
-        const plan   = session.metadata?.plan as keyof typeof PLAN_TOKEN_LIMITS | undefined
-        const customerId    = session.customer as string
+        const customerId     = session.customer as string
         const subscriptionId = session.subscription as string
+        let plan = session.metadata?.plan as keyof typeof PLAN_TOKEN_LIMITS | undefined
 
-        if (!userId || !plan) break
+        const userId = await resolveUserId(
+          supabaseAdmin,
+          session.metadata?.user_id,
+          session.customer_email,
+          customerId,
+          'checkout.session.completed'
+        )
+        if (!userId) break
+
+        // If plan missing from session metadata, try subscription metadata
+        if (!plan) {
+          try {
+            const sub = await stripe.subscriptions.retrieve(subscriptionId)
+            plan = sub.metadata?.plan as keyof typeof PLAN_TOKEN_LIMITS | undefined
+          } catch { /* ignore */ }
+        }
+
+        if (!plan || !(plan in PLAN_TOKEN_LIMITS)) {
+          console.error('[webhook:checkout.session.completed] unknown plan', { plan, sessionId: session.id })
+          break
+        }
 
         const sub         = await stripe.subscriptions.retrieve(subscriptionId)
-        const tokensLimit = PLAN_TOKEN_LIMITS[plan] ?? PLAN_TOKEN_LIMITS.starter
+        const tokensLimit = PLAN_TOKEN_LIMITS[plan]
 
         await supabaseAdmin.from('subscriptions').upsert({
           user_id: userId,
@@ -70,13 +130,22 @@ export async function POST(request: Request) {
           tokens_limit: tokensLimit,
           sites_used_this_month: 0,
         }, { onConflict: 'id' })
+
+        console.log(`[webhook] checkout.session.completed — user ${userId} → plan=${plan}, tokens=${tokensLimit}`)
         break
       }
 
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        const sub    = event.data.object as Stripe.Subscription
-        const userId = sub.metadata?.user_id
+        const sub = event.data.object as Stripe.Subscription
+
+        const userId = await resolveUserId(
+          supabaseAdmin,
+          sub.metadata?.user_id,
+          null,
+          sub.customer as string,
+          event.type
+        )
         if (!userId) break
 
         const plan   = (sub.metadata?.plan || 'starter') as keyof typeof PLAN_TOKEN_LIMITS
@@ -97,6 +166,7 @@ export async function POST(request: Request) {
             tokens_limit: PLAN_TOKEN_LIMITS.free,
             tokens_used: 0,
           }).eq('id', userId)
+          console.log(`[webhook] ${event.type} — user ${userId} downgraded to free (status=${status})`)
         }
         break
       }
@@ -106,8 +176,15 @@ export async function POST(request: Request) {
         const subscriptionId = getSubscriptionIdFromInvoice(invoice)
         if (!subscriptionId) break
 
-        const sub    = await stripe.subscriptions.retrieve(subscriptionId)
-        const userId = sub.metadata?.user_id
+        const sub = await stripe.subscriptions.retrieve(subscriptionId)
+
+        const userId = await resolveUserId(
+          supabaseAdmin,
+          sub.metadata?.user_id,
+          invoice.customer_email,
+          invoice.customer as string,
+          'invoice.payment_succeeded'
+        )
         if (!userId) break
 
         const plan        = (sub.metadata?.plan || 'starter') as keyof typeof PLAN_TOKEN_LIMITS
@@ -118,12 +195,13 @@ export async function POST(request: Request) {
           current_period_end: monthFromNow(),
         }).eq('user_id', userId)
 
-        // Monthly reset
         await supabaseAdmin.from('users').update({
           tokens_used: 0,
           tokens_limit: tokensLimit,
           sites_used_this_month: 0,
         }).eq('id', userId)
+
+        console.log(`[webhook] invoice.payment_succeeded — user ${userId} reset tokens, plan=${plan}`)
         break
       }
 
@@ -134,13 +212,12 @@ export async function POST(request: Request) {
 
         const sub    = await stripe.subscriptions.retrieve(subscriptionId)
         const userId = sub.metadata?.user_id
-        if (!userId) break
 
         await supabaseAdmin.from('subscriptions').update({
           status: sub.status,
         }).eq('stripe_subscription_id', subscriptionId)
 
-        console.warn(`Payment failed for user ${userId} — subscription ${subscriptionId} is now ${sub.status}`)
+        console.warn(`[webhook] invoice.payment_failed — user ${userId ?? 'unknown'}, sub ${subscriptionId}, status=${sub.status}`)
         break
       }
     }
