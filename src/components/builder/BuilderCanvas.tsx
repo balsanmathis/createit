@@ -327,12 +327,12 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
         ref={containerRef}
         onClick={() => selectBlock(null)}
         style={{
-          flex: 1, overflowY: 'auto',
-          background: '#e8eaf0',
-          backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
+          flex: 1,
+          minHeight: 0,          /* fix: allow flex item to be shorter than content → enables overflow-y scroll */
+          overflowY: 'auto',
+          background: '#f1f5f9',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          padding: isMobile === true ? '8px 0 120px' : '32px 24px 80px',
+          padding: isMobile === true ? '8px 0 120px' : '24px 20px 80px',
           scrollBehavior: 'smooth',
         }}
       >
@@ -340,9 +340,8 @@ export default function BuilderCanvas({ onMobileOpenBlocks }: BuilderCanvasProps
           width: '100%', maxWidth,
           background: '#fff',
           minHeight: 600,
-          boxShadow: '0 2px 4px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.1)',
+          boxShadow: maxWidth ? '0 0 0 1px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.1)' : '0 0 0 1px rgba(0,0,0,0.06)',
           borderRadius: maxWidth ? 12 : 0,
-          overflow: 'hidden',
           transition: 'max-width 0.3s ease',
         }}>
           {state.blocks.length === 0 ? (

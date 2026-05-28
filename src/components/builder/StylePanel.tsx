@@ -144,7 +144,7 @@ export default function StylePanel({ mobileOpen = false, onMobileClose }: { mobi
       </div>
 
       {/* Tab content */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {tab === 'content' && (
           <ContentTab
             content={selectedBlock.content}

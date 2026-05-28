@@ -317,7 +317,7 @@ function BlockPanelContent({ onAddClose, disableDrag }: { onAddClose?: () => voi
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '4px 8px 20px' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '4px 8px 20px' }}>
 
         {/* ── Blocks Tab ── */}
         {activeTab === 'blocks' && (
