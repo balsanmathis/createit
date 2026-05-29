@@ -24,7 +24,6 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
       siteId={site.id}
       siteName={site.name}
       initialHtml={site.html_content ?? ''}
-      prompt={site.prompt ?? ''}
       tokensUsed={isAdmin ? -1 : (profile?.tokens_used ?? 0)}
       tokensLimit={isAdmin ? -1 : (profile?.tokens_limit ?? 0)}
     />

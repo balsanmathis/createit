@@ -2,102 +2,25 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import {
+  LayoutDashboard, Sparkles, PenSquare, CreditCard, Settings,
+  LogOut, BarChart2, Menu, X,
+} from 'lucide-react'
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 
-const NAV_MAIN = [
-  {
-    href: '/dashboard',
-    label: 'Dashboard',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-        <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
-      </svg>
-    ),
-  },
-  {
-    href: '/dashboard/nouveau',
-    label: '✨ Créer un site',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9" />
-        <path d="M18 2l4 4-4 4M22 6H14" />
-      </svg>
-    ),
-  },
-  {
-    href: '/prompt-builder',
-    label: 'Prompt Builder',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-        <polyline points="14,2 14,8 20,8" />
-        <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
-        <line x1="10" y1="9" x2="8" y2="9" />
-      </svg>
-    ),
-  },
-]
-
-const NAV_ACCOUNT = [
-  {
-    href: '/dashboard/abonnement',
-    label: 'Abonnement',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-        <line x1="1" y1="10" x2="23" y2="10" />
-      </svg>
-    ),
-  },
-  {
-    href: '/dashboard/equipe',
-    label: 'Équipe',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-  },
-  {
-    href: '/dashboard/parametres',
-    label: 'Paramètres',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/dashboard/aide',
-    label: 'Aide',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" />
-      </svg>
-    ),
-  },
-]
-
-const AnalyticsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
-    <line x1="6" y1="20" x2="6" y2="14" />
-  </svg>
-)
+const PLAN_LABELS: Record<string, string> = {
+  free: 'Gratuit', starter: 'Starter', pro: 'Pro', agency: 'Agency',
+}
 
 export default function DashboardSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [tokens, setTokens] = useState<{ used: number; limit: number } | null>(null)
+  const [tokens, setTokens] = useState<{ used: number; limit: number; plan: string } | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -106,47 +29,57 @@ export default function DashboardSidebar() {
       setIsAdmin(user.email === ADMIN_EMAIL)
       supabase
         .from('users')
-        .select('tokens_used, tokens_limit')
+        .select('tokens_used, tokens_limit, plan')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
-          if (data) setTokens({ used: data.tokens_used, limit: data.tokens_limit })
+          if (data) setTokens({ used: data.tokens_used ?? 0, limit: data.tokens_limit ?? 8000, plan: data.plan ?? 'free' })
         })
     })
   }, [])
 
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+  }
+
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === '/dashboard'
+    if (href === '/generate') return pathname.startsWith('/generate') || pathname.startsWith('/dashboard/nouveau')
+    if (href === '/settings') return (pathname === '/settings' || pathname === '/dashboard/parametres') && !pathname.startsWith('/settings/subscription')
+    if (href === '/settings/subscription') return pathname.startsWith('/settings/subscription') || pathname.startsWith('/dashboard/abonnement')
+    if (href === '/editor') return pathname.startsWith('/editor')
     return pathname.startsWith(href)
   }
 
-  const sidebarStyle: React.CSSProperties = {
-    background: 'var(--surface)',
-    borderRight: '1px solid var(--border)',
+  function navStyle(active: boolean): React.CSSProperties {
+    return active
+      ? { background: '#eff6ff', color: '#2563eb', borderLeft: '3px solid #2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 13px', fontSize: 14, borderRadius: 8, textDecoration: 'none' }
+      : { color: '#64748b', borderLeft: '3px solid transparent', display: 'flex', alignItems: 'center', gap: 12, padding: '10px 13px', fontSize: 14, borderRadius: 8, textDecoration: 'none', background: 'transparent' }
   }
 
-  const activeStyle: React.CSSProperties = {
-    background: 'var(--accent-light)',
-    color: 'var(--accent)',
-    fontWeight: 600,
-  }
+  const NAV_MAIN = [
+    { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+    { href: '/generate', label: 'Créer un site', Icon: Sparkles },
+    { href: '/editor', label: 'Modifier un site', Icon: PenSquare },
+  ]
 
-  const inactiveStyle: React.CSSProperties = {
-    color: 'var(--fg-muted)',
-  }
+  const NAV_SECONDARY = [
+    { href: '/settings/subscription', label: 'Mon abonnement', Icon: CreditCard },
+    { href: '/settings', label: 'Paramètres', Icon: Settings },
+  ]
 
   return (
     <>
-      {/* Burger — mobile only */}
+      {/* Burger — mobile */}
       <button
         onClick={() => setOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}
+        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-xl flex items-center justify-center"
+        style={{ background: '#fff', border: '1px solid #e2e8f0', color: '#64748b' }}
         aria-label="Ouvrir le menu"
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
+        <Menu size={20} />
       </button>
 
       {/* Overlay */}
@@ -160,84 +93,100 @@ export default function DashboardSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full w-64 flex flex-col z-50 transition-transform duration-300 ${
-          open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
-        style={sidebarStyle}
+        className={`fixed left-0 top-0 h-full w-64 flex flex-col z-50 transition-transform duration-300 ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        style={{ background: '#fff', borderRight: '1px solid #e2e8f0' }}
       >
+        {/* Close — mobile */}
         <button
           onClick={() => setOpen(false)}
           className="md:hidden absolute top-4 right-4 w-8 h-8 flex items-center justify-center"
-          style={{ color: 'var(--fg-muted)' }}
+          style={{ color: '#64748b' }}
           aria-label="Fermer"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X size={18} />
         </button>
 
         {/* Logo */}
-        <div className="px-6 pt-6 pb-5" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div className="px-6 pt-6 pb-5" style={{ borderBottom: '1px solid #e2e8f0' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
-            <span className="text-lg font-bold tracking-tight" style={{ color: 'var(--fg)' }}>
-              Create<span style={{ color: 'var(--accent)' }}>It</span>
+            <span className="text-lg font-bold tracking-tight" style={{ color: '#0f172a' }}>
+              Create<span style={{ color: '#2563eb' }}>It</span>
             </span>
           </Link>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-          {/* Main */}
-          {NAV_MAIN.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
-              style={isActive(item.href) ? activeStyle : inactiveStyle}
-              onMouseEnter={e => { if (!isActive(item.href)) e.currentTarget.style.background = 'var(--glass)' }}
-              onMouseLeave={e => { if (!isActive(item.href)) e.currentTarget.style.background = 'transparent' }}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
+        {/* Main nav */}
+        <nav className="flex-1 overflow-y-auto py-4">
+          <div className="flex flex-col gap-0.5 px-3">
+            {NAV_MAIN.map(({ href, label, Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                style={navStyle(isActive(href))}
+                onMouseEnter={e => { if (!isActive(href)) (e.currentTarget as HTMLAnchorElement).style.background = '#f8fafc' }}
+                onMouseLeave={e => { if (!isActive(href)) (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
+              >
+                <Icon size={16} />
+                {label}
+              </Link>
+            ))}
+          </div>
 
           {/* Divider */}
-          <div className="my-3" style={{ borderTop: '1px solid var(--border)' }} />
+          <div className="my-4 mx-4" style={{ borderTop: '1px solid #e2e8f0' }} />
 
-          {/* Account */}
-          {NAV_ACCOUNT.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
-              style={isActive(item.href) ? activeStyle : inactiveStyle}
-              onMouseEnter={e => { if (!isActive(item.href)) e.currentTarget.style.background = 'var(--glass)' }}
-              onMouseLeave={e => { if (!isActive(item.href)) e.currentTarget.style.background = 'transparent' }}
+          {/* Secondary nav */}
+          <div className="flex flex-col gap-0.5 px-3">
+            {NAV_SECONDARY.map(({ href, label, Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                style={navStyle(isActive(href))}
+                onMouseEnter={e => { if (!isActive(href)) (e.currentTarget as HTMLAnchorElement).style.background = '#f8fafc' }}
+                onMouseLeave={e => { if (!isActive(href)) (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
+              >
+                <Icon size={16} />
+                {label}
+              </Link>
+            ))}
+            <button
+              onClick={handleSignOut}
+              style={{ color: '#64748b', borderLeft: '3px solid transparent', display: 'flex', alignItems: 'center', gap: 12, padding: '10px 13px', fontSize: 14, borderRadius: 8, background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+              onMouseEnter={e => {
+                const b = e.currentTarget as HTMLButtonElement
+                b.style.background = '#fef2f2'
+                b.style.color = '#ef4444'
+              }}
+              onMouseLeave={e => {
+                const b = e.currentTarget as HTMLButtonElement
+                b.style.background = 'transparent'
+                b.style.color = '#64748b'
+              }}
             >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
+              <LogOut size={16} />
+              Se déconnecter
+            </button>
+          </div>
 
           {/* Admin */}
           {isAdmin && (
             <>
-              <div className="my-3" style={{ borderTop: '1px solid var(--border)' }} />
-              <p className="px-3 text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--fg-subtle)' }}>Admin</p>
-              <Link
-                href="/analytics"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
-                style={isActive('/analytics') ? activeStyle : inactiveStyle}
-                onMouseEnter={e => { if (!isActive('/analytics')) e.currentTarget.style.background = 'var(--glass)' }}
-                onMouseLeave={e => { if (!isActive('/analytics')) e.currentTarget.style.background = 'transparent' }}
-              >
-                <AnalyticsIcon />
-                Analytics
-              </Link>
+              <div className="my-4 mx-4" style={{ borderTop: '1px solid #e2e8f0' }} />
+              <div className="px-3">
+                <p className="px-3 text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#94a3b8' }}>Admin</p>
+                <Link
+                  href="/analytics"
+                  onClick={() => setOpen(false)}
+                  style={navStyle(isActive('/analytics'))}
+                  onMouseEnter={e => { if (!isActive('/analytics')) (e.currentTarget as HTMLAnchorElement).style.background = '#f8fafc' }}
+                  onMouseLeave={e => { if (!isActive('/analytics')) (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
+                >
+                  <BarChart2 size={16} />
+                  Analytics
+                </Link>
+              </div>
             </>
           )}
         </nav>
@@ -246,32 +195,26 @@ export default function DashboardSidebar() {
         {tokens && !isAdmin && (() => {
           const remaining = Math.max(0, tokens.limit - tokens.used)
           const pct = tokens.limit > 0 ? (tokens.used / tokens.limit) * 100 : 100
-          const barColor = pct > 80 ? '#ef4444' : pct > 50 ? '#f97316' : 'var(--accent)'
-          const textColor = pct > 80 ? '#ef4444' : pct > 50 ? '#f97316' : 'var(--accent)'
+          const barColor = pct > 80 ? '#ef4444' : pct > 50 ? '#f97316' : '#2563eb'
           return (
-            <div className="px-4 py-4" style={{ borderTop: '1px solid var(--border)' }}>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs" style={{ color: 'var(--fg-subtle)' }}>Tokens</span>
-                <span className="text-xs font-semibold tabular-nums" style={{ color: textColor }}>
-                  {remaining.toLocaleString('fr-FR')} restants
+            <div className="px-4 py-4" style={{ borderTop: '1px solid #e2e8f0' }}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>
+                  Plan {PLAN_LABELS[tokens.plan] ?? tokens.plan}
+                </span>
+                <span className="text-xs font-semibold tabular-nums" style={{ color: barColor }}>
+                  {remaining.toLocaleString('fr-FR')} tokens
                 </span>
               </div>
-              <div className="h-1.5 rounded-full overflow-hidden mb-1.5" style={{ background: 'var(--border)' }}>
+              <div className="h-1.5 rounded-full overflow-hidden mb-1" style={{ background: '#f1f5f9' }}>
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${Math.max(2, 100 - pct)}%`, background: barColor }}
                 />
               </div>
-              <p className="text-xs" style={{ color: 'var(--fg-subtle)' }}>
+              <p className="text-xs" style={{ color: '#94a3b8' }}>
                 {tokens.used.toLocaleString('fr-FR')} / {tokens.limit.toLocaleString('fr-FR')} utilisés
               </p>
-              <Link
-                href="/tarifs"
-                className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-lg transition-all"
-                style={{ background: pct > 60 ? 'var(--accent)' : 'var(--accent-light)', color: pct > 60 ? '#fff' : 'var(--accent)', border: pct > 60 ? 'none' : '1px solid rgba(124,58,237,0.2)' }}
-              >
-                ⚡ {remaining === 0 ? 'Augmenter mon plan' : 'Passer à la version Pro'}
-              </Link>
             </div>
           )
         })()}
