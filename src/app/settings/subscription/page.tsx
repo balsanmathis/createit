@@ -1,8 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdmin } from '@supabase/supabase-js'
 import { stripe } from '@/lib/stripe'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 import SubscriptionClient from './SubscriptionClient'
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 
 const PLAN_INFO: Record<string, { label: string; color: string; price: string; tokens: string }> = {
   free:    { label: 'Gratuit',  color: '#64748b', price: '0 €/mois',   tokens: '8 000' },
@@ -17,6 +20,8 @@ export default async function SubscriptionPage() {
     const { data: { user }, error } = await supabase.auth.getUser()
     if (error || !user) redirect('/auth/login')
 
+    const isAdmin = user.email === ADMIN_EMAIL
+
     const [profileResult, subscriptionResult] = await Promise.all([
       supabase.from('users').select('*').eq('id', user.id).single(),
       supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle(),
@@ -27,6 +32,7 @@ export default async function SubscriptionPage() {
     const planKey = profile?.plan ?? 'free'
     const plan = PLAN_INFO[planKey] ?? PLAN_INFO.free
 
+    // Real tokens from DB (even for admin — not -1)
     const tokensUsed = profile?.tokens_used ?? 0
     const tokensLimit = profile?.tokens_limit ?? 8000
 
@@ -45,15 +51,34 @@ export default async function SubscriptionPage() {
           date: new Date(inv.created * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
           status: 'Payé',
         }))
-      } catch {
-        // Stripe not configured or error — ignore
-      }
+      } catch { /* Stripe not configured */ }
     }
 
     const isCanceling = subscription?.status === 'canceling'
     const cancelAt = subscription?.cancel_at
       ? new Date(subscription.cancel_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
       : null
+
+    // Admin-only: platform stats
+    let adminStats: { totalTokens: number; userCount: number; siteCount: number } | null = null
+    if (isAdmin) {
+      try {
+        const adminClient = createAdmin(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        const [usersRes, sitesRes] = await Promise.all([
+          adminClient.from('users').select('tokens_used'),
+          adminClient.from('sites').select('id', { count: 'exact', head: true }),
+        ])
+        const totalTokens = (usersRes.data ?? []).reduce((s: number, r: { tokens_used?: number }) => s + (r.tokens_used ?? 0), 0)
+        adminStats = {
+          totalTokens,
+          userCount: usersRes.data?.length ?? 0,
+          siteCount: sitesRes.count ?? 0,
+        }
+      } catch { /* service key not configured */ }
+    }
 
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
@@ -71,6 +96,8 @@ export default async function SubscriptionPage() {
               cancelAt={cancelAt}
               invoices={invoices}
               email={user.email ?? ''}
+              isAdmin={isAdmin}
+              adminStats={adminStats}
             />
           </div>
         </main>

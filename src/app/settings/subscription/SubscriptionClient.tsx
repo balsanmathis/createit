@@ -14,6 +14,8 @@ interface Props {
   cancelAt: string | null
   invoices: { id: string; amount: number; date: string; status: string }[]
   email: string
+  isAdmin: boolean
+  adminStats: { totalTokens: number; userCount: number; siteCount: number } | null
 }
 
 const CANCEL_REASONS = [
@@ -26,7 +28,7 @@ const CANCEL_REASONS = [
 
 export default function SubscriptionClient({
   planKey, plan, tokensUsed, tokensLimit, hasSubscription,
-  isCanceling, cancelAt, invoices, email,
+  isCanceling, cancelAt, invoices, email, isAdmin, adminStats,
 }: Props) {
   const [cancelModal, setCancelModal] = useState(false)
   const [cancelStep, setCancelStep] = useState<1 | 2>(1)
@@ -112,6 +114,59 @@ export default function SubscriptionClient({
           >
             {reactivating ? 'En cours…' : 'Réactiver'}
           </button>
+        </div>
+      )}
+
+      {/* Admin section */}
+      {isAdmin && (
+        <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)', border: '1px solid #312e81', borderRadius: 16, padding: 24, marginBottom: 20, color: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: '#7c3aed', color: '#fff', letterSpacing: '0.05em' }}>ADMIN</span>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0', margin: 0 }}>Tableau de bord API</h2>
+          </div>
+
+          {/* Tokens used / ∞ */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+              <span style={{ fontSize: 13, color: '#94a3b8' }}>Tokens consommés ce cycle</span>
+              <span style={{ fontSize: 20, fontWeight: 800, color: '#a78bfa' }}>
+                {tokensUsed.toLocaleString('fr-FR')} <span style={{ color: '#64748b', fontWeight: 400 }}>/</span> <span style={{ fontSize: 22 }}>∞</span>
+              </span>
+            </div>
+            <div style={{ height: 6, borderRadius: 3, background: '#1e293b', overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 3, width: '100%', background: 'linear-gradient(90deg, #7c3aed, #a78bfa)', opacity: 0.7 }} />
+            </div>
+            <p style={{ fontSize: 12, color: '#475569', marginTop: 6 }}>Accès illimité — aucune limite de tokens appliquée</p>
+          </div>
+
+          {/* Cost estimate */}
+          <div style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4 }}>Coût Anthropic estimé (cycle actuel)</p>
+            <p style={{ fontSize: 28, fontWeight: 800, color: '#c4b5fd', margin: 0 }}>
+              ${(tokensUsed / 1_000_000 * 2.00).toFixed(4)}
+            </p>
+            <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>
+              Taux mixte Haiku 4.5 : ~$2.00/M tokens (65% input @$0.80 + 35% output @$4.00)
+            </p>
+          </div>
+
+          {/* Platform stats */}
+          {adminStats && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '12px 14px' }}>
+                <p style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Tokens totaux plateforme</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0' }}>{(adminStats.totalTokens / 1000).toFixed(1)}k</p>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '12px 14px' }}>
+                <p style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Utilisateurs</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0' }}>{adminStats.userCount}</p>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '12px 14px' }}>
+                <p style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Sites créés</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0' }}>{adminStats.siteCount}</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
