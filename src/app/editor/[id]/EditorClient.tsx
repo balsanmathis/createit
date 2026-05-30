@@ -17,7 +17,7 @@ if(window.__ve_new)return;window.__ve_new=true;
 var ss=document.createElement('style');ss.id='__ve_sel_style__';
 ss.textContent='[data-ve-selected]{outline:2px solid #2563eb!important;outline-offset:2px!important}[data-ve-hovered]:not([data-ve-selected]){outline:2px dashed rgba(37,99,235,0.5)!important;outline-offset:2px!important}';
 document.head.appendChild(ss);
-var sel=null,hov=null;
+var sel=null,hov=null,editMode=false;
 function getPath(el){
   if(!el||el===document.body)return 'body';
   var path=[],cur=el;
@@ -30,15 +30,27 @@ function getPath(el){
   return 'body > '+path.join(' > ');
 }
 function notify(){window.parent.postMessage({type:'ve-change',html:document.documentElement.outerHTML},'*');}
+function setEditMode(v){
+  editMode=v;
+  document.body.style.cursor=v?'crosshair':'';
+  var b=document.getElementById('__ve_banner__');if(b)b.style.display=v?'block':'none';
+  if(!v){
+    if(sel){sel.removeAttribute('data-ve-selected');sel=null;}
+    if(hov){hov.removeAttribute('data-ve-hovered');hov=null;}
+  }
+}
 document.addEventListener('mouseover',function(e){
+  if(!editMode)return;
   if(hov)hov.removeAttribute('data-ve-hovered');
   hov=e.target;
   if(hov!==sel)hov.setAttribute('data-ve-hovered','');
 },true);
 document.addEventListener('mouseout',function(e){
+  if(!editMode)return;
   if(e.target)e.target.removeAttribute('data-ve-hovered');
 },true);
 document.addEventListener('click',function(e){
+  if(!editMode)return;
   e.preventDefault();e.stopPropagation();
   var el=e.target;
   if(!el||el===document.documentElement)return;
@@ -75,6 +87,7 @@ function enableEdit(el,path){
   el.addEventListener('blur',onBlur);
 }
 document.addEventListener('dblclick',function(e){
+  if(!editMode)return;
   e.preventDefault();e.stopPropagation();
   var el=e.target;
   if(!el||el.tagName==='IMG'||el===document.documentElement||el===document.body)return;
@@ -99,6 +112,7 @@ document.addEventListener('keydown',function(e){
 window.addEventListener('message',function(e){
   if(!e.data)return;
   var d=e.data;
+  if(d.type==='SET_MODE'){setEditMode(d.mode==='edit');}
   if(d.type==='APPLY_STYLE'){var el=document.querySelector(d.path);if(el){Object.assign(el.style,d.styles);notify();}}
   if(d.type==='APPLY_TEXT'){var el=document.querySelector(d.path);if(el){el.textContent=d.text;notify();}}
   if(d.type==='APPLY_IMAGE'){var el=document.querySelector(d.path);if(el&&el.tagName==='IMG'){el.src=d.src;notify();}}
@@ -106,6 +120,11 @@ window.addEventListener('message',function(e){
   if(d.type==='CLEAR_SELECTION'){if(sel){sel.removeAttribute('data-ve-selected');sel=null;}}
   if(d.type==='GET_HTML'){notify();}
 });
+var banner=document.createElement('div');
+banner.id='__ve_banner__';
+banner.style.cssText='display:none;position:fixed;top:0;left:0;right:0;background:rgba(37,99,235,0.85);color:#fff;text-align:center;padding:5px 8px;font-size:11px;font-family:system-ui,sans-serif;z-index:99999;pointer-events:none;';
+banner.textContent='✏️ Mode Édition — Cliquez sur un élément pour le modifier · Double-cliquez pour éditer le texte · Échap pour désélectionner';
+document.body.appendChild(banner);
 })()`
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -140,6 +159,7 @@ function cleanHtml(html: string): string {
     .replace(/<style[^>]*id="__ve_sel_style__"[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<style[^>]*id="__offline__"[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<style[^>]*id="__scroll_fix__"[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<div[^>]*id="__ve_banner__"[^>]*>[\s\S]*?<\/div>/gi, '')
     .replace(/\s*data-ve-selected=""/gi, '')
     .replace(/\s*data-ve-hovered=""/gi, '')
     .replace(/\s*contenteditable="(true|false)"/gi, '')
@@ -744,6 +764,8 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const histDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const [mode, setMode] = useState<'navigate' | 'edit'>('navigate')
+  const modeRef = useRef<'navigate' | 'edit'>('navigate')
   const [selectedEl, setSelectedEl] = useState<SelectedEl | null>(null)
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop')
   const [saveStatus, setSaveStatus] = useState<'saved' | 'modified' | 'saving'>('saved')
@@ -758,6 +780,16 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
   function updateStatus(s: typeof saveStatus) {
     saveStatusRef.current = s
     setSaveStatus(s)
+  }
+
+  function changeMode(m: 'navigate' | 'edit') {
+    modeRef.current = m
+    setMode(m)
+    iframeRef.current?.contentWindow?.postMessage({ type: 'SET_MODE', mode: m }, '*')
+    if (m === 'navigate') {
+      setSelectedEl(null)
+      iframeRef.current?.contentWindow?.postMessage({ type: 'CLEAR_SELECTION' }, '*')
+    }
   }
 
   function pushHistory(html: string) {
@@ -938,6 +970,36 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
 
         <div style={{ flex: 1 }} />
 
+        {/* Mode toggle */}
+        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 6, padding: 3 }}>
+          <button
+            onClick={() => changeMode('navigate')}
+            title="Naviguez sur le site, cliquez sur les boutons, changez de page"
+            style={{
+              padding: '6px 12px', borderRadius: 4, border: 'none', cursor: 'pointer',
+              background: mode === 'navigate' ? '#2563eb' : 'transparent',
+              color: mode === 'navigate' ? '#fff' : '#64748b',
+              fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4,
+            }}
+          >
+            🖱 <span className="hidden sm:inline">Navigation</span>
+          </button>
+          <button
+            onClick={() => changeMode('edit')}
+            title="Cliquez sur un élément pour modifier ses propriétés"
+            style={{
+              padding: '6px 12px', borderRadius: 4, border: 'none', cursor: 'pointer',
+              background: mode === 'edit' ? '#2563eb' : 'transparent',
+              color: mode === 'edit' ? '#fff' : '#64748b',
+              fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4,
+            }}
+          >
+            ✏️ <span className="hidden sm:inline">Édition</span>
+          </button>
+        </div>
+
+        <div style={{ width: 1, height: 20, background: '#e2e8f0', flexShrink: 0 }} />
+
         {/* Viewport toggle */}
         <div style={{ display: 'flex', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
           <button
@@ -1014,16 +1076,21 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
               style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
               title="Éditeur de site"
+              onLoad={() => {
+                iframeRef.current?.contentWindow?.postMessage({ type: 'SET_MODE', mode: modeRef.current }, '*')
+              }}
             />
             {/* Instruction banner */}
-            <div style={{
-              position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-              background: 'rgba(37,99,235,0.9)', color: '#fff', borderRadius: 20,
-              padding: '4px 14px', fontSize: 11, fontWeight: 500, pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-            }}>
-              Clic pour sélectionner · Double-clic pour modifier le texte · Échap pour désélectionner
-            </div>
+            {mode === 'navigate' && (
+              <div style={{
+                position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
+                background: 'rgba(15,23,42,0.7)', color: '#fff', borderRadius: 20,
+                padding: '4px 14px', fontSize: 11, fontWeight: 500, pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+              }}>
+                🖱 Mode Navigation — Passez en ✏️ Édition pour modifier les éléments
+              </div>
+            )}
           </div>
         </div>
 
@@ -1035,10 +1102,7 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
             applyStyle={applyStyle}
             applyText={applyText}
             onChangeImage={() => setImgModal({ path: selectedEl.path, src: selectedEl.data.src })}
-            onClose={() => {
-              setSelectedEl(null)
-              iframeRef.current?.contentWindow?.postMessage({ type: 'CLEAR_SELECTION' }, '*')
-            }}
+            onClose={() => changeMode('navigate')}
           />
         )}
       </div>
