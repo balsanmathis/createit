@@ -16,7 +16,7 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: https://images.unsplash.com",
+      "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co",
       "frame-src https://challenges.cloudflare.com",
       "connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com",
     ].join('; '),
