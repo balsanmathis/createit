@@ -7,7 +7,7 @@ VALUES (
   5242880,
   ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = true, file_size_limit = 5242880;
 
 -- Policy : les utilisateurs authentifiés peuvent uploader
 CREATE POLICY "Authenticated users can upload images"

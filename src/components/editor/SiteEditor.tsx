@@ -716,7 +716,7 @@ function ImagePopup({ siteId, currentSrc, onConfirm, onClose }: ImagePopupProps)
             style={{ minHeight: 120, background: 'var(--bg)', border: '1px solid var(--border)' }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="Aperçu" className="max-h-40 max-w-full object-contain" onError={() => setPreview('')} />
+            <img src={preview} alt="Aperçu" className="max-h-40 max-w-full object-contain" onError={() => { setPreview(''); setUrl(''); toast.error('Impossible de charger l\'image. Vérifiez l\'URL ou réessayez.') }} />
           </div>
         )}
 

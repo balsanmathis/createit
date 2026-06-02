@@ -1,24 +1,31 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export const maxDuration = 30
 
 const BUCKET = 'site-images'
 
-async function ensureBucketExists(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function ensureBucketExists() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!serviceKey || !url) {
+    console.warn('[upload] missing service role key — skipping bucket check')
+    return
+  }
   try {
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets()
-    if (listError) console.error('[upload] listBuckets:', listError)
-    const exists = buckets?.some(b => b.name === BUCKET)
-    if (!exists) {
-      const { error: createError } = await supabase.storage.createBucket(BUCKET, {
+    const admin = createAdminClient(url, serviceKey, { auth: { persistSession: false } })
+    const { data: buckets } = await admin.storage.listBuckets()
+    const existing = buckets?.find(b => b.name === BUCKET)
+    if (!existing) {
+      const { error } = await admin.storage.createBucket(BUCKET, {
         public: true,
         fileSizeLimit: 5242880,
         allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'],
       })
-      if (createError && !createError.message.includes('already exists')) {
-        throw createError
-      }
+      if (error && !error.message.includes('already exists')) throw error
+    } else if (!existing.public) {
+      await admin.storage.updateBucket(BUCKET, { public: true })
     }
   } catch (err) {
     console.warn('[upload] bucket check failed, attempting upload anyway:', err)
@@ -53,7 +60,7 @@ export async function POST(request: Request) {
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
 
-  await ensureBucketExists(supabase)
+  await ensureBucketExists()
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
