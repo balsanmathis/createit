@@ -3,6 +3,28 @@ import { createClient } from '@/lib/supabase/server'
 
 export const maxDuration = 30
 
+const BUCKET = 'site-images'
+
+async function ensureBucketExists(supabase: Awaited<ReturnType<typeof createClient>>) {
+  try {
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets()
+    if (listError) console.error('[upload] listBuckets:', listError)
+    const exists = buckets?.some(b => b.name === BUCKET)
+    if (!exists) {
+      const { error: createError } = await supabase.storage.createBucket(BUCKET, {
+        public: true,
+        fileSizeLimit: 5242880,
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'],
+      })
+      if (createError && !createError.message.includes('already exists')) {
+        throw createError
+      }
+    }
+  } catch (err) {
+    console.warn('[upload] bucket check failed, attempting upload anyway:', err)
+  }
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -31,8 +53,10 @@ export async function POST(request: Request) {
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
 
+  await ensureBucketExists(supabase)
+
   const { error: uploadError } = await supabase.storage
-    .from('site-images')
+    .from(BUCKET)
     .upload(path, buffer, { contentType: file.type, upsert: false })
 
   if (uploadError) {
@@ -40,7 +64,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Erreur upload: ' + uploadError.message }, { status: 500 })
   }
 
-  const { data: { publicUrl } } = supabase.storage.from('site-images').getPublicUrl(path)
+  const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path)
 
   return NextResponse.json({ url: publicUrl })
 }
