@@ -9,6 +9,7 @@ import {
   injectScrollFix,
   injectLinkGuard,
 } from '@/lib/editor/ve-script'
+import ImageManager, { type ImageManagerMode } from '@/components/editor/ImageManager'
 
 // ─── New VE_SCRIPT ─────────────────────────────────────────────────────────────
 
@@ -116,6 +117,8 @@ window.addEventListener('message',function(e){
   if(d.type==='APPLY_STYLE'){var el=document.querySelector(d.path);if(el){Object.assign(el.style,d.styles);notify();}}
   if(d.type==='APPLY_TEXT'){var el=document.querySelector(d.path);if(el){el.textContent=d.text;notify();}}
   if(d.type==='APPLY_IMAGE'){var el=document.querySelector(d.path);if(el&&el.tagName==='IMG'){el.src=d.src;notify();}}
+  if(d.type==='INSERT_IMAGE'){var t=document.querySelector(d.path)||document.body;var img=document.createElement('img');img.src=d.src;img.alt='Image';img.style.cssText='max-width:100%;height:auto;display:block;margin:16px auto;cursor:pointer;';if(t.tagName==='IMG'){t.insertAdjacentElement('afterend',img);}else{t.appendChild(img);}notify();}
+  if(d.type==='APPLY_BG_IMAGE'){var el=document.querySelector(d.path);if(el){el.style.backgroundImage='url("'+d.src+'")';el.style.backgroundSize='cover';el.style.backgroundPosition='center';notify();}}
   if(d.type==='ENABLE_EDIT'){var el=document.querySelector(d.path);if(el)enableEdit(el,d.path);}
   if(d.type==='CLEAR_SELECTION'){if(sel){sel.removeAttribute('data-ve-selected');sel=null;}}
   if(d.type==='GET_HTML'){notify();}
@@ -279,11 +282,12 @@ function SpacingGrid({ values, onChange }: {
 
 // ─── Properties Panel ──────────────────────────────────────────────────────────
 
-function PropertiesPanel({ el, applyStyle, applyText, onChangeImage, onClose, fullWidth }: {
+function PropertiesPanel({ el, applyStyle, applyText, onChangeImage, onSetBgImage, onClose, fullWidth }: {
   el: SelectedEl
   applyStyle: (styles: Record<string, string>) => void
   applyText: (text: string) => void
   onChangeImage: () => void
+  onSetBgImage?: () => void
   onClose: () => void
   fullWidth?: boolean
 }) {
@@ -468,6 +472,11 @@ function PropertiesPanel({ el, applyStyle, applyText, onChangeImage, onClose, fu
               <SliderInput value={opacity} min={0} max={100} unit="%"
                 onChange={v => { setOpacity(v); applyStyle({ opacity: (v / 100).toString() }) }} />
             </Row>
+            {onSetBgImage && (
+              <button onClick={onSetBgImage} style={{ ...toggleBtn, width: '100%', textAlign: 'center', marginTop: 4 }}>
+                Image de fond
+              </button>
+            )}
           </PanelSection>
 
           <PanelSection title="Dimensions">
@@ -486,199 +495,6 @@ function PropertiesPanel({ el, applyStyle, applyText, onChangeImage, onClose, fu
         </>
       )}
     </aside>
-  )
-}
-
-// ─── Image Modal ───────────────────────────────────────────────────────────────
-
-function ImageModal({ siteId, currentSrc, onConfirm, onClose }: {
-  siteId: string; currentSrc: string; onConfirm: (url: string) => void; onClose: () => void
-}) {
-  const [tab, setTab] = useState<'upload' | 'url' | 'library'>('upload')
-  const [url, setUrl] = useState('')
-  const [preview, setPreview] = useState(currentSrc)
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [library, setLibrary] = useState<string[]>([])
-  const [libLoading, setLibLoading] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (tab === 'library') loadLibrary()
-  }, [tab])
-
-  async function loadLibrary() {
-    setLibLoading(true)
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: files } = await supabase.storage.from('site-images').list(user.id, { limit: 50, sortBy: { column: 'created_at', order: 'desc' } })
-      if (files) {
-        const urls = files.map(f => supabase.storage.from('site-images').getPublicUrl(`${user.id}/${f.name}`).data.publicUrl)
-        setLibrary(urls.filter(Boolean))
-      }
-    } catch { /* ignore */ }
-    finally { setLibLoading(false) }
-  }
-
-  async function handleFile(file: File) {
-    if (file.size > 5 * 1024 * 1024) { toast.error('Fichier trop volumineux (max 5MB)'); return }
-    setUploading(true); setUploadProgress(10)
-    const fd = new FormData(); fd.append('file', file); fd.append('siteId', siteId)
-    try {
-      setUploadProgress(40)
-      const res = await fetch('/api/upload-image', { method: 'POST', body: fd })
-      setUploadProgress(80)
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur upload')
-      setUploadProgress(100)
-      setUrl(data.url); setPreview(data.url)
-      toast.success('Image uploadée !')
-    } catch (err) { toast.error((err as Error).message) }
-    finally { setUploading(false); setUploadProgress(0) }
-  }
-
-  const modalInp: React.CSSProperties = {
-    background: '#f8fafc', border: '1px solid #e2e8f0', color: '#0f172a',
-    borderRadius: 8, padding: '10px 14px', fontSize: 14, outline: 'none', width: '100%',
-  }
-  const tabBtn = (active: boolean): React.CSSProperties => ({
-    flex: 1, padding: '6px 8px', fontSize: 12, fontWeight: 500, borderRadius: 6, cursor: 'pointer',
-    border: 'none', background: active ? '#fff' : 'transparent',
-    color: active ? '#2563eb' : '#64748b',
-    boxShadow: active ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
-  })
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: '#fff', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480, zIndex: 1, boxShadow: '0 24px 64px rgba(0,0,0,0.2)' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#0f172a' }}>Changer l&apos;image</h3>
-
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 8, padding: 4, marginBottom: 16 }}>
-          {(['upload', 'url', 'library'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={tabBtn(tab === t)}>
-              {t === 'upload' ? '📁 Uploader' : t === 'url' ? '🔗 URL' : '📚 Bibliothèque'}
-            </button>
-          ))}
-        </div>
-
-        {/* Upload tab */}
-        {tab === 'upload' && (
-          <div style={{ marginBottom: 16 }}>
-            <input ref={fileRef} type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} style={{ display: 'none' }} />
-            <div
-              onClick={() => !uploading && fileRef.current?.click()}
-              onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) handleFile(f) }}
-              onDragOver={e => e.preventDefault()}
-              style={{
-                border: '2px dashed #e2e8f0', borderRadius: 12, padding: 32,
-                textAlign: 'center', cursor: uploading ? 'default' : 'pointer',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-              }}
-            >
-              {uploading ? (
-                <>
-                  <svg className="animate-spin" width="28" height="28" fill="none" viewBox="0 0 24 24" style={{ color: '#2563eb' }}>
-                    <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                  </svg>
-                  <span style={{ fontSize: 13, color: '#2563eb' }}>Upload en cours…</span>
-                  {uploadProgress > 0 && (
-                    <div style={{ width: '100%', height: 4, background: '#e2e8f0', borderRadius: 2 }}>
-                      <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#2563eb', borderRadius: 2, transition: 'width 0.3s' }} />
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                  </svg>
-                  <span style={{ fontSize: 13, color: '#64748b' }}>Glissez votre image ici ou cliquez pour parcourir</span>
-                  <span style={{ fontSize: 11, color: '#94a3b8' }}>JPG, PNG, WebP · max 5MB</span>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* URL tab */}
-        {tab === 'url' && (
-          <div style={{ marginBottom: 16 }}>
-            <input
-              type="text"
-              value={url}
-              onChange={e => { setUrl(e.target.value); setPreview(e.target.value) }}
-              placeholder="https://exemple.com/image.jpg"
-              style={{ ...modalInp, marginBottom: 12 }}
-              autoFocus
-            />
-            {preview && (
-              <div style={{ borderRadius: 8, overflow: 'hidden', height: 120, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={preview} alt="Aperçu" style={{ maxHeight: 120, maxWidth: '100%', objectFit: 'contain' }} onError={() => setPreview('')} />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Library tab */}
-        {tab === 'library' && (
-          <div style={{ marginBottom: 16, minHeight: 120 }}>
-            {libLoading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 120 }}>
-                <svg className="animate-spin" width="24" height="24" fill="none" viewBox="0 0 24 24" style={{ color: '#2563eb' }}>
-                  <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
-              </div>
-            ) : library.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '24px 0' }}>
-                Aucune image dans votre bibliothèque.<br/>Uploadez des images depuis l&apos;onglet Uploader.
-              </p>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, maxHeight: 200, overflowY: 'auto' }}>
-                {library.map((imgUrl, i) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={i}
-                    src={imgUrl}
-                    alt=""
-                    style={{
-                      width: '100%', height: 72, objectFit: 'cover', borderRadius: 8, cursor: 'pointer',
-                      border: url === imgUrl ? '2px solid #2563eb' : '2px solid transparent',
-                    }}
-                    onClick={() => { setUrl(imgUrl); setPreview(imgUrl) }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.outline = '2px solid #2563eb' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.outline = 'none' }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
-            Annuler
-          </button>
-          <button
-            onClick={() => { const u = url || preview; if (u) onConfirm(u) }}
-            disabled={!url && !preview}
-            style={{ flex: 1, padding: '10px 0', borderRadius: 8, background: '#2563eb', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (!url && !preview) ? 0.5 : 1, border: 'none' }}
-          >
-            Utiliser cette image
-          </button>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -777,7 +593,7 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
   const [srcdoc, setSrcdoc] = useState(() => buildSrcdoc(initialHtml))
   const [showAi, setShowAi] = useState(false)
   const [tokensUsedState, setTokensUsedState] = useState(tokensUsed)
-  const [imgModal, setImgModal] = useState<{ path: string; src: string } | null>(null)
+  const [imgModal, setImgModal] = useState<{ path: string; src: string; mode: ImageManagerMode } | null>(null)
 
   function updateStatus(s: typeof saveStatus) {
     saveStatusRef.current = s
@@ -1114,7 +930,8 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
             el={selectedEl}
             applyStyle={applyStyle}
             applyText={applyText}
-            onChangeImage={() => setImgModal({ path: selectedEl.path, src: selectedEl.data.src })}
+            onChangeImage={() => setImgModal({ path: selectedEl.path, src: selectedEl.data.src, mode: 'replace' })}
+            onSetBgImage={() => setImgModal({ path: selectedEl.path, src: '', mode: 'background' })}
             onClose={() => changeMode('navigate')}
           />
         )}
@@ -1159,7 +976,8 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
                 el={selectedEl}
                 applyStyle={applyStyle}
                 applyText={applyText}
-                onChangeImage={() => { setShowMobilePanel(false); setImgModal({ path: selectedEl.path, src: selectedEl.data.src }) }}
+                onChangeImage={() => { setShowMobilePanel(false); setImgModal({ path: selectedEl.path, src: selectedEl.data.src, mode: 'replace' }) }}
+                onSetBgImage={() => { setShowMobilePanel(false); setImgModal({ path: selectedEl.path, src: '', mode: 'background' }) }}
                 onClose={() => { setShowMobilePanel(false); changeMode('navigate') }}
                 fullWidth
               />
@@ -1168,14 +986,40 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
         </>
       )}
 
+      {/* ── Add Image floating button (edit mode, no element selected) ── */}
+      {mode === 'edit' && !selectedEl && !isMobile && (
+        <button
+          onClick={() => setImgModal({ path: 'body', src: '', mode: 'insert' })}
+          style={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 90,
+            background: '#fff', color: '#2563eb', border: '1.5px solid #bfdbfe',
+            borderRadius: 30, padding: '8px 16px', fontSize: 13,
+            fontWeight: 600, boxShadow: '0 4px 16px rgba(37,99,235,0.15)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+          </svg>
+          Ajouter une image
+        </button>
+      )}
+
       {/* ── Modals ───────────────────────────────────────────────── */}
 
       {imgModal && (
-        <ImageModal
-          siteId={siteId}
+        <ImageManager
+          mode={imgModal.mode}
           currentSrc={imgModal.src}
+          siteId={siteId}
           onConfirm={url => {
-            iframeRef.current?.contentWindow?.postMessage({ type: 'APPLY_IMAGE', path: imgModal.path, src: url }, '*')
+            const msg =
+              imgModal.mode === 'insert'
+                ? { type: 'INSERT_IMAGE', path: imgModal.path, src: url }
+                : imgModal.mode === 'background'
+                ? { type: 'APPLY_BG_IMAGE', path: imgModal.path, src: url }
+                : { type: 'APPLY_IMAGE', path: imgModal.path, src: url }
+            iframeRef.current?.contentWindow?.postMessage(msg, '*')
             setImgModal(null)
           }}
           onClose={() => setImgModal(null)}
