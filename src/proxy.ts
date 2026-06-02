@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PROTECTED_ROUTES = ['/dashboard', '/generate', '/sites', '/settings', '/analytics', '/prompt-builder']
+const PROTECTED_ROUTES = ['/dashboard', '/generate', '/sites', '/settings', '/analytics', '/prompt-builder', '/editor']
 const BLOCKED_UA_FRAGMENTS = ['curl', 'wget', 'python-requests', 'scrapy', 'bot', 'crawler', 'spider']
 const AUTH_PATHS = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/api/auth/']
 

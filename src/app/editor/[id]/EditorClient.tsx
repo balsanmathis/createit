@@ -279,12 +279,13 @@ function SpacingGrid({ values, onChange }: {
 
 // ─── Properties Panel ──────────────────────────────────────────────────────────
 
-function PropertiesPanel({ el, applyStyle, applyText, onChangeImage, onClose }: {
+function PropertiesPanel({ el, applyStyle, applyText, onChangeImage, onClose, fullWidth }: {
   el: SelectedEl
   applyStyle: (styles: Record<string, string>) => void
   applyText: (text: string) => void
   onChangeImage: () => void
   onClose: () => void
+  fullWidth?: boolean
 }) {
   const d = el.data
   const isImg = d.isImage
@@ -317,10 +318,9 @@ function PropertiesPanel({ el, applyStyle, applyText, onChangeImage, onClose }: 
   // Section state
   const [minHeight, setMinHeight] = useState(d.computedMinHeight || 'auto')
 
-  const panelStyle: React.CSSProperties = {
-    width: 280, background: '#fff', borderLeft: '1px solid #e2e8f0',
-    overflowY: 'auto', padding: 16, flexShrink: 0,
-  }
+  const panelStyle: React.CSSProperties = fullWidth
+    ? { width: '100%', background: '#fff', overflowY: 'auto', padding: 16 }
+    : { width: 280, background: '#fff', borderLeft: '1px solid #e2e8f0', overflowY: 'auto', padding: 16, flexShrink: 0 }
 
   const toggleBtn: React.CSSProperties = {
     padding: '4px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
@@ -768,6 +768,8 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
   const modeRef = useRef<'navigate' | 'edit'>('navigate')
   const [selectedEl, setSelectedEl] = useState<SelectedEl | null>(null)
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop')
+  const [isMobile, setIsMobile] = useState(false)
+  const [showMobilePanel, setShowMobilePanel] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'saved' | 'modified' | 'saving'>('saved')
   const [undoDisabled, setUndoDisabled] = useState(true)
   const [redoDisabled, setRedoDisabled] = useState(true)
@@ -788,6 +790,7 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
     iframeRef.current?.contentWindow?.postMessage({ type: 'SET_MODE', mode: m }, '*')
     if (m === 'navigate') {
       setSelectedEl(null)
+      setShowMobilePanel(false)
       iframeRef.current?.contentWindow?.postMessage({ type: 'CLEAR_SELECTION' }, '*')
     }
   }
@@ -857,6 +860,14 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
     }
   }, [siteId, name])
 
+  // Mobile detection
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check, { passive: true })
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   // 30s interval auto-save
   useEffect(() => {
     const interval = setInterval(() => {
@@ -879,8 +890,10 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
   // postMessage handler
   useEffect(() => {
     const handler = (e: MessageEvent) => {
-      if (!e.data) return
-      const d = e.data
+      // Ignore non-object messages (strings, numbers) and null
+      if (!e.data || typeof e.data !== 'object') return
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = e.data as any
 
       if (d.type === 've-change') {
         const clean = cleanHtml(d.html)
@@ -1061,7 +1074,7 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
 
         {/* Canvas */}
-        <div style={{ flex: 1, position: 'relative', display: 'flex', justifyContent: 'center', background: '#e2e8f0', overflow: 'hidden' }}>
+        <div style={{ flex: 1, position: 'relative', display: 'flex', justifyContent: 'center', background: '#e2e8f0', overflow: 'auto' }}>
           <div style={{
             width: viewport === 'mobile' ? 390 : '100%',
             height: '100%',
@@ -1094,8 +1107,8 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
           </div>
         </div>
 
-        {/* Properties panel */}
-        {selectedEl && (
+        {/* Properties panel — desktop sidebar */}
+        {selectedEl && !isMobile && (
           <PropertiesPanel
             key={selectedEl.path}
             el={selectedEl}
@@ -1106,6 +1119,54 @@ export default function EditorClient({ siteId, siteName, initialHtml, tokensUsed
           />
         )}
       </div>
+
+      {/* ── Mobile floating button + bottom sheet ─────────────────── */}
+      {isMobile && selectedEl && !showMobilePanel && (
+        <button
+          onClick={() => setShowMobilePanel(true)}
+          style={{
+            position: 'fixed', bottom: 24, right: 16, zIndex: 100,
+            background: '#2563eb', color: '#fff', border: 'none',
+            borderRadius: 30, padding: '10px 18px', fontSize: 14,
+            fontWeight: 600, boxShadow: '0 8px 24px rgba(37,99,235,0.4)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          ⚙️ Propriétés
+        </button>
+      )}
+
+      {isMobile && selectedEl && showMobilePanel && (
+        <>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 99, background: 'rgba(0,0,0,0.3)' }}
+            onClick={() => setShowMobilePanel(false)}
+          />
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+            height: '60vh', background: '#fff', borderRadius: '16px 16px 0 0',
+            boxShadow: '0 -8px 32px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column',
+          }}>
+            <div
+              style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px', flexShrink: 0, cursor: 'pointer' }}
+              onClick={() => setShowMobilePanel(false)}
+            >
+              <div style={{ width: 40, height: 4, borderRadius: 2, background: '#cbd5e1' }} />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <PropertiesPanel
+                key={selectedEl.path}
+                el={selectedEl}
+                applyStyle={applyStyle}
+                applyText={applyText}
+                onChangeImage={() => { setShowMobilePanel(false); setImgModal({ path: selectedEl.path, src: selectedEl.data.src }) }}
+                onClose={() => { setShowMobilePanel(false); changeMode('navigate') }}
+                fullWidth
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── Modals ───────────────────────────────────────────────── */}
 

@@ -1100,7 +1100,7 @@ export default function SiteEditor({ site, tokensUsed, tokensLimit }: Props) {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={{ background: 'var(--bg)' }}>
+    <div className="h-screen flex flex-col overflow-hidden relative" style={{ background: 'var(--bg)' }}>
 
       {/* ── Top bar ── */}
       <div
