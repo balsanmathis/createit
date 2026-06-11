@@ -2,20 +2,37 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 const PROTECTED_ROUTES = ['/dashboard', '/generate', '/sites', '/settings', '/analytics', '/prompt-builder', '/editor']
-const BLOCKED_UA_FRAGMENTS = ['curl', 'wget', 'python-requests', 'scrapy', 'bot', 'crawler', 'spider']
+const ALLOWED_BOTS = [
+  'googlebot',
+  'google-inspectiontool',
+  'bingbot',
+  'facebookexternalhit',
+  'twitterbot',
+  'linkedinbot',
+  'slackbot',
+  'whatsapp',
+]
+const BLOCKED_UA_FRAGMENTS = ['curl', 'wget', 'python-requests', 'scrapy', 'go-http-client']
 const AUTH_PATHS = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/api/auth/']
+
+function isUserAgentBlocked(ua: string): boolean {
+  if (ALLOWED_BOTS.some(bot => ua.includes(bot))) return false
+  if (BLOCKED_UA_FRAGMENTS.some(f => ua.includes(f))) return true
+  return false
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const ua = (request.headers.get('user-agent') ?? '').toLowerCase()
   const acceptLang = request.headers.get('accept-language')
+  const isAllowedBot = ALLOWED_BOTS.some(bot => ua.includes(bot))
 
-  if (BLOCKED_UA_FRAGMENTS.some(f => ua.includes(f))) {
+  if (isUserAgentBlocked(ua)) {
     console.warn(`[security] Blocked UA "${ua}" on ${pathname}`)
     return new NextResponse(null, { status: 403 })
   }
 
-  if (!acceptLang) {
+  if (!acceptLang && !isAllowedBot) {
     console.warn(`[security] No accept-language on ${pathname} from UA "${ua}"`)
     return new NextResponse(null, { status: 403 })
   }
