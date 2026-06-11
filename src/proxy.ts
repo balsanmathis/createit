@@ -23,6 +23,12 @@ function isUserAgentBlocked(ua: string): boolean {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // API routes are called programmatically (Stripe webhooks, etc.) — skip bot/UA checks
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next({ request })
+  }
+
   const ua = (request.headers.get('user-agent') ?? '').toLowerCase()
   const acceptLang = request.headers.get('accept-language')
   const isAllowedBot = ALLOWED_BOTS.some(bot => ua.includes(bot))
