@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Sparkles, PenSquare, CreditCard, Settings,
-  LogOut, BarChart2, Menu, X,
+  LogOut, BarChart2, TrendingUp, Menu, X,
 } from 'lucide-react'
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
@@ -185,6 +185,16 @@ export default function DashboardSidebar() {
                 >
                   <BarChart2 size={16} />
                   Admin
+                </Link>
+                <Link
+                  href="/analytics"
+                  onClick={() => setOpen(false)}
+                  style={navStyle(isActive('/analytics'))}
+                  onMouseEnter={e => { if (!isActive('/analytics')) (e.currentTarget as HTMLAnchorElement).style.background = '#f8fafc' }}
+                  onMouseLeave={e => { if (!isActive('/analytics')) (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
+                >
+                  <TrendingUp size={16} />
+                  Analytics
                 </Link>
               </div>
             </>
