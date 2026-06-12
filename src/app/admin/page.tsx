@@ -6,6 +6,7 @@ import { getStripe } from '@/lib/stripe'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 import RevenueChart from '@/components/admin/RevenueChart'
 import SyncButton from '@/components/admin/SyncButton'
+import EmailCampaignSection from '@/components/admin/EmailCampaignSection'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 const VERCEL_ANALYTICS_URL = 'https://vercel.com/balsanmathis-projects/createit/analytics'
@@ -462,6 +463,9 @@ export default async function AdminPage() {
               <p className="text-white/40 text-sm">Aucun abonné payant pour l&apos;instant</p>
             </div>
           )}
+
+          {/* Email campaign */}
+          <EmailCampaignSection />
 
           {/* Recent activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
