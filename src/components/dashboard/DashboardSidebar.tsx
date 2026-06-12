@@ -177,14 +177,14 @@ export default function DashboardSidebar() {
               <div className="px-3">
                 <p className="px-3 text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: '#94a3b8' }}>Admin</p>
                 <Link
-                  href="/analytics"
+                  href="/admin"
                   onClick={() => setOpen(false)}
-                  style={navStyle(isActive('/analytics'))}
-                  onMouseEnter={e => { if (!isActive('/analytics')) (e.currentTarget as HTMLAnchorElement).style.background = '#f8fafc' }}
-                  onMouseLeave={e => { if (!isActive('/analytics')) (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
+                  style={navStyle(isActive('/admin'))}
+                  onMouseEnter={e => { if (!isActive('/admin')) (e.currentTarget as HTMLAnchorElement).style.background = '#f8fafc' }}
+                  onMouseLeave={e => { if (!isActive('/admin')) (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
                 >
                   <BarChart2 size={16} />
-                  Analytics
+                  Admin
                 </Link>
               </div>
             </>
