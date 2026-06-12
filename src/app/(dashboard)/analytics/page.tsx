@@ -2,10 +2,14 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import Stripe from 'stripe'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 import PromoCodesManager from '@/components/admin/PromoCodesManager'
 import LandingContentEditor from '@/components/admin/LandingContentEditor'
+import AnalyticsChart from '@/components/admin/AnalyticsChart'
+import CustomersTable from '@/components/admin/CustomersTable'
+import type { CustomerRow } from '@/components/admin/CustomersTable'
+import { getStripe } from '@/lib/stripe'
+import type Stripe from 'stripe'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 const VERCEL_ANALYTICS_URL = 'https://vercel.com/balsanmathis-projects/createit/analytics'
@@ -16,6 +20,8 @@ function serviceClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 }
+
+// ─── Existing data functions ──────────────────────────────────────────────────
 
 async function getStats() {
   const db = serviceClient()
@@ -109,34 +115,129 @@ async function getAllSites(page: number) {
   }
 }
 
-async function getStripeRevenue() {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-  const now = new Date()
-  const start = Math.floor(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).getTime() / 1000)
+// ─── Revenue tab data functions ───────────────────────────────────────────────
 
-  let revenue = 0
+async function getRevenueData() {
+  const stripe = getStripe()
+  const now = new Date()
+
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5 + i, 1))
+    const end = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1))
+    return {
+      label: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+      start: Math.floor(d.getTime() / 1000),
+      end: Math.floor(end.getTime() / 1000),
+    }
+  })
+
+  const threeMonthsAgoStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1))
+
+  const allInvoices: { amount: number; created: number }[] = []
   let hasMore = true
   let startingAfter: string | undefined
 
   while (hasMore) {
-    const res = await stripe.invoices.list({
-      created: { gte: start },
+    const batch = await stripe.invoices.list({
+      created: { gte: months[0].start },
       status: 'paid',
       limit: 100,
       ...(startingAfter ? { starting_after: startingAfter } : {}),
     })
-    revenue += res.data.reduce((s, inv) => s + inv.amount_paid / 100, 0)
-    hasMore = res.has_more
-    if (hasMore && res.data.length) startingAfter = res.data[res.data.length - 1].id
+    for (const inv of batch.data) allInvoices.push({ amount: inv.amount_paid / 100, created: inv.created })
+    hasMore = batch.has_more
+    if (hasMore && batch.data.length > 0) startingAfter = batch.data[batch.data.length - 1].id
   }
 
-  return revenue
+  const monthly = months.map(m => ({
+    month: m.label,
+    amount: allInvoices.filter(i => i.created >= m.start && i.created < m.end).reduce((s, i) => s + i.amount, 0),
+  }))
+
+  const last = months[months.length - 1]
+  const currentMonth = monthly[monthly.length - 1].amount
+  const currentMonthPayments = allInvoices.filter(i => i.created >= last.start && i.created < last.end).length
+  const threeMonths = allInvoices.filter(i => i.created >= Math.floor(threeMonthsAgoStart.getTime() / 1000)).reduce((s, i) => s + i.amount, 0)
+
+  return { monthly, currentMonth, currentMonthPayments, threeMonths }
 }
 
-function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+async function getSubscriberStats() {
+  const db = serviceClient()
+  const [totalRes, starterRes, proRes, agencyRes] = await Promise.all([
+    db.from('users').select('*', { count: 'exact', head: true }),
+    db.from('users').select('*', { count: 'exact', head: true }).eq('plan', 'starter'),
+    db.from('users').select('*', { count: 'exact', head: true }).eq('plan', 'pro'),
+    db.from('users').select('*', { count: 'exact', head: true }).eq('plan', 'agency'),
+  ])
+  const starter = starterRes.count ?? 0
+  const pro = proRes.count ?? 0
+  const agency = agencyRes.count ?? 0
+  return {
+    total: totalRes.count ?? 0,
+    paid: starter + pro + agency,
+    starter, pro, agency,
+    mrr: starter * 20 + pro * 45 + agency * 250,
+  }
+}
+
+async function getPayingCustomers(): Promise<CustomerRow[]> {
+  const db = serviceClient()
+  const { data: users } = await db
+    .from('users')
+    .select('id, email, plan, tokens_used, tokens_limit, created_at, subscriptions(status, stripe_customer_id, stripe_subscription_id, current_period_end)')
+    .in('plan', ['starter', 'pro', 'agency'])
+    .order('created_at', { ascending: false })
+
+  if (!users) return []
+
+  return users.map((u: {
+    id: string; email: string; plan: string
+    tokens_used: number; tokens_limit: number; created_at: string
+    subscriptions: Array<{ status: string; stripe_customer_id: string | null; stripe_subscription_id: string | null; current_period_end: string | null }> | null
+  }) => {
+    const sub = Array.isArray(u.subscriptions) ? u.subscriptions[0] : null
+    return {
+      id: u.id, email: u.email, plan: u.plan,
+      tokensUsed: u.tokens_used ?? 0, tokensLimit: u.tokens_limit ?? 0,
+      status: sub?.status ?? 'active', createdAt: u.created_at,
+      periodEnd: sub?.current_period_end ?? null,
+      stripeCustomerId: sub?.stripe_customer_id ?? null,
+      stripeSubscriptionId: sub?.stripe_subscription_id ?? null,
+    }
   })
+}
+
+async function getCancellations() {
+  const db = serviceClient()
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  try {
+    const { data, error } = await db
+      .from('cancellations')
+      .select('id, email, plan, reason, created_at')
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: false })
+    if (error) return []
+    return data ?? []
+  } catch {
+    return []
+  }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function fmt(iso: string) {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
+
+function fmtDate(iso: string | null) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function fmtNum(n: number) {
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
 
 function PlanBadge({ plan }: { plan: string }) {
@@ -153,6 +254,20 @@ function PlanBadge({ plan }: { plan: string }) {
   )
 }
 
+function Sparkline({ data }: { data: { amount: number }[] }) {
+  const last3 = data.slice(-3)
+  const max = Math.max(...last3.map(d => d.amount), 1)
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 24, marginTop: 8 }}>
+      {last3.map((d, i) => (
+        <div key={i} style={{ flex: 1, borderRadius: 3, background: '#dbeafe', height: `${Math.max((d.amount / max) * 100, 8)}%`, opacity: 0.4 + (i / last3.length) * 0.6 }} />
+      ))}
+    </div>
+  )
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
 interface Props {
   searchParams: Promise<{ tab?: string; page?: string }>
 }
@@ -164,19 +279,30 @@ export default async function AnalyticsPage({ searchParams }: Props) {
   if (!user || user.email !== ADMIN_EMAIL) redirect('/dashboard')
 
   const { tab, page: pageParam } = await searchParams
-  const activeTab = tab === 'promo' ? 'promo' : tab === 'landing' ? 'landing' : tab === 'sites' ? 'sites' : tab === 'users' ? 'users' : 'overview'
+  const activeTab = tab === 'promo' ? 'promo'
+    : tab === 'landing' ? 'landing'
+    : tab === 'sites' ? 'sites'
+    : tab === 'users' ? 'users'
+    : tab === 'revenus' ? 'revenus'
+    : 'overview'
   const currentPage = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
 
-  const [stats, recentUsers, recentSites, revenue, allUsersData, allSitesData] = await Promise.all([
+  const isRevenu = activeTab === 'revenus'
+
+  const [stats, recentUsers, recentSites, allUsersData, allSitesData, revenueData, subStats, customers, cancellations] = await Promise.all([
     getStats(),
-    getRecentUsers(),
-    getRecentSites(),
-    getStripeRevenue(),
+    activeTab === 'overview' ? getRecentUsers() : Promise.resolve([]),
+    activeTab === 'overview' ? getRecentSites() : Promise.resolve([]),
     activeTab === 'users' ? getAllUsers(currentPage) : Promise.resolve({ users: [], total: 0 }),
     activeTab === 'sites' ? getAllSites(currentPage) : Promise.resolve({ sites: [], total: 0 }),
+    isRevenu ? getRevenueData() : Promise.resolve({ monthly: [], currentMonth: 0, currentMonthPayments: 0, threeMonths: 0 }),
+    isRevenu ? getSubscriberStats() : Promise.resolve({ total: 0, paid: 0, starter: 0, pro: 0, agency: 0, mrr: 0 }),
+    isRevenu ? getPayingCustomers() : Promise.resolve([]),
+    isRevenu ? getCancellations() : Promise.resolve([]),
   ])
 
   const monthLabel = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  const conversionRate = subStats.total > 0 ? ((subStats.paid / subStats.total) * 100).toFixed(1) : '0.0'
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
@@ -214,7 +340,8 @@ export default async function AnalyticsPage({ searchParams }: Props) {
           <div className="flex gap-1 mb-6 p-1 rounded-xl flex-wrap" style={{ background: 'var(--surface)', border: '1px solid var(--border)', width: 'fit-content' }}>
             {[
               { key: 'overview', label: 'Vue d\'ensemble', href: '/analytics' },
-              { key: 'sites',    label: `Sites (${stats.totalSites})`,  href: '/analytics?tab=sites' },
+              { key: 'revenus',  label: '💰 Revenus',      href: '/analytics?tab=revenus' },
+              { key: 'sites',    label: `Sites (${stats.totalSites})`,      href: '/analytics?tab=sites' },
               { key: 'users',    label: `Utilisateurs (${stats.totalUsers})`, href: '/analytics?tab=users' },
               { key: 'promo',    label: 'Codes promo',    href: '/analytics?tab=promo' },
               { key: 'landing',  label: 'Landing Page',   href: '/analytics?tab=landing' },
@@ -232,15 +359,14 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             ))}
           </div>
 
+          {/* ── Tab: Overview ── */}
           {activeTab === 'overview' && (
             <>
-              {/* Stats cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 {[
                   { value: stats.totalUsers.toLocaleString('fr-FR'),     label: 'Utilisateurs inscrits',      sub: `+${stats.usersThisMonth} ce mois` },
                   { value: stats.sitesToday.toLocaleString('fr-FR'),     label: "Sites générés aujourd'hui",  sub: null },
                   { value: stats.sitesThisMonth.toLocaleString('fr-FR'), label: 'Sites générés ce mois',      sub: `${stats.totalSites} au total` },
-                  { value: `${revenue.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €`, label: `Revenus ${monthLabel}`, sub: null },
                 ].map((card, i) => (
                   <div key={i} className="rounded-xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                     <p className="text-3xl font-black" style={{ color: 'var(--accent)' }}>{card.value}</p>
@@ -248,12 +374,15 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                     {card.sub && <p className="text-xs mt-0.5" style={{ color: 'var(--fg-subtle)' }}>{card.sub}</p>}
                   </div>
                 ))}
+                <div className="rounded-xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                  <p className="text-xs mt-0.5 mb-2" style={{ color: 'var(--fg-muted)' }}>Revenus & abonnés</p>
+                  <Link href="/analytics?tab=revenus" className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
+                    Voir l&apos;onglet Revenus →
+                  </Link>
+                </div>
               </div>
 
-              {/* Recent activity */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                {/* Last 5 registrations */}
                 <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                   <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }}></span>
@@ -280,7 +409,6 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                   )}
                 </div>
 
-                {/* Last 5 generated sites */}
                 <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                   <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }}></span>
@@ -301,9 +429,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm truncate" style={{ color: 'var(--fg)' }}>{s.name || 'Sans titre'}</p>
-                            <p className="text-xs truncate" style={{ color: 'var(--fg-subtle)' }}>
-                              {s.userEmail ?? `${s.user_id.slice(0, 8)}…`}
-                            </p>
+                            <p className="text-xs truncate" style={{ color: 'var(--fg-subtle)' }}>{s.userEmail ?? `${s.user_id.slice(0, 8)}…`}</p>
                           </div>
                           <p className="text-xs shrink-0" style={{ color: 'var(--fg-subtle)' }}>{fmt(s.created_at)}</p>
                         </div>
@@ -311,11 +437,121 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                     </div>
                   )}
                 </div>
-
               </div>
             </>
           )}
 
+          {/* ── Tab: Revenus ── */}
+          {activeTab === 'revenus' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+              {/* 4 stat cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }} className="grid-rev">
+                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 24 }}>
+                  <p style={{ fontSize: 13, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: 12 }}>Revenus ce mois</p>
+                  <p style={{ fontSize: 32, fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>{fmtNum(revenueData.currentMonth)} €</p>
+                  <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 8 }}>{revenueData.currentMonthPayments} paiement{revenueData.currentMonthPayments !== 1 ? 's' : ''} ce mois</p>
+                </div>
+
+                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 24 }}>
+                  <p style={{ fontSize: 13, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: 12 }}>3 derniers mois</p>
+                  <p style={{ fontSize: 32, fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>{fmtNum(revenueData.threeMonths)} €</p>
+                  <Sparkline data={revenueData.monthly} />
+                </div>
+
+                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 24 }}>
+                  <p style={{ fontSize: 13, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: 12 }}>Abonnés actifs</p>
+                  <p style={{ fontSize: 32, fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>{subStats.paid}</p>
+                  <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 8 }}>Starter: {subStats.starter} · Pro: {subStats.pro} · Agency: {subStats.agency}</p>
+                </div>
+
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: 24 }}>
+                  <p style={{ fontSize: 13, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: 12 }}>MRR</p>
+                  <p style={{ fontSize: 32, fontWeight: 700, color: '#1d4ed8', lineHeight: 1 }}>{fmtNum(subStats.mrr)} €</p>
+                  <p style={{ fontSize: 13, color: '#93c5fd', marginTop: 8 }}>Revenu récurrent mensuel estimé</p>
+                </div>
+              </div>
+
+              {/* Revenue chart */}
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 24 }}>
+                <p style={{ fontSize: 13, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: 20 }}>Revenus mensuels — 6 derniers mois</p>
+                <AnalyticsChart data={revenueData.monthly} />
+              </div>
+
+              {/* Paying customers table */}
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <p style={{ fontSize: 13, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Clients payants</p>
+                  <span style={{ fontSize: 13, color: '#94a3b8' }}>{customers.length} client{customers.length !== 1 ? 's' : ''}</span>
+                </div>
+                <CustomersTable customers={customers} />
+              </div>
+
+              {/* Cancellations + Conversion */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16, alignItems: 'start' }} className="grid-cancel">
+
+                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 24 }}>
+                  <p style={{ fontSize: 13, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: 16 }}>Résiliations récentes (30 jours)</p>
+                  {cancellations.length === 0 ? (
+                    <p style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: '16px 0' }}>Aucune résiliation sur les 30 derniers jours ✓</p>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            {['Email', 'Plan annulé', 'Raison', 'Date'].map(h => (
+                              <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {cancellations.map((c: { id: string; email: string; plan: string; reason: string; created_at: string }) => (
+                            <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                              <td style={{ padding: '10px 12px', color: '#0f172a' }}>{c.email}</td>
+                              <td style={{ padding: '10px 12px' }}>
+                                <span style={{ background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>{c.plan}</span>
+                              </td>
+                              <td style={{ padding: '10px 12px', color: '#64748b', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.reason || '—'}</td>
+                              <td style={{ padding: '10px 12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{fmtDate(c.created_at)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 24 }}>
+                  <p style={{ fontSize: 13, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: 20 }}>Taux de conversion</p>
+                  <div style={{ textAlign: 'center', padding: '8px 0 16px' }}>
+                    <p style={{ fontSize: 52, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{conversionRate}%</p>
+                    <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 10 }}>{subStats.paid} payant{subStats.paid !== 1 ? 's' : ''} / {subStats.total} inscrits</p>
+                  </div>
+                  <div style={{ height: 8, background: '#f1f5f9', borderRadius: 8, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${conversionRate}%`, background: 'linear-gradient(90deg,#2563eb,#7c3aed)', borderRadius: 8 }} />
+                  </div>
+                  <div style={{ marginTop: 20, borderTop: '1px solid #f1f5f9', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[
+                      { label: 'Starter', count: subStats.starter, price: 20, bg: '#dbeafe', color: '#1e40af' },
+                      { label: 'Pro',     count: subStats.pro,     price: 45, bg: '#dcfce7', color: '#166534' },
+                      { label: 'Agency',  count: subStats.agency,  price: 250, bg: '#fef3c7', color: '#92400e' },
+                    ].map(p => (
+                      <div key={p.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ background: p.bg, color: p.color, fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 12 }}>{p.label}</span>
+                          <span style={{ fontSize: 13, color: '#0f172a' }}>{p.count} abonné{p.count !== 1 ? 's' : ''}</span>
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{fmtNum(p.count * p.price)} €/mois</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* ── Tab: Sites ── */}
           {activeTab === 'sites' && (() => {
             const { sites, total } = allSitesData
             const totalPages = Math.ceil(total / PAGE_SIZE)
@@ -344,9 +580,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm truncate" style={{ color: 'var(--fg)' }}>{s.name || 'Sans titre'}</p>
-                            <p className="text-xs truncate" style={{ color: 'var(--fg-subtle)' }}>
-                              {s.userEmail ?? `${s.user_id.slice(0, 8)}…`}
-                            </p>
+                            <p className="text-xs truncate" style={{ color: 'var(--fg-subtle)' }}>{s.userEmail ?? `${s.user_id.slice(0, 8)}…`}</p>
                           </div>
                           <p className="text-xs shrink-0" style={{ color: 'var(--fg-subtle)' }}>{fmt(s.created_at)}</p>
                         </div>
@@ -357,18 +591,10 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                         <span className="text-xs" style={{ color: 'var(--fg-muted)' }}>Page {currentPage} / {totalPages}</span>
                         <div className="flex gap-2">
                           {currentPage > 1 && (
-                            <Link href={`/analytics?tab=sites&page=${currentPage - 1}`}
-                              className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                              style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
-                              ← Précédent
-                            </Link>
+                            <Link href={`/analytics?tab=sites&page=${currentPage - 1}`} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>← Précédent</Link>
                           )}
                           {currentPage < totalPages && (
-                            <Link href={`/analytics?tab=sites&page=${currentPage + 1}`}
-                              className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                              style={{ background: 'var(--accent-light)', border: '1px solid rgba(124,58,237,0.2)', color: 'var(--accent)' }}>
-                              Suivant →
-                            </Link>
+                            <Link href={`/analytics?tab=sites&page=${currentPage + 1}`} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'var(--accent-light)', border: '1px solid rgba(124,58,237,0.2)', color: 'var(--accent)' }}>Suivant →</Link>
                           )}
                         </div>
                       </div>
@@ -379,6 +605,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             )
           })()}
 
+          {/* ── Tab: Users ── */}
           {activeTab === 'users' && (() => {
             const { users, total } = allUsersData
             const totalPages = Math.ceil(total / PAGE_SIZE)
@@ -407,9 +634,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                             <p className="text-xs" style={{ color: 'var(--fg-subtle)' }}>{fmt(u.created_at)}</p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs" style={{ color: 'var(--fg-muted)' }}>
-                              {u.tokens_used ?? 0}/{u.tokens_limit ?? '∞'}
-                            </span>
+                            <span className="text-xs" style={{ color: 'var(--fg-muted)' }}>{u.tokens_used ?? 0}/{u.tokens_limit ?? '∞'}</span>
                             <PlanBadge plan={u.plan} />
                           </div>
                         </div>
@@ -420,18 +645,10 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                         <span className="text-xs" style={{ color: 'var(--fg-muted)' }}>Page {currentPage} / {totalPages}</span>
                         <div className="flex gap-2">
                           {currentPage > 1 && (
-                            <Link href={`/analytics?tab=users&page=${currentPage - 1}`}
-                              className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                              style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
-                              ← Précédent
-                            </Link>
+                            <Link href={`/analytics?tab=users&page=${currentPage - 1}`} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>← Précédent</Link>
                           )}
                           {currentPage < totalPages && (
-                            <Link href={`/analytics?tab=users&page=${currentPage + 1}`}
-                              className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                              style={{ background: 'var(--accent-light)', border: '1px solid rgba(124,58,237,0.2)', color: 'var(--accent)' }}>
-                              Suivant →
-                            </Link>
+                            <Link href={`/analytics?tab=users&page=${currentPage + 1}`} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'var(--accent-light)', border: '1px solid rgba(124,58,237,0.2)', color: 'var(--accent)' }}>Suivant →</Link>
                           )}
                         </div>
                       </div>
@@ -442,11 +659,16 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             )
           })()}
 
-          {activeTab === 'promo' && <PromoCodesManager />}
+          {activeTab === 'promo'   && <PromoCodesManager />}
           {activeTab === 'landing' && <LandingContentEditor />}
 
         </div>
       </main>
+
+      <style>{`
+        @media (max-width: 900px) { .grid-rev { grid-template-columns: repeat(2,1fr) !important; } .grid-cancel { grid-template-columns: 1fr !important; } }
+        @media (max-width: 500px) { .grid-rev { grid-template-columns: 1fr !important; } }
+      `}</style>
     </div>
   )
 }
