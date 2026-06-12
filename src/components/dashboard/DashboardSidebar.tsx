@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Sparkles, PenSquare, CreditCard, Settings,
-  LogOut, BarChart2, TrendingUp, Menu, X,
+  LogOut, BarChart2, TrendingUp, Users, Menu, X,
 } from 'lucide-react'
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
@@ -50,6 +50,8 @@ export default function DashboardSidebar() {
     if (href === '/settings') return (pathname === '/settings' || pathname === '/dashboard/parametres') && !pathname.startsWith('/settings/subscription')
     if (href === '/settings/subscription') return pathname.startsWith('/settings/subscription') || pathname.startsWith('/dashboard/abonnement')
     if (href === '/editor') return pathname.startsWith('/editor')
+    if (href === '/admin') return pathname === '/admin'
+    if (href === '/admin/users') return pathname.startsWith('/admin/users')
     return pathname.startsWith(href)
   }
 
@@ -195,6 +197,16 @@ export default function DashboardSidebar() {
                 >
                   <TrendingUp size={16} />
                   Analytics
+                </Link>
+                <Link
+                  href="/admin/users"
+                  onClick={() => setOpen(false)}
+                  style={navStyle(isActive('/admin/users'))}
+                  onMouseEnter={e => { if (!isActive('/admin/users')) (e.currentTarget as HTMLAnchorElement).style.background = '#f8fafc' }}
+                  onMouseLeave={e => { if (!isActive('/admin/users')) (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
+                >
+                  <Users size={16} />
+                  Utilisateurs
                 </Link>
               </div>
             </>

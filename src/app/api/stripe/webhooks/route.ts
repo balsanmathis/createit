@@ -220,6 +220,34 @@ export async function POST(request: Request) {
         console.warn(`[webhook] invoice.payment_failed — user ${userId ?? 'unknown'}, sub ${subscriptionId}, status=${sub.status}`)
         break
       }
+
+      case 'charge.refunded': {
+        const charge     = event.data.object as Stripe.Charge
+        const customerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id
+        if (!customerId) break
+
+        const userId = await resolveUserId(
+          supabaseAdmin,
+          undefined,
+          charge.billing_details?.email,
+          customerId,
+          'charge.refunded'
+        )
+        if (!userId) break
+
+        await supabaseAdmin.from('users').update({
+          plan: 'free',
+          tokens_limit: PLAN_TOKEN_LIMITS.free,
+          tokens_used: 0,
+        }).eq('id', userId)
+
+        await supabaseAdmin.from('subscriptions').update({
+          status: 'canceled',
+        }).eq('user_id', userId)
+
+        console.log(`[webhook] charge.refunded — user ${userId} downgraded to free (charge ${charge.id})`)
+        break
+      }
     }
   } catch (err) {
     console.error('Webhook processing error:', err)

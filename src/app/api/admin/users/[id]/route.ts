@@ -27,7 +27,7 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
     const body = await request.json()
-    const { plan, status, tokensLimit } = body
+    const { plan, status, tokensLimit, tokensUsed } = body
 
     const service = getServiceClient()
 
@@ -48,6 +48,7 @@ export async function PATCH(request: Request, { params }: Params) {
       }
     }
     if (tokensLimit !== undefined) usersUpdate.tokens_limit = tokensLimit
+    if (tokensUsed !== undefined) usersUpdate.tokens_used = tokensUsed
 
     if (Object.keys(usersUpdate).length > 0) {
       const { error } = await service.from('users').update(usersUpdate).eq('id', id)
