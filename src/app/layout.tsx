@@ -21,22 +21,45 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'CreateIt — Générez votre site web en quelques secondes',
+  metadataBase: new URL('https://create-it.app'),
+  title: {
+    default: 'CreateIt — Créez votre site web en 30 secondes avec l\'IA',
+    template: '%s | CreateIt',
+  },
   description:
-    'Décrivez votre projet en français, CreateIt génère un site web professionnel complet en moins de 30 secondes. Éditez, exportez en ZIP, hébergez où vous voulez.',
+    'Décrivez votre projet en quelques mots, CreateIt génère un site web professionnel complet en moins de 30 secondes. Éditez, exportez en ZIP, hébergez où vous voulez.',
   keywords: [
-    'générateur site web',
-    'créer site internet',
-    'site web IA',
-    'générateur HTML',
+    'créateur site web IA',
+    'générateur site internet',
+    'créer site web rapide',
+    'IA création site',
     'site web automatique',
+    'générateur HTML',
   ],
+  authors: [{ name: 'CreateIt' }],
+  creator: 'CreateIt',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
   openGraph: {
-    title: 'CreateIt — Générez votre site web en quelques secondes',
-    description:
-      'Décrivez votre projet, obtenez un site professionnel en 30 secondes. Exportez le code, hébergez où vous voulez.',
     type: 'website',
     locale: 'fr_FR',
+    url: 'https://create-it.app',
+    siteName: 'CreateIt',
+    title: 'CreateIt — Créez votre site web en 30 secondes avec l\'IA',
+    description:
+      'Décrivez votre projet en quelques mots, l\'IA le crée pour vous. Sites professionnels, exportables en ZIP, prêts en 30 secondes.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CreateIt — Créez votre site web en 30 secondes avec l\'IA',
+    description:
+      'Décrivez votre projet en quelques mots, l\'IA le crée pour vous.',
+  },
+  alternates: {
+    canonical: 'https://create-it.app',
   },
 }
 

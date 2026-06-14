@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PROTECTED_ROUTES = ['/dashboard', '/generate', '/sites', '/settings', '/analytics', '/prompt-builder', '/editor']
+const PROTECTED_ROUTES = ['/dashboard', '/generate', '/sites', '/settings', '/analytics', '/prompt-builder', '/editor', '/admin']
 const ALLOWED_BOTS = [
   'googlebot',
   'google-inspectiontool',
