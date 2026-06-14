@@ -10,50 +10,50 @@ import PricingCard, { type PricingPlan } from '@/components/ui/PricingCard'
 import AuroraBackground from '@/components/ui/AuroraBackground'
 import { cn } from '@/lib/utils'
 
-type Row = { label: string; free: boolean | string; starter: boolean | string; pro: boolean | string; agency: boolean | string }
+type Row = { label: string; free: boolean | string; starter: boolean | string; pro: boolean | string; ultra: boolean | string; agency: boolean | string }
 
 const COMPARISON: { category: string; rows: Row[] }[] = [
   {
     category: 'Génération',
     rows: [
-      { label: 'Génération de sites', free: false,      starter: true,      pro: true,      agency: true },
-      { label: 'Tokens inclus',       free: 'Aucun',    starter: '800 000', pro: '2 400 000', agency: '16 000 000' },
-      { label: 'Temps de génération', free: '—',        starter: '< 30 s',  pro: '< 30 s',  agency: '< 30 s' },
+      { label: 'Génération de sites', free: false,   starter: true,      pro: true,        ultra: true,          agency: true },
+      { label: 'Tokens inclus',       free: 'Aucun', starter: '800 000', pro: '2 400 000', ultra: '16 000 000',  agency: '35 000 000' },
+      { label: 'Temps de génération', free: '—',     starter: '< 30 s',  pro: '< 30 s',    ultra: '< 30 s',      agency: '< 30 s' },
     ],
   },
   {
     category: 'Éditeur',
     rows: [
-      { label: 'Éditeur visuel',          free: true,  starter: true,  pro: true,  agency: true  },
-      { label: 'Éditeur IA (instructions)', free: false, starter: false, pro: true,  agency: true  },
-      { label: 'Modification de couleurs', free: true,  starter: true,  pro: true,  agency: true  },
-      { label: 'Historique des versions',  free: false, starter: false, pro: true,  agency: true  },
+      { label: 'Éditeur visuel',            free: true,  starter: true,  pro: true,  ultra: true,  agency: true  },
+      { label: 'Éditeur IA (instructions)', free: false, starter: false, pro: true,  ultra: true,  agency: true  },
+      { label: 'Modification de couleurs',  free: true,  starter: true,  pro: true,  ultra: true,  agency: true  },
+      { label: 'Historique des versions',   free: false, starter: false, pro: true,  ultra: true,  agency: true  },
     ],
   },
   {
     category: 'Export & hébergement',
     rows: [
-      { label: 'Export ZIP (HTML/CSS/JS)', free: true,  starter: true,  pro: true,  agency: true  },
-      { label: 'Code 100 % propriétaire', free: true,  starter: true,  pro: true,  agency: true  },
-      { label: 'Hébergement libre',        free: true,  starter: true,  pro: true,  agency: true  },
+      { label: 'Export ZIP (HTML/CSS/JS)', free: true, starter: true, pro: true, ultra: true, agency: true },
+      { label: 'Code 100 % propriétaire', free: true, starter: true, pro: true, ultra: true, agency: true },
+      { label: 'Hébergement libre',        free: true, starter: true, pro: true, ultra: true, agency: true },
     ],
   },
   {
     category: 'Business',
     rows: [
-      { label: 'Revente à des clients',   free: false, starter: true,  pro: true,  agency: true  },
-      { label: 'White label',             free: false, starter: false, pro: false, agency: true  },
-      { label: 'Accès API',              free: false, starter: false, pro: false, agency: true  },
-      { label: "Membres d'équipe",        free: false, starter: false, pro: false, agency: true  },
+      { label: 'Revente à des clients', free: false, starter: true,  pro: true,  ultra: true,  agency: true  },
+      { label: 'White label',           free: false, starter: false, pro: false, ultra: true,  agency: true  },
+      { label: 'Accès API',            free: false, starter: false, pro: false, ultra: true,  agency: true  },
+      { label: "Membres d'équipe",      free: false, starter: false, pro: false, ultra: false, agency: true  },
     ],
   },
   {
     category: 'Support',
     rows: [
-      { label: 'Documentation',          free: true,  starter: true,  pro: true,  agency: true  },
-      { label: 'Support email',          free: false, starter: true,  pro: true,  agency: true  },
-      { label: 'Support prioritaire',    free: false, starter: false, pro: true,  agency: true  },
-      { label: 'Support dédié 24/7',     free: false, starter: false, pro: false, agency: true  },
+      { label: 'Documentation',       free: true,  starter: true,  pro: true,  ultra: true,  agency: true  },
+      { label: 'Support email',       free: false, starter: true,  pro: true,  ultra: true,  agency: true  },
+      { label: 'Support prioritaire', free: false, starter: false, pro: true,  ultra: true,  agency: true  },
+      { label: 'Support dédié 24/7',  free: false, starter: false, pro: false, ultra: true,  agency: true  },
     ],
   },
 ]
@@ -128,12 +128,23 @@ export default function TarifsClient({ isLoggedIn }: { isLoggedIn: boolean }) {
       onSelect: () => handleSelectPlan('pro'),
     },
     {
-      key: 'agency',
-      name: 'Agency',
-      desc: 'Pour les agences',
+      key: 'ultra',
+      name: 'Ultra',
+      desc: 'Pour les agences ambitieuses',
       monthlyPrice: 250,
       tokens: '16 000 000 tokens',
       features: ['Tout le Pro', 'Support dédié 24/7', 'API access', 'Revente autorisée', 'White label'],
+      cta: 'Choisir Ultra',
+      href: '/auth/signup?plan=ultra',
+      onSelect: () => handleSelectPlan('ultra'),
+    },
+    {
+      key: 'agency',
+      name: 'Agency',
+      desc: 'Volume maximal',
+      monthlyPrice: 399,
+      tokens: '35 000 000 tokens',
+      features: ['Tout le Ultra', '35M tokens/mois', "Membres d'équipe illimités", 'Support dédié 24/7', 'White label'],
       cta: 'Choisir Agency',
       href: '/auth/signup?plan=agency',
       onSelect: () => handleSelectPlan('agency'),
@@ -167,7 +178,7 @@ export default function TarifsClient({ isLoggedIn }: { isLoggedIn: boolean }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5 items-start">
             {PLANS.map(plan => (
               <PricingCard key={plan.key} plan={plan} highlighted={plan.key === 'pro'} billing={billing} />
             ))}
@@ -184,7 +195,7 @@ export default function TarifsClient({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           <GlassCard className="overflow-hidden">
             {/* Header row */}
-            <div className="grid grid-cols-5 text-xs font-semibold uppercase tracking-wider py-3 px-4" style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', color: 'var(--fg-subtle)' }}>
+            <div className="grid grid-cols-6 text-xs font-semibold uppercase tracking-wider py-3 px-4" style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', color: 'var(--fg-subtle)' }}>
               <div className="col-span-1">Fonctionnalité</div>
               {PLANS.map(p => (
                 <div key={p.key} className="text-center" style={{ color: p.key === 'pro' ? 'var(--accent)' : undefined }}>
@@ -203,13 +214,14 @@ export default function TarifsClient({ isLoggedIn }: { isLoggedIn: boolean }) {
                 {cat.rows.map((row, ri) => (
                   <div
                     key={ri}
-                    className="grid grid-cols-5 py-3 px-4 items-center"
+                    className="grid grid-cols-6 py-3 px-4 items-center"
                     style={{ borderBottom: '1px solid var(--border)', background: ri % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.01)' }}
                   >
                     <div className="text-sm col-span-1" style={{ color: 'var(--fg-muted)' }}>{row.label}</div>
                     <div className="text-center"><Cell value={row.free} /></div>
                     <div className="text-center"><Cell value={row.starter} /></div>
                     <div className="text-center"><Cell value={row.pro} /></div>
+                    <div className="text-center"><Cell value={row.ultra} /></div>
                     <div className="text-center"><Cell value={row.agency} /></div>
                   </div>
                 ))}
@@ -217,7 +229,7 @@ export default function TarifsClient({ isLoggedIn }: { isLoggedIn: boolean }) {
             ))}
 
             {/* CTA row */}
-            <div className="grid grid-cols-5 py-4 px-4 gap-2 items-center" style={{ background: 'var(--surface-2)' }}>
+            <div className="grid grid-cols-6 py-4 px-4 gap-2 items-center" style={{ background: 'var(--surface-2)' }}>
               <div className="text-xs font-semibold" style={{ color: 'var(--fg-subtle)' }}>Commencer</div>
               {PLANS.map(plan => (
                 <div key={plan.key} className="flex justify-center">

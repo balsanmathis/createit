@@ -45,7 +45,7 @@ const PLANS = [
     ],
   },
   {
-    key: 'agency',
+    key: 'ultra',
     price: 250,
     popular: false,
     tokens: '16 000 000 tokens',
@@ -68,18 +68,42 @@ const PLANS = [
       'White label',
     ],
   },
+  {
+    key: 'agency',
+    price: 399,
+    popular: false,
+    tokens: '35 000 000 tokens',
+    features_fr: [
+      '35 000 000 tokens inclus',
+      'Tout le plan Ultra',
+      'Support dédié 24/7',
+      'API access',
+      'White label',
+      'Membres d\'équipe illimités',
+    ],
+    features_en: [
+      '35,000,000 tokens included',
+      'Everything in Ultra',
+      'Dedicated 24/7 support',
+      'API access',
+      'White label',
+      'Unlimited team members',
+    ],
+  },
 ]
 
 const NAMES: Record<string, { fr: string; en: string }> = {
   starter: { fr: 'Starter', en: 'Starter' },
   pro:     { fr: 'Pro',     en: 'Pro'     },
+  ultra:   { fr: 'Ultra',   en: 'Ultra'   },
   agency:  { fr: 'Agency',  en: 'Agency'  },
 }
 
 const DESC: Record<string, { fr: string; en: string }> = {
   starter: { fr: 'Parfait pour débuter',         en: 'Perfect for getting started' },
   pro:     { fr: 'Pour les professionnels',       en: 'For professionals'           },
-  agency:  { fr: 'Pour les agences',              en: 'For agencies'                },
+  ultra:   { fr: 'Pour les agences ambitieuses', en: 'For ambitious agencies'       },
+  agency:  { fr: 'Volume maximal',               en: 'Maximum volume'              },
 }
 
 const F = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -160,7 +184,7 @@ export default function PricingSection({ locale = 'fr', initialPromoCode }: Pric
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {PLANS.map((plan) => (
             <div
               key={plan.key}

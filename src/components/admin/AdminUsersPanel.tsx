@@ -21,17 +21,19 @@ export interface AdminUser {
 }
 
 const PLAN_TOKEN_LIMITS: Record<string, number> = {
-  free: 0,
+  free:    0,
   starter: 800_000,
-  pro: 2_400_000,
-  agency: 16_000_000,
+  pro:     2_400_000,
+  ultra:   16_000_000,
+  agency:  35_000_000,
 }
 
 const PLAN_COLORS: Record<string, string> = {
   free:    'bg-white/5 text-white/40 border-white/10',
   starter: 'bg-blue-500/20 text-blue-300 border-blue-500/20',
   pro:     'bg-violet-500/20 text-violet-300 border-violet-500/20',
-  agency:  'bg-emerald-500/20 text-emerald-300 border-emerald-500/20',
+  ultra:   'bg-emerald-500/20 text-emerald-300 border-emerald-500/20',
+  agency:  'bg-orange-500/20 text-orange-300 border-orange-500/20',
 }
 
 const STATUS_COLORS: Record<string, string> = {

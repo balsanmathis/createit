@@ -48,6 +48,7 @@ interface SubscriptionStats {
   byPlan: {
     starter: { count: number; mrr: number }
     pro: { count: number; mrr: number }
+    ultra: { count: number; mrr: number }
     agency: { count: number; mrr: number }
   }
   subscribers: PaidSubscriber[]
@@ -127,6 +128,7 @@ async function getSubscriptionStats(): Promise<SubscriptionStats> {
     byPlan: {
       starter: { count: 0, mrr: 0 },
       pro: { count: 0, mrr: 0 },
+      ultra: { count: 0, mrr: 0 },
       agency: { count: 0, mrr: 0 },
     },
     subscribers: [],
@@ -135,6 +137,7 @@ async function getSubscriptionStats(): Promise<SubscriptionStats> {
   const priceIdToPlan: Record<string, string> = {}
   if (process.env.STRIPE_STARTER_PRICE_ID) priceIdToPlan[process.env.STRIPE_STARTER_PRICE_ID] = 'starter'
   if (process.env.STRIPE_PRO_PRICE_ID) priceIdToPlan[process.env.STRIPE_PRO_PRICE_ID] = 'pro'
+  if (process.env.STRIPE_ULTRA_PRICE_ID) priceIdToPlan[process.env.STRIPE_ULTRA_PRICE_ID] = 'ultra'
   if (process.env.STRIPE_AGENCY_PRICE_ID) priceIdToPlan[process.env.STRIPE_AGENCY_PRICE_ID] = 'agency'
 
   let hasMore = true
@@ -165,7 +168,7 @@ async function getSubscriptionStats(): Promise<SubscriptionStats> {
       result.mrr += unitAmount
       result.activeCount++
 
-      if (plan === 'starter' || plan === 'pro' || plan === 'agency') {
+      if (plan === 'starter' || plan === 'pro' || plan === 'ultra' || plan === 'agency') {
         result.byPlan[plan].count++
         result.byPlan[plan].mrr += unitAmount
       }

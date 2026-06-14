@@ -9,7 +9,8 @@ const PLANS: Record<string, { label: string; tokens: string; price: string }> = 
   free:    { label: 'Gratuit', tokens: '8 000',        price: '0 €/mois' },
   starter: { label: 'Starter', tokens: '800 000',      price: '20 €/mois' },
   pro:     { label: 'Pro',     tokens: '2 400 000',    price: '45 €/mois' },
-  agency:  { label: 'Agency',  tokens: '16 000 000',   price: '250 €/mois' },
+  ultra:   { label: 'Ultra',   tokens: '16 000 000',   price: '250 €/mois' },
+  agency:  { label: 'Agency',  tokens: '35 000 000',   price: '399 €/mois' },
 }
 
 export default async function AbonnementPage() {

@@ -1,4 +1,4 @@
-export type Plan = 'free' | 'starter' | 'pro' | 'agency'
+export type Plan = 'free' | 'starter' | 'pro' | 'ultra' | 'agency'
 
 export interface User {
   id: string
@@ -35,14 +35,16 @@ export interface Subscription {
 export const PLAN_LIMITS: Record<string, number> = {
   starter: 10,
   pro: 30,
-  agency: 200,
+  ultra: 200,
+  agency: 500,
 }
 
 export const PLAN_TOKEN_LIMITS: Record<Plan, number> = {
   free:    0,
   starter: 800_000,
   pro:     2_400_000,
-  agency:  16_000_000,
+  ultra:   16_000_000,
+  agency:  35_000_000,
 }
 
 export const TOKEN_COST_GENERATE = 8_000
@@ -51,5 +53,6 @@ export const TOKEN_COST_MODIFY   = 8_000
 export const PLAN_PRICES: Record<Exclude<Plan, 'free'>, { monthly: number; priceId: string }> = {
   starter: { monthly: 20,  priceId: process.env.STRIPE_STARTER_PRICE_ID || '' },
   pro:     { monthly: 45,  priceId: process.env.STRIPE_PRO_PRICE_ID || '' },
-  agency:  { monthly: 250, priceId: process.env.STRIPE_AGENCY_PRICE_ID || '' },
+  ultra:   { monthly: 250, priceId: process.env.STRIPE_ULTRA_PRICE_ID || '' },
+  agency:  { monthly: 399, priceId: process.env.STRIPE_AGENCY_PRICE_ID || '' },
 }

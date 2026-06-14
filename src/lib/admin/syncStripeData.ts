@@ -6,7 +6,7 @@ export interface SyncedUser {
   email: string
   stripeCustomerId: string
   stripeSubscriptionId: string | null
-  plan: 'free' | 'starter' | 'pro' | 'agency'
+  plan: 'free' | 'starter' | 'pro' | 'ultra' | 'agency'
   tokensLimit: number
   subscriptionStatus: 'free' | 'active' | 'canceling' | 'canceled' | 'refunded' | 'past_due'
   discountPercent: number
@@ -26,10 +26,11 @@ function getServiceClient() {
   )
 }
 
-function mapPriceToPlan(unitAmount: number): { plan: 'starter' | 'pro' | 'agency'; tokens: number } {
-  if (unitAmount <= 2200)      return { plan: 'starter', tokens: 800_000 }
-  else if (unitAmount <= 4600) return { plan: 'pro',     tokens: 2_400_000 }
-  else                         return { plan: 'agency',  tokens: 16_000_000 }
+function mapPriceToPlan(unitAmount: number): { plan: 'starter' | 'pro' | 'ultra' | 'agency'; tokens: number } {
+  if (unitAmount <= 2200)       return { plan: 'starter', tokens: 800_000 }
+  else if (unitAmount <= 4600)  return { plan: 'pro',     tokens: 2_400_000 }
+  else if (unitAmount <= 26000) return { plan: 'ultra',   tokens: 16_000_000 }
+  else                          return { plan: 'agency',  tokens: 35_000_000 }
 }
 
 function extractDiscount(sub: Stripe.Subscription): { percent: number; code: string | null } {
@@ -96,7 +97,7 @@ export async function syncAllUsersFromStripe(emails?: string[]): Promise<{ synce
     const hasRefund  = refundedCharges.length > 0
     const firstRefund = refundedCharges[0] ?? null
 
-    let plan: 'free' | 'starter' | 'pro' | 'agency' = 'free'
+    let plan: 'free' | 'starter' | 'pro' | 'ultra' | 'agency' = 'free'
     let tokensLimit    = 0
     let status: SyncedUser['subscriptionStatus'] = 'free'
     let discountPercent = 0

@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: 'Tarifs — CreateIt',
-  description: 'Gratuit, Starter 20 €/mois, Pro 45 €/mois, Agency 250 €/mois. Comparez les plans CreateIt et choisissez celui qui correspond à vos besoins.',
+  description: 'Gratuit, Starter 20 €/mois, Pro 45 €/mois, Ultra 250 €/mois, Agency 399 €/mois. Comparez les plans CreateIt et choisissez celui qui correspond à vos besoins.',
   alternates: { canonical: 'https://www.create-it.app/tarifs' },
 }
 

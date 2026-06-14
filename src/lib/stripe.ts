@@ -32,9 +32,14 @@ export const PLANS = {
     price: 45,
     priceId: process.env.STRIPE_PRO_PRICE_ID!,
   },
+  ultra: {
+    name: 'Ultra',
+    price: 250,
+    priceId: process.env.STRIPE_ULTRA_PRICE_ID!,
+  },
   agency: {
     name: 'Agency',
-    price: 250,
+    price: 399,
     priceId: process.env.STRIPE_AGENCY_PRICE_ID!,
   },
 } as const
