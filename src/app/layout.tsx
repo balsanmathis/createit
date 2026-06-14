@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://create-it.app'),
+  metadataBase: new URL('https://www.create-it.app'),
   title: {
     default: 'CreateIt — Créez votre site web en 30 secondes avec l\'IA',
     template: '%s | CreateIt',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    url: 'https://create-it.app',
+    url: 'https://www.create-it.app',
     siteName: 'CreateIt',
     title: 'CreateIt — Créez votre site web en 30 secondes avec l\'IA',
     description:
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
       'Décrivez votre projet en quelques mots, l\'IA le crée pour vous.',
   },
   alternates: {
-    canonical: 'https://create-it.app',
+    canonical: 'https://www.create-it.app',
   },
 }
 

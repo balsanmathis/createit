@@ -23,6 +23,6 @@ export default function robots(): MetadataRoute.Robots {
         '/api/',
       ],
     },
-    sitemap: 'https://create-it.app/sitemap.xml',
+    sitemap: 'https://www.create-it.app/sitemap.xml',
   };
 }
