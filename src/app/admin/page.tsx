@@ -7,6 +7,7 @@ import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 import RevenueChart from '@/components/admin/RevenueChart'
 import SyncButton from '@/components/admin/SyncButton'
 import EmailCampaignSection from '@/components/admin/EmailCampaignSection'
+import CleanSitesButton from '@/components/admin/CleanSitesButton'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'balsanmathis08@gmail.com'
 const VERCEL_ANALYTICS_URL = 'https://vercel.com/balsanmathis-projects/createit/analytics'
@@ -466,6 +467,18 @@ export default async function AdminPage() {
               <p className="text-white/40 text-sm">Aucun abonné payant pour l&apos;instant</p>
             </div>
           )}
+
+          {/* Maintenance */}
+          <div className="glass rounded-2xl p-6 border border-red-500/10">
+            <h2 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+              Maintenance
+            </h2>
+            <p className="text-xs text-white/30 mb-4">
+              Supprime le prompt utilisateur qui peut apparaître en bas des sites générés (tous les clients).
+            </p>
+            <CleanSitesButton />
+          </div>
 
           {/* Email campaign */}
           <EmailCampaignSection />

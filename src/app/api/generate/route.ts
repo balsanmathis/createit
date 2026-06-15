@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { generateWebsiteStreaming } from '@/lib/claude'
+import { generateWebsiteStreaming, cleanHtml } from '@/lib/claude'
 import { TOKEN_COST_GENERATE } from '@/types'
 import { checkRateLimit } from '@/lib/ratelimit'
 
@@ -137,14 +137,15 @@ export async function POST(request: Request) {
 
       try {
         // 1. Generate HTML
-        const htmlContent = await generateWebsiteStreaming(sanitizedPrompt, (chars) => {
+        const rawHtml = await generateWebsiteStreaming(sanitizedPrompt, (chars) => {
           emit({ type: 'progress', chars })
         }, {
           maxTokens: qualityConfig.maxTokens,
           model: qualityConfig.model,
         })
 
-        console.log(`[generate] HTML ready — ${htmlContent.length} chars, quality=${quality}`)
+        const htmlContent = cleanHtml(rawHtml, sanitizedPrompt)
+        console.log(`[generate] HTML ready — ${htmlContent.length} chars (raw: ${rawHtml.length}), quality=${quality}`)
 
         // 2. Save to Supabase
         const { data: site, error: siteError } = await supabase

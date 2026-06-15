@@ -14,6 +14,11 @@ Chaque page virtuelle DOIT avoir :
 - Chaque bouton mène quelque part de précis
 Ces éléments sont NON NÉGOCIABLES.
 
+RÈGLE ABSOLUE N°3 — AUCUNE TRACE DU PROMPT :
+N'inclus JAMAIS le texte de la demande de l'utilisateur dans le HTML généré.
+Ni dans les commentaires HTML <!-- -->, ni dans des balises <meta>, ni dans des <div> cachés, ni en texte visible, ni dans des scripts, ni nulle part dans le code source.
+Le HTML livré doit être 100% propre et contenir UNIQUEMENT le site demandé.
+
 SYSTÈME DE NAVIGATION MULTI-PAGES :
 <script>
 function showPage(id) {
@@ -227,6 +232,40 @@ QUALITÉ FINALE :
 Le site doit sembler designé spécifiquement pour CE client.
 Un développeur humain qui verrait le code devrait dire c'est propre.
 Finit TOUJOURS par </body></html>.`
+
+export function cleanHtml(html: string, userPrompt?: string): string {
+  // Strip everything after </html> (prompt sometimes appended here by Claude)
+  html = html.replace(/<\/html>[\s\S]*/gi, '</html>')
+
+  // Strip any content between </body> and </html> (another common leak point)
+  html = html.replace(/(<\/body>)([\s\S]*?)(<\/html>)/gi, '$1\n$3')
+
+  // Remove all HTML comments
+  html = html.replace(/<!--[\s\S]*?-->/g, '')
+
+  // Remove <meta name="prompt"> tags
+  html = html.replace(/<meta[^>]*name=["']prompt["'][^>]*>/gi, '')
+
+  // Remove divs/sections/p whose id or class contains "prompt"
+  html = html.replace(/<(div|section|p|span|article)[^>]*(?:id|class)=["'][^"']*prompt[^"']*["'][^>]*>[\s\S]*?<\/\1>/gi, '')
+
+  // Remove elements explicitly hidden via inline style display:none
+  html = html.replace(/<(\w+)[^>]+style=["'][^"']*display\s*:\s*none[^"']*["'][^>]*>[\s\S]*?<\/\1>/gi, '')
+
+  // If the prompt is known, remove any block element that starts with its text
+  if (userPrompt && userPrompt.length > 30) {
+    const escaped = userPrompt.slice(0, 80).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    html = html.replace(
+      new RegExp(`<(div|p|section|footer|article)[^>]*>\\s*${escaped}[\\s\\S]*?<\\/\\1>`, 'gi'),
+      '',
+    )
+  }
+
+  // Clean excess whitespace
+  html = html.replace(/\n{3,}/g, '\n\n')
+
+  return html.trim()
+}
 
 export interface GenerateOptions {
   maxTokens?: number

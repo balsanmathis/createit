@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { cleanHtml } from '@/lib/claude'
 
 interface Params {
   params: Promise<{ id: string }>
@@ -29,7 +30,7 @@ export async function POST(_request: Request, { params }: Params) {
 
     const { data: site, error } = await supabase
       .from('sites')
-      .select('name, html_content')
+      .select('name, prompt, html_content')
       .eq('id', id)
       .eq('user_id', user.id)
       .single()
@@ -38,7 +39,7 @@ export async function POST(_request: Request, { params }: Params) {
 
     const JSZip = (await import('jszip')).default
     const zip = new JSZip()
-    zip.file('index.html', sanitizeForOffline(site.html_content))
+    zip.file('index.html', cleanHtml(sanitizeForOffline(site.html_content), site.prompt ?? undefined))
 
     const blob = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
     const slug = (site.name || 'site').replace(/\s+/g, '-').toLowerCase()
