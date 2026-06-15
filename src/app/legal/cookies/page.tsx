@@ -74,7 +74,7 @@ export default function CookiesPage() {
           </Section>
 
           <Section title="Contact">
-            <p>Pour toute question : <a href="mailto:bonjour@create-it.app" style={{ color: 'var(--accent)' }}>bonjour@create-it.app</a></p>
+            <p>Pour toute question : <a href="mailto:createitapp@gmail.com" style={{ color: 'var(--accent)' }}>createitapp@gmail.com</a></p>
           </Section>
         </GlassCard>
       </main>

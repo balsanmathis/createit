@@ -62,13 +62,13 @@ export default async function AidePage() {
                 <p className="text-sm font-semibold mb-1" style={{ color: 'var(--fg)' }}>Vous ne trouvez pas votre réponse ?</p>
                 <p className="text-sm" style={{ color: 'var(--fg-muted)' }}>Notre équipe répond sous 24h.</p>
               </div>
-              <Link
-                href="/contact"
+              <a
+                href="mailto:createitapp@gmail.com"
                 className="shrink-0 text-sm font-semibold px-4 py-2 rounded-lg"
                 style={{ background: 'var(--accent)', color: '#fff', textDecoration: 'none' }}
               >
                 Nous contacter
-              </Link>
+              </a>
             </div>
           </div>
         </main>

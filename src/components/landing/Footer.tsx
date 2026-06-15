@@ -32,7 +32,7 @@ export default function Footer({ locale = 'fr' }: FooterProps) {
           <Link href="/auth/login" style={{ fontSize: 14, color: 'var(--fg-muted)', textDecoration: 'none' }}>
             {locale === 'fr' ? 'Connexion' : 'Login'}
           </Link>
-          <a href="mailto:hello@create-it.app" style={{ fontSize: 14, color: 'var(--fg-muted)', textDecoration: 'none' }}>
+          <a href="mailto:createitapp@gmail.com" style={{ fontSize: 14, color: 'var(--fg-muted)', textDecoration: 'none' }}>
             Contact
           </a>
         </div>

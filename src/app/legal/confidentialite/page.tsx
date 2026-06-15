@@ -24,7 +24,7 @@ export default function ConfidentialitePage() {
 
         <GlassCard className="p-8 space-y-8 text-sm leading-relaxed" style={{ color: 'var(--fg-muted)' }}>
           <Section title="1. Responsable du traitement">
-            <p>CreateIt SAS, Paris, France. Contact : <a href="mailto:bonjour@create-it.app" style={{ color: 'var(--accent)' }}>bonjour@create-it.app</a></p>
+            <p>CreateIt SAS, Paris, France. Contact : <a href="mailto:createitapp@gmail.com" style={{ color: 'var(--accent)' }}>createitapp@gmail.com</a></p>
           </Section>
 
           <Section title="2. Données collectées">
@@ -67,7 +67,7 @@ export default function ConfidentialitePage() {
           </Section>
 
           <Section title="7. Vos droits">
-            <p>Conformément au RGPD, vous disposez des droits d&apos;accès, rectification, effacement, portabilité et opposition. Pour les exercer : <a href="mailto:bonjour@create-it.app" style={{ color: 'var(--accent)' }}>bonjour@create-it.app</a>. Réponse sous 30 jours. Vous pouvez également saisir la CNIL.</p>
+            <p>Conformément au RGPD, vous disposez des droits d&apos;accès, rectification, effacement, portabilité et opposition. Pour les exercer : <a href="mailto:createitapp@gmail.com" style={{ color: 'var(--accent)' }}>createitapp@gmail.com</a>. Réponse sous 30 jours. Vous pouvez également saisir la CNIL.</p>
           </Section>
 
           <Section title="8. Cookies">

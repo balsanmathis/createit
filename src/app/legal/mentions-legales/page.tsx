@@ -21,7 +21,7 @@ export default function MentionsLegalesPage() {
               Capital social : 1 000 €<br />
               RCS Paris — numéro en cours d&apos;immatriculation<br />
               Siège social : Paris, France<br />
-              Email : <a href="mailto:bonjour@create-it.app" style={{ color: 'var(--accent)' }}>bonjour@create-it.app</a>
+              Email : <a href="mailto:createitapp@gmail.com" style={{ color: 'var(--accent)' }}>createitapp@gmail.com</a>
             </p>
           </Section>
 

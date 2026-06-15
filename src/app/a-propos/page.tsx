@@ -111,13 +111,13 @@ export default function AProposPage() {
         <p className="text-base mb-6" style={{ color: 'var(--fg-muted)' }}>
           Nous lisons tous les messages.
         </p>
-        <Link
-          href="/contact"
+        <a
+          href="mailto:createitapp@gmail.com"
           className="inline-flex items-center gap-2 text-sm font-semibold"
           style={{ color: 'var(--accent)', textDecoration: 'none' }}
         >
           Nous contacter <ArrowRight size={14} />
-        </Link>
+        </a>
       </section>
 
       <PublicFooter />

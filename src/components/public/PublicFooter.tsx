@@ -81,7 +81,7 @@ export default function PublicFooter() {
           <FooterCol title="Entreprise" links={[
             { label: 'Blog',     href: '/blog' },
             { label: 'À propos', href: '/a-propos' },
-            { label: 'Contact',  href: '/contact' },
+            { label: 'Contact',  href: 'mailto:createitapp@gmail.com' },
           ]} />
 
           <FooterCol title="Légal" links={[

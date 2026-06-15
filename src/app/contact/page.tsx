@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 const INFO = [
-  { icon: '✉️', label: 'Email', value: 'bonjour@create-it.app' },
+  { icon: '✉️', label: 'Email', value: 'createitapp@gmail.com' },
   { icon: '⏱', label: 'Temps de réponse', value: 'Sous 24 heures ouvrées' },
   { icon: '🌍', label: 'Langues', value: 'Français, English' },
 ]
