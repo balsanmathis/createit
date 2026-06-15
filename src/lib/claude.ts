@@ -233,14 +233,69 @@ Le site doit sembler designé spécifiquement pour CE client.
 Un développeur humain qui verrait le code devrait dire c'est propre.
 Finit TOUJOURS par </body></html>.`
 
+// Strips Claude's markdown commentary injected as raw text before </body>.
+// Claude sometimes appends a feature checklist / résumé as plain text inside <body>.
+// The visual editor can inject buttons and scripts AFTER the commentary, so we
+// locate the commentary START first (not work backwards from </body>).
+function stripMarkdownCommentary(html: string): string {
+  const bodyCloseIdx = html.lastIndexOf('</body>')
+  if (bodyCloseIdx === -1) return html
+
+  // Search the last 10 000 chars for commentary start markers
+  const searchStart = Math.max(0, bodyCloseIdx - 10_000)
+  const zone = html.slice(searchStart, bodyCloseIdx)
+
+  // Ordered from most specific to least — first match wins
+  const commentaryMarkers = [
+    /^```\s*\n+---+/m,                              // closing code fence + hr
+    /^---+\s*\n+#{1,4}\s/m,                         // hr + markdown header
+    /^#{1,4}\s[^\n]*[✅✓]/m,                        // header with checkmark
+    /^✅\s+\*{1,2}/m,                                // ✅ **bold** list
+    /^✓\s+\*{1,2}/m,                                // ✓ **bold** list
+    /J['']ai (?:développé|créé|conçu)\s+un\s+\*\*/m, // "J'ai développé un **"
+    /Le site (?:fonctionne|respire|est \*\*production)/m,
+  ]
+
+  let commentaryRelIdx = -1
+  for (const pattern of commentaryMarkers) {
+    const m = pattern.exec(zone)
+    if (m !== null && (commentaryRelIdx === -1 || m.index < commentaryRelIdx)) {
+      commentaryRelIdx = m.index
+    }
+  }
+
+  if (commentaryRelIdx === -1) return html
+
+  const commentaryAbsIdx = searchStart + commentaryRelIdx
+
+  // Find the last block-level closing tag in the 1000 chars just BEFORE the commentary
+  const beforeZone = html.slice(Math.max(0, commentaryAbsIdx - 1_000), commentaryAbsIdx)
+  const blockTagRe = /<\/(?:script|style|div|section|footer|main|article|header|nav|ul|ol|form|table|p|h[1-6]|li)>/gi
+  let lastRelEnd = -1
+  let m2: RegExpExecArray | null
+  while ((m2 = blockTagRe.exec(beforeZone)) !== null) lastRelEnd = m2.index + m2[0].length
+
+  // Cut point: end of last block tag before commentary (or commentary start itself)
+  const cutPoint = lastRelEnd !== -1
+    ? Math.max(0, commentaryAbsIdx - 1_000) + lastRelEnd
+    : commentaryAbsIdx
+
+  const removed = html.slice(cutPoint, bodyCloseIdx).replace(/<[^>]+>/g, '').trim()
+  console.log(`[cleanHtml] stripped ${removed.length} chars of markdown commentary: "${removed.slice(0, 60)}…"`)
+  return html.slice(0, cutPoint) + '\n' + html.slice(bodyCloseIdx)
+}
+
 export function cleanHtml(html: string, userPrompt?: string): string {
-  // Strip everything after </html> (prompt sometimes appended here by Claude)
+  // ── PRIMARY FIX: strip Claude's markdown commentary inside <body> ──────────
+  html = stripMarkdownCommentary(html)
+
+  // Strip everything after </html>
   html = html.replace(/<\/html>[\s\S]*/gi, '</html>')
 
-  // Strip any content between </body> and </html> (another common leak point)
+  // Strip content between </body> and </html>
   html = html.replace(/(<\/body>)([\s\S]*?)(<\/html>)/gi, '$1\n$3')
 
-  // Remove all HTML comments
+  // Remove HTML comments
   html = html.replace(/<!--[\s\S]*?-->/g, '')
 
   // Remove <meta name="prompt"> tags
@@ -261,9 +316,7 @@ export function cleanHtml(html: string, userPrompt?: string): string {
     )
   }
 
-  // Clean excess whitespace
   html = html.replace(/\n{3,}/g, '\n\n')
-
   return html.trim()
 }
 
