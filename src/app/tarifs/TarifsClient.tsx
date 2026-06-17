@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Check, X, ChevronDown } from 'lucide-react'
+import { Check, X, ChevronDown, Tag } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import GlassCard from '@/components/ui/GlassCard'
 import PricingCard, { type PricingPlan } from '@/components/ui/PricingCard'
@@ -76,21 +76,27 @@ function Cell({ value }: { value: boolean | string }) {
 export default function TarifsClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [promoCode, setPromoCode] = useState('')
+  const [promoError, setPromoError] = useState<string | null>(null)
   const router = useRouter()
 
   async function handleSelectPlan(planKey: string) {
     if (!isLoggedIn) {
-      router.push(`/auth/signup?plan=${planKey}`)
+      const query = promoCode.trim() ? `?plan=${planKey}&promo=${promoCode.trim()}` : `?plan=${planKey}`
+      router.push(`/auth/signup${query}`)
       return
     }
+    setPromoError(null)
     const res = await fetch('/api/stripe/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: planKey }),
+      body: JSON.stringify({ plan: planKey, promoCode: promoCode.trim() || undefined }),
     })
     const json = await res.json()
     if (json?.url) {
       window.location.href = json.url
+    } else if (json?.error) {
+      setPromoError(json.error)
     }
   }
 
@@ -176,6 +182,31 @@ export default function TarifsClient({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Promo code input */}
+          <div className="flex flex-col items-center mb-8 gap-2">
+            <div className="flex items-center gap-2 w-full max-w-xs">
+              <div className="relative flex-1">
+                <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--fg-subtle)' }} />
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoError(null) }}
+                  placeholder="Code promo (optionnel)"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg)' }}
+                />
+              </div>
+            </div>
+            {promoError && (
+              <p className="text-xs" style={{ color: '#ef4444' }}>{promoError}</p>
+            )}
+            {promoCode && !promoError && (
+              <p className="text-xs font-medium" style={{ color: 'var(--accent)' }}>
+                Code « {promoCode} » appliqué à l&apos;étape suivante
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5 items-start">
