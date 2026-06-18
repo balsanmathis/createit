@@ -393,14 +393,13 @@ export const BLOCK_DEFS: BlockDef[] = [
     defaultStyle: { paddingTop: 40, paddingBottom: 40, paddingLeft: 40, paddingRight: 40 },
     render(content, style) {
       const css = styleToPartialCss(style)
-      const srcs = [
+      const baseSrcs = [
         content.img1 || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop',
         content.img2 || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop',
         content.img3 || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop',
-        content.img4 || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop',
-        content.img5 || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop',
-        content.img6 || 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop',
       ]
+      const extra = [content.img4, content.img5, content.img6].filter(Boolean) as string[]
+      const srcs = [...baseSrcs, ...extra]
       const items = srcs.map((src, n) =>
         `  <div class="gallery-item" style="overflow:hidden;border-radius:10px;cursor:zoom-in"><img src="${src}" alt="Photo ${n + 1}" style="width:100%;height:220px;object-fit:cover;display:block;transition:transform 0.35s" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform=''" /></div>`
       ).join('\n')

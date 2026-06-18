@@ -113,9 +113,12 @@ export const TEMPLATES: Template[] = [
       {
         type: 'gallery-3col',
         content: {
-          img1: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&auto=format&fit=crop',
-          img2: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&auto=format&fit=crop',
-          img3: 'https://images.unsplash.com/photo-1518791841217-8f162f1912da?w=600&auto=format&fit=crop',
+          img1: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&auto=format&fit=crop',
+          img2: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop',
+          img3: 'https://images.unsplash.com/photo-1518791841217-8f162f1912da?w=800&auto=format&fit=crop',
+          img4: 'https://images.unsplash.com/photo-1547700055-b61cdc9a3b9e?w=800&auto=format&fit=crop',
+          img5: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop',
+          img6: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop',
         },
         style: getDefaultsForType('gallery-3col').style,
         animation: defaultAnimation,

@@ -486,6 +486,8 @@ const barBtn: React.CSSProperties = {
 
 const HOVER_STYLE = `
 .block-wrap:hover .block-actionbar { opacity: 1 !important; pointer-events: all !important; }
+.gallery-item { cursor: pointer !important; }
+.gallery-item:hover { box-shadow: inset 0 0 0 3px #7c3aed; }
 `
 
 // ─── Empty drop zone ───────────────────────────────────────────────────────────
