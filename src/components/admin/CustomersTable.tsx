@@ -13,6 +13,8 @@ export interface CustomerRow {
   periodEnd: string | null
   stripeCustomerId: string | null
   stripeSubscriptionId: string | null
+  actualMonthly?: number
+  discountPercent?: number
 }
 
 const PLAN_LABELS: Record<string, string> = { starter: 'Starter', pro: 'Pro', agency: 'Agency', free: 'Free' }
@@ -200,9 +202,16 @@ export default function CustomersTable({ customers }: { customers: CustomerRow[]
                     <span style={{ background: planCfg.bg, color: planCfg.color, padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
                       {PLAN_LABELS[c.plan] ?? c.plan}
                     </span>
-                    {PLAN_PRICES[c.plan] && (
+                    {c.actualMonthly !== undefined ? (
+                      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                        {c.actualMonthly.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}€/mois
+                        {(c.discountPercent ?? 0) > 0 && (
+                          <span style={{ color: '#16a34a', marginLeft: 4 }}>(-{c.discountPercent}%)</span>
+                        )}
+                      </div>
+                    ) : PLAN_PRICES[c.plan] ? (
                       <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{PLAN_PRICES[c.plan]}€/mois</div>
-                    )}
+                    ) : null}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <TokenBar used={c.tokensUsed} limit={c.tokensLimit} />

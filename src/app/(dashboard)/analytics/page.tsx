@@ -164,32 +164,113 @@ async function getRevenueData() {
 
 async function getSubscriberStats() {
   const db = serviceClient()
-  const [totalRes, starterRes, proRes, agencyRes] = await Promise.all([
+  const stripe = getStripe()
+
+  const priceIdToPlan: Record<string, string> = {}
+  if (process.env.STRIPE_STARTER_PRICE_ID) priceIdToPlan[process.env.STRIPE_STARTER_PRICE_ID] = 'starter'
+  if (process.env.STRIPE_PRO_PRICE_ID)     priceIdToPlan[process.env.STRIPE_PRO_PRICE_ID]     = 'pro'
+  if (process.env.STRIPE_ULTRA_PRICE_ID)   priceIdToPlan[process.env.STRIPE_ULTRA_PRICE_ID]   = 'ultra'
+  if (process.env.STRIPE_AGENCY_PRICE_ID)  priceIdToPlan[process.env.STRIPE_AGENCY_PRICE_ID]  = 'agency'
+
+  const [totalRes, starterRes, proRes, agencyRes, ultraRes] = await Promise.all([
     db.from('users').select('*', { count: 'exact', head: true }),
     db.from('users').select('*', { count: 'exact', head: true }).eq('plan', 'starter'),
     db.from('users').select('*', { count: 'exact', head: true }).eq('plan', 'pro'),
     db.from('users').select('*', { count: 'exact', head: true }).eq('plan', 'agency'),
+    db.from('users').select('*', { count: 'exact', head: true }).eq('plan', 'ultra'),
   ])
+
+  // Pre-fetch all coupons once to resolve discount percentages
+  const couponsRes = await stripe.coupons.list({ limit: 100 })
+  const couponPercentMap = new Map(couponsRes.data.map(c => [c.id, c.percent_off ?? 0]))
+
+  // Compute real MRR from Stripe — accounts for applied promo codes/discounts
+  let mrr = 0
+  const mrrByPlan: Record<string, number> = { starter: 0, pro: 0, ultra: 0, agency: 0 }
+  let hasMore = true
+  let startingAfter: string | undefined
+  while (hasMore) {
+    const batch = await stripe.subscriptions.list({
+      status: 'active', limit: 100,
+      expand: ['data.discounts'],
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    })
+    for (const sub of batch.data) {
+      const priceItem = sub.items.data[0]
+      if (!priceItem) continue
+      const baseAmount = (priceItem.price.unit_amount ?? 0) / 100
+      const discounts = sub.discounts as unknown as Array<{ source?: { type?: string; coupon?: string } }>
+      const couponId = discounts?.[0]?.source?.coupon ?? null
+      const percentOff = couponId ? (couponPercentMap.get(couponId) ?? 0) : 0
+      const actual = Math.round(baseAmount * (1 - percentOff / 100) * 100) / 100
+      mrr += actual
+      const plan = priceIdToPlan[priceItem.price.id]
+      if (plan && plan in mrrByPlan) mrrByPlan[plan] += actual
+    }
+    hasMore = batch.has_more
+    if (hasMore && batch.data.length > 0) startingAfter = batch.data[batch.data.length - 1].id
+  }
+
   const starter = starterRes.count ?? 0
-  const pro = proRes.count ?? 0
-  const agency = agencyRes.count ?? 0
+  const pro     = proRes.count     ?? 0
+  const agency  = agencyRes.count  ?? 0
+  const ultra   = ultraRes.count   ?? 0
   return {
     total: totalRes.count ?? 0,
-    paid: starter + pro + agency,
-    starter, pro, agency,
-    mrr: starter * 20 + pro * 45 + agency * 250,
+    paid: starter + pro + agency + ultra,
+    starter, pro, agency, ultra,
+    mrr,
+    mrrByPlan,
   }
 }
 
 async function getPayingCustomers(): Promise<CustomerRow[]> {
   const db = serviceClient()
+  const stripe = getStripe()
+
   const { data: users } = await db
     .from('users')
     .select('id, email, plan, tokens_used, tokens_limit, created_at, subscriptions(status, stripe_customer_id, stripe_subscription_id, current_period_end)')
-    .in('plan', ['starter', 'pro', 'agency'])
+    .in('plan', ['starter', 'pro', 'ultra', 'agency'])
     .order('created_at', { ascending: false })
 
   if (!users) return []
+
+  // Build a map of sub ID → actual monthly amount from Stripe (with discounts)
+  const subAmountMap = new Map<string, { actualMonthly: number; discountPercent: number }>()
+  const subIds = users
+    .flatMap((u: { subscriptions: Array<{ stripe_subscription_id: string | null }> | null }) =>
+      Array.isArray(u.subscriptions) ? u.subscriptions.map(s => s.stripe_subscription_id) : []
+    )
+    .filter(Boolean) as string[]
+
+  if (subIds.length > 0) {
+    const couponsRes = await stripe.coupons.list({ limit: 100 })
+    const couponPercentMap = new Map(couponsRes.data.map(c => [c.id, c.percent_off ?? 0]))
+
+    let hasMore = true
+    let startingAfter: string | undefined
+    while (hasMore) {
+      const batch = await stripe.subscriptions.list({
+        status: 'active', limit: 100,
+        expand: ['data.discounts'],
+        ...(startingAfter ? { starting_after: startingAfter } : {}),
+      })
+      for (const sub of batch.data) {
+        if (!subIds.includes(sub.id)) continue
+        const baseAmount = (sub.items.data[0]?.price.unit_amount ?? 0) / 100
+        const discounts = sub.discounts as unknown as Array<{ source?: { type?: string; coupon?: string } }>
+        const couponId = discounts?.[0]?.source?.coupon ?? null
+        const percentOff = couponId ? (couponPercentMap.get(couponId) ?? 0) : 0
+        subAmountMap.set(sub.id, {
+          actualMonthly: Math.round(baseAmount * (1 - percentOff / 100) * 100) / 100,
+          discountPercent: percentOff,
+        })
+      }
+      hasMore = batch.has_more
+      if (hasMore && batch.data.length > 0) startingAfter = batch.data[batch.data.length - 1].id
+    }
+  }
 
   return users.map((u: {
     id: string; email: string; plan: string
@@ -197,6 +278,7 @@ async function getPayingCustomers(): Promise<CustomerRow[]> {
     subscriptions: Array<{ status: string; stripe_customer_id: string | null; stripe_subscription_id: string | null; current_period_end: string | null }> | null
   }) => {
     const sub = Array.isArray(u.subscriptions) ? u.subscriptions[0] : null
+    const stripeInfo = sub?.stripe_subscription_id ? subAmountMap.get(sub.stripe_subscription_id) : undefined
     return {
       id: u.id, email: u.email, plan: u.plan,
       tokensUsed: u.tokens_used ?? 0, tokensLimit: u.tokens_limit ?? 0,
@@ -204,6 +286,8 @@ async function getPayingCustomers(): Promise<CustomerRow[]> {
       periodEnd: sub?.current_period_end ?? null,
       stripeCustomerId: sub?.stripe_customer_id ?? null,
       stripeSubscriptionId: sub?.stripe_subscription_id ?? null,
+      actualMonthly: stripeInfo?.actualMonthly,
+      discountPercent: stripeInfo?.discountPercent,
     }
   })
 }
@@ -296,7 +380,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
     activeTab === 'users' ? getAllUsers(currentPage) : Promise.resolve({ users: [], total: 0 }),
     activeTab === 'sites' ? getAllSites(currentPage) : Promise.resolve({ sites: [], total: 0 }),
     isRevenu ? getRevenueData() : Promise.resolve({ monthly: [], currentMonth: 0, currentMonthPayments: 0, threeMonths: 0 }),
-    isRevenu ? getSubscriberStats() : Promise.resolve({ total: 0, paid: 0, starter: 0, pro: 0, agency: 0, mrr: 0 }),
+    isRevenu ? getSubscriberStats() : Promise.resolve({ total: 0, paid: 0, starter: 0, pro: 0, agency: 0, ultra: 0, mrr: 0, mrrByPlan: { starter: 0, pro: 0, ultra: 0, agency: 0 } }),
     isRevenu ? getPayingCustomers() : Promise.resolve([]),
     isRevenu ? getCancellations() : Promise.resolve([]),
   ])
@@ -532,16 +616,16 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                   </div>
                   <div style={{ marginTop: 20, borderTop: '1px solid #f1f5f9', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {[
-                      { label: 'Starter', count: subStats.starter, price: 20, bg: '#dbeafe', color: '#1e40af' },
-                      { label: 'Pro',     count: subStats.pro,     price: 45, bg: '#dcfce7', color: '#166534' },
-                      { label: 'Agency',  count: subStats.agency,  price: 250, bg: '#fef3c7', color: '#92400e' },
+                      { label: 'Starter', count: subStats.starter, plan: 'starter', bg: '#dbeafe', color: '#1e40af' },
+                      { label: 'Pro',     count: subStats.pro,     plan: 'pro',     bg: '#dcfce7', color: '#166534' },
+                      { label: 'Agency',  count: subStats.agency,  plan: 'agency',  bg: '#fef3c7', color: '#92400e' },
                     ].map(p => (
                       <div key={p.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ background: p.bg, color: p.color, fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 12 }}>{p.label}</span>
                           <span style={{ fontSize: 13, color: '#0f172a' }}>{p.count} abonné{p.count !== 1 ? 's' : ''}</span>
                         </div>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{fmtNum(p.count * p.price)} €/mois</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{fmtNum((subStats.mrrByPlan as Record<string, number>)?.[p.plan] ?? 0)} €/mois</span>
                       </div>
                     ))}
                   </div>

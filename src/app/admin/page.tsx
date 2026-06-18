@@ -141,6 +141,10 @@ async function getSubscriptionStats(): Promise<SubscriptionStats> {
   if (process.env.STRIPE_ULTRA_PRICE_ID) priceIdToPlan[process.env.STRIPE_ULTRA_PRICE_ID] = 'ultra'
   if (process.env.STRIPE_AGENCY_PRICE_ID) priceIdToPlan[process.env.STRIPE_AGENCY_PRICE_ID] = 'agency'
 
+  // Pre-fetch all coupons once to resolve discount percentages
+  const couponsRes = await stripe.coupons.list({ limit: 100 })
+  const couponPercentMap = new Map(couponsRes.data.map(c => [c.id, c.percent_off ?? 0]))
+
   let hasMore = true
   let startingAfter: string | undefined
 
@@ -148,7 +152,7 @@ async function getSubscriptionStats(): Promise<SubscriptionStats> {
     const batch = await stripe.subscriptions.list({
       status: 'active',
       limit: 100,
-      expand: ['data.customer'],
+      expand: ['data.customer', 'data.discounts'],
       ...(startingAfter ? { starting_after: startingAfter } : {}),
     })
 
@@ -163,18 +167,23 @@ async function getSubscriptionStats(): Promise<SubscriptionStats> {
       }
 
       const priceId = priceItem.price.id
-      const unitAmount = (priceItem.price.unit_amount ?? 0) / 100
+      const baseAmount = (priceItem.price.unit_amount ?? 0) / 100
       const plan = priceIdToPlan[priceId] ?? 'autre'
 
-      result.mrr += unitAmount
+      const discounts = sub.discounts as unknown as Array<{ source?: { type?: string; coupon?: string } }>
+      const couponId = discounts?.[0]?.source?.coupon ?? null
+      const percentOff = couponId ? (couponPercentMap.get(couponId) ?? 0) : 0
+      const actualAmount = Math.round(baseAmount * (1 - percentOff / 100) * 100) / 100
+
+      result.mrr += actualAmount
       result.activeCount++
 
       if (plan === 'starter' || plan === 'pro' || plan === 'ultra' || plan === 'agency') {
         result.byPlan[plan].count++
-        result.byPlan[plan].mrr += unitAmount
+        result.byPlan[plan].mrr += actualAmount
       }
 
-      result.subscribers.push({ email, plan, amount: unitAmount, createdAt: sub.created, subscriptionId: sub.id })
+      result.subscribers.push({ email, plan, amount: actualAmount, createdAt: sub.created, subscriptionId: sub.id })
     }
 
     hasMore = batch.has_more
