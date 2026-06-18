@@ -7,7 +7,7 @@ import { BLOCK_DEFS } from '@/lib/builder/blocks'
 import ImageUploader from './ImageUploader'
 import type { BlockStyle, BlockAnimation, AnimationType, HoverEffect } from '@/lib/builder/types'
 
-const IMAGE_KEYS = new Set(['image', 'src', 'photo', 'avatar'])
+const IMAGE_KEYS = new Set(['image', 'src', 'photo', 'avatar', 'img1', 'img2', 'img3', 'img4', 'img5', 'img6', 'img7', 'img8'])
 const BOOL_KEYS = new Set(['autoplay', 'muted', 'loop', 'controls'])
 const URL_KEYS = new Set(['href', 'href1', 'href2', 'url', 'ctaHref', 'link1Href', 'link2Href', 'link3Href'])
 
@@ -17,6 +17,7 @@ function isTargetKey(k: string) { return k.endsWith('Target') && isUrlKey(k.slic
 const LABEL: Record<string, string> = {
   title: 'Titre', subtitle: 'Sous-titre', text: 'Texte', cta: 'Bouton',
   href: 'Lien', href1: 'Lien 1', href2: 'Lien 2', ctaHref: 'Lien bouton',
+  img1: 'Image 1', img2: 'Image 2', img3: 'Image 3', img4: 'Image 4', img5: 'Image 5', img6: 'Image 6', img7: 'Image 7', img8: 'Image 8',
   logo: 'Logo', link1: 'Lien 1', link2: 'Lien 2', link3: 'Lien 3',
   link1Href: 'URL 1', link2Href: 'URL 2', link3Href: 'URL 3',
   copyright: 'Copyright', image: 'Image', src: 'Image', alt: 'Texte alt',
@@ -44,7 +45,7 @@ function normalizeUrl(v: string) {
 }
 
 type Tab = 'content' | 'style' | 'animation'
-const IMAGE_TYPES = new Set(['image-simple', 'gallery-2col', 'gallery-3col'])
+const IMAGE_TYPES = new Set(['image-simple', 'gallery-2col', 'gallery-3col', 'gallery-4col'])
 const TEXT_TYPES = new Set(['heading-h1', 'heading-h2', 'paragraph', 'quote', 'badge'])
 
 const ANIM_OPTS: { value: AnimationType; label: string; group: string }[] = [

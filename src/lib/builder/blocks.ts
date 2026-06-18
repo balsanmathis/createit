@@ -74,6 +74,8 @@ function buildVideoEmbed(
   return `<div style="position:relative;padding-bottom:${pb};height:0;overflow:hidden;border-radius:12px"><iframe src="${url}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allowfullscreen></iframe></div>`
 }
 
+const GALLERY_LIGHTBOX_SCRIPT = `<script>(function(){if(window.__gb_lb__)return;window.__gb_lb__=true;var o=document.createElement('div');o.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;cursor:zoom-out;align-items:center;justify-content:center;';var i=document.createElement('img');i.style.cssText='max-width:90vw;max-height:88vh;object-fit:contain;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,0.5);pointer-events:none;';o.appendChild(i);document.body.appendChild(o);function cl(){o.style.display='none';document.body.style.overflow='';}o.addEventListener('click',cl);document.addEventListener('keydown',function(e){if(e.key==='Escape')cl();});document.addEventListener('click',function(e){var t=e.target;if(t.tagName!=='IMG'||!t.closest('.gallery-item'))return;i.src=t.src;o.style.display='flex';document.body.style.overflow='hidden';});})()</script>`
+
 export const BLOCK_DEFS: BlockDef[] = [
   // ─── LAYOUT ───────────────────────────────────────────────────────────────
   {
@@ -355,20 +357,24 @@ export const BLOCK_DEFS: BlockDef[] = [
     category: 'media',
     icon: '🖼🖼',
     defaultContent: {
-      img1: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=600&auto=format&fit=crop',
-      img2: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop',
-      img3: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop',
-      img4: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&auto=format&fit=crop',
+      img1: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop',
+      img2: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop',
+      img3: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop',
+      img4: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop',
     },
     defaultStyle: { paddingTop: 40, paddingBottom: 40, paddingLeft: 40, paddingRight: 40 },
     render(content, style) {
       const css = styleToPartialCss(style)
-      return `<div style="${css};display:grid;grid-template-columns:1fr 1fr;gap:16px">
-  <img src="${content.img1}" alt="Galerie 1" style="width:100%;height:260px;object-fit:cover;border-radius:10px" />
-  <img src="${content.img2}" alt="Galerie 2" style="width:100%;height:260px;object-fit:cover;border-radius:10px" />
-  <img src="${content.img3}" alt="Galerie 3" style="width:100%;height:260px;object-fit:cover;border-radius:10px" />
-  <img src="${content.img4}" alt="Galerie 4" style="width:100%;height:260px;object-fit:cover;border-radius:10px" />
-</div>`
+      const srcs = [
+        content.img1 || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop',
+        content.img2 || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop',
+        content.img3 || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop',
+        content.img4 || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop',
+      ]
+      const items = srcs.map((src, n) =>
+        `  <div class="gallery-item" style="overflow:hidden;border-radius:10px;cursor:zoom-in"><img src="${src}" alt="Galerie ${n + 1}" style="width:100%;height:260px;object-fit:cover;display:block;transition:transform 0.35s" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform=''" /></div>`
+      ).join('\n')
+      return `<div class="gallery-block" style="${css}"><div class="gallery-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">\n${items}\n</div>${GALLERY_LIGHTBOX_SCRIPT}</div>`
     },
   },
   {
@@ -377,18 +383,62 @@ export const BLOCK_DEFS: BlockDef[] = [
     category: 'media',
     icon: '🗃️',
     defaultContent: {
-      img1: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=600&auto=format&fit=crop',
-      img2: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop',
-      img3: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop',
+      img1: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop',
+      img2: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop',
+      img3: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop',
+      img4: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop',
+      img5: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop',
+      img6: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop',
     },
     defaultStyle: { paddingTop: 40, paddingBottom: 40, paddingLeft: 40, paddingRight: 40 },
     render(content, style) {
       const css = styleToPartialCss(style)
-      return `<div style="${css};display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-  <img src="${content.img1}" alt="Photo 1" style="width:100%;height:220px;object-fit:cover;border-radius:10px" />
-  <img src="${content.img2}" alt="Photo 2" style="width:100%;height:220px;object-fit:cover;border-radius:10px" />
-  <img src="${content.img3}" alt="Photo 3" style="width:100%;height:220px;object-fit:cover;border-radius:10px" />
-</div>`
+      const srcs = [
+        content.img1 || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop',
+        content.img2 || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop',
+        content.img3 || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop',
+        content.img4 || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop',
+        content.img5 || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop',
+        content.img6 || 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop',
+      ]
+      const items = srcs.map((src, n) =>
+        `  <div class="gallery-item" style="overflow:hidden;border-radius:10px;cursor:zoom-in"><img src="${src}" alt="Photo ${n + 1}" style="width:100%;height:220px;object-fit:cover;display:block;transition:transform 0.35s" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform=''" /></div>`
+      ).join('\n')
+      return `<div class="gallery-block" style="${css}"><div class="gallery-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">\n${items}\n</div>${GALLERY_LIGHTBOX_SCRIPT}</div>`
+    },
+  },
+  {
+    type: 'gallery-4col',
+    label: 'Galerie 4 colonnes',
+    category: 'media',
+    icon: '🏙️',
+    defaultContent: {
+      img1: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=600&auto=format&fit=crop',
+      img2: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop',
+      img3: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop',
+      img4: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&auto=format&fit=crop',
+      img5: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop',
+      img6: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format&fit=crop',
+      img7: 'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=600&auto=format&fit=crop',
+      img8: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&auto=format&fit=crop',
+    },
+    defaultStyle: { paddingTop: 40, paddingBottom: 40, paddingLeft: 40, paddingRight: 40 },
+    render(content, style) {
+      const css = styleToPartialCss(style)
+      const srcs = [
+        content.img1 || 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=600&auto=format&fit=crop',
+        content.img2 || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop',
+        content.img3 || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop',
+        content.img4 || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&auto=format&fit=crop',
+        content.img5 || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop',
+        content.img6 || 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format&fit=crop',
+        content.img7 || 'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=600&auto=format&fit=crop',
+        content.img8 || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&auto=format&fit=crop',
+      ]
+      const items = srcs.map((src, n) =>
+        `  <div class="gallery-item" style="overflow:hidden;border-radius:10px;cursor:zoom-in"><img src="${src}" alt="Photo ${n + 1}" style="width:100%;height:180px;object-fit:cover;display:block;transition:transform 0.35s" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform=''" /></div>`
+      ).join('\n')
+      return `<div class="gallery-block" style="${css}"><div class="gallery-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">\n${items}\n</div>${GALLERY_LIGHTBOX_SCRIPT}</div>`
     },
   },
   {
