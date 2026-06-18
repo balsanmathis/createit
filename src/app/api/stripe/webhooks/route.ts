@@ -132,13 +132,12 @@ export async function POST(request: Request) {
           current_period_end: monthFromNow(),
         }, { onConflict: 'user_id' })
 
-        await supabaseAdmin.from('users').upsert({
-          id: userId,
+        await supabaseAdmin.from('users').update({
           plan,
           tokens_used: 0,
           tokens_limit: tokensLimit,
           sites_used_this_month: 0,
-        }, { onConflict: 'id' })
+        }).eq('id', userId)
 
         console.log(`[webhook] checkout.session.completed — user ${userId} → plan=${plan}, tokens=${tokensLimit}`)
         break
