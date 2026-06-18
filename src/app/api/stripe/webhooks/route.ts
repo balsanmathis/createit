@@ -77,6 +77,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
+  if (!event.livemode && process.env.NODE_ENV === 'production') {
+    console.error('[webhook] TEST event received in production — rejected', event.type, event.id)
+    return NextResponse.json({ received: true, skipped: 'test_event_in_production' })
+  }
+
   const supabaseAdmin = getSupabaseAdmin()
 
   try {
@@ -84,6 +89,10 @@ export async function POST(request: Request) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         if (session.mode !== 'subscription') break
+        if (session.payment_status !== 'paid') {
+          console.warn('[webhook] checkout.session.completed — payment_status not paid, skipping', session.id, session.payment_status)
+          break
+        }
 
         const customerId     = session.customer as string
         const subscriptionId = session.subscription as string
